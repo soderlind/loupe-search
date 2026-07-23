@@ -1,6 +1,10 @@
 <?php
 namespace Soderlind\Plugin\WPLoupe;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 // Namespaced compatibility shims: allow static analysis / tests without full WP while delegating to global functions when available.
 if ( ! function_exists( __NAMESPACE__ . '\register_rest_route' ) ) {
 	function register_rest_route( $namespace, $route, $args ) {
@@ -13,7 +17,7 @@ if ( ! function_exists( __NAMESPACE__ . '\register_rest_route' ) ) {
 if ( ! function_exists( __NAMESPACE__ . '\__' ) ) {
 	function __( $text, $domain = null ) {
 		if ( function_exists( '\__' ) ) {
-			return \__( $text, $domain );
+			return \__( $text, $domain ); // phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralText,WordPress.WP.I18n.NonSingularStringLiteralDomain -- proxy shim for test compatibility.
 		}
 		return $text;
 	}
@@ -419,8 +423,10 @@ class WP_Loupe_REST {
 				if ( empty( $status[ 'ready' ] ) ) {
 					$reason = $status[ 'reason' ] ?? 'index_missing';
 					if ( 'index_needs_reindex' === $reason ) {
+						/* translators: %s: post type name */
 						return new \WP_Error( 'wp_loupe_index_needs_reindex', sprintf( __( 'Search index schema is out of date for post type "%s". Rebuild required.', 'wp-loupe' ), $pt ), [ 'status' => 400, 'details' => [ 'postType' => $pt, 'reason' => $reason ] ] );
 					}
+					/* translators: %s: post type name */
 					return new \WP_Error( 'wp_loupe_index_missing', sprintf( __( 'Search index not found for post type "%s".', 'wp-loupe' ), $pt ), [ 'status' => 400, 'details' => [ 'postType' => $pt, 'reason' => $reason ] ] );
 				}
 				$post_types_to_search[] = $pt;
@@ -1081,6 +1087,7 @@ class WP_Loupe_REST {
 
 		return rest_ensure_response( [
 			'success' => true,
+			/* translators: %s: post type name */
 			'message' => sprintf( __( 'Database structure ready for %s.', 'wp-loupe' ), $post_type ),
 			'created' => $created,
 		] );
@@ -1120,6 +1127,7 @@ class WP_Loupe_REST {
 
 		return rest_ensure_response( [
 			'success' => true,
+			/* translators: %s: post type name */
 			'message' => sprintf( __( 'Database removed for %s.', 'wp-loupe' ), $post_type ),
 			'deleted' => $deleted,
 		] );
@@ -1133,17 +1141,19 @@ class WP_Loupe_REST {
 		if ( ! post_type_exists( $post_type ) ) {
 			return [];
 		}
-		$sql  = $wpdb->prepare(
+		$like_protected = $wpdb->esc_like( '_' ) . '%';
+		$sql            = $wpdb->prepare(
 			"SELECT DISTINCT pm.meta_key
              FROM {$wpdb->postmeta} pm
              INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
              WHERE p.post_type = %s AND p.post_status = 'publish'
-               AND pm.meta_key NOT LIKE '\_%'
+               AND pm.meta_key NOT LIKE %s
                AND pm.meta_value <> ''
              LIMIT 500",
-			$post_type
+			$post_type,
+			$like_protected
 		);
-		$keys = $wpdb->get_col( $sql );
+		$keys = $wpdb->get_col( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql is output of $wpdb->prepare().
 		$out  = [];
 		if ( is_array( $keys ) ) {
 			foreach ( $keys as $k ) {

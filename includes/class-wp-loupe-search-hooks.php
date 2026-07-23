@@ -148,7 +148,7 @@ class WP_Loupe_Search_Hooks {
 				'post__in'         => array_column( $type_hits, 'id' ),
 				'posts_per_page'   => -1,
 				'orderby'          => 'post__in',
-				'suppress_filters' => true,
+				'suppress_filters' => true, // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- required for accurate search-result ordering by post__in.
 			] );
 
 			$post_type_fields = is_array( $saved_fields ) ? ( $saved_fields[ $post_type ] ?? [] ) : [];
@@ -193,7 +193,7 @@ class WP_Loupe_Search_Hooks {
 		}
 		$log = $this->engine->get_log();
 		if ( $log ) {
-			echo "\n<!-- {$log} -->\n";
+			echo "\n<!-- " . esc_html( $log ) . " -->\n";
 		}
 	}
 }

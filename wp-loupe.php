@@ -33,19 +33,11 @@ define( 'WP_LOUPE_FILE', __FILE__ );
 define( 'WP_LOUPE_NAME', plugin_basename( WP_LOUPE_FILE ) );
 define( 'WP_LOUPE_PATH', plugin_dir_path( WP_LOUPE_FILE ) );
 define( 'WP_LOUPE_URL', plugin_dir_url( WP_LOUPE_FILE ) );
-// MCP related constants (development token & version marker)
-if ( ! defined( 'WP_LOUPE_MCP_VERSION' ) ) {
-	define( 'WP_LOUPE_MCP_VERSION', '0.8.5' );
-}
-// Optional development bearer token for initial implementation (SHOULD be disabled in production)
-if ( ! defined( 'WP_LOUPE_MCP_DEV_TOKEN' ) ) {
-	define( 'WP_LOUPE_MCP_DEV_TOKEN', '' ); // Site owner may set in wp-config.php
-}
 
 require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-loader.php';
 // Load CLI commands if in WP-CLI context
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
-	require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-mcp-cli.php';
+	require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-cli.php';
 }
 
 /**
@@ -55,9 +47,8 @@ function init() {
 	// Don't run on autosave, WP CLI, Heartbeat or cron requests, and REST API requests (except our own)
 	if (
 		( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) ||
-			// Allow WP_CLI to proceed so CLI subcommands can access server components.
 		( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_REQUEST[ 'action' ] ) && 'heartbeat' === $_REQUEST[ 'action' ] ) ||
-		( defined( 'REST_REQUEST' ) && REST_REQUEST && ! str_starts_with( $_SERVER[ 'REQUEST_URI' ] ?? '', '/wp-json/wp-loupe' ) ) ||
+		( defined( 'REST_REQUEST' ) && REST_REQUEST && ! str_starts_with( wp_unslash( $_SERVER[ 'REQUEST_URI' ] ?? '' ), '/wp-json/wp-loupe' ) ) ||
 		( defined( 'DOING_CRON' ) && DOING_CRON )
 	) {
 		return;

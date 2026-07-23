@@ -1,0 +1,43 @@
+# Files and directories excluded from the wp.org SVN payload.
+# Used by the 10up action-wordpress-plugin-deploy GitHub Action.
+
+# Development and test files
+.distignore
+.github/
+.gitignore
+.gitattributes
+.DS_Store
+phpunit.xml.dist
+tests/
+
+# Build / tooling config
+package.json
+package-lock.json
+composer.json
+composer.lock
+
+# Documentation (GitHub-only)
+CHANGELOG.md
+TODO.md
+docs/
+
+# Dev-only vendor packages (phpunit, pest, brain/monkey, etc.)
+# The deploy action runs `composer install --no-dev`, so vendor/ will be clean.
+# List here just in case vendor/ is already committed with dev deps.
+vendor/bin/
+vendor/phpunit/
+vendor/pestphp/
+vendor/brain/
+vendor/brianium/
+vendor/phpstan/
+vendor/fidry/
+vendor/sebastian/
+vendor/nikic/
+vendor/phar-io/
+vendor/phpdocumentor/
+vendor/nunomaduro/
+vendor/staabm/
+vendor/ta-tikoma/
+
+# wp.org assets live in .wordpress-org/ (mapped to SVN assets/ by the action)
+.wordpress-org/

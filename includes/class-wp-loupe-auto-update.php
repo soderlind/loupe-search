@@ -1,6 +1,10 @@
 <?php
 namespace Soderlind\Plugin\WPLoupe;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Auto-update opt-in for WP Loupe.
  * Enabled by default; define WP_LOUPE_DISABLE_AUTO_UPDATE to disable.

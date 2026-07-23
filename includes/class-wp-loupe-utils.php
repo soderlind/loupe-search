@@ -54,7 +54,7 @@ class WP_Loupe_Utils {
 
 		$drivers = [];
 		try {
-			$drivers = \PDO::getAvailableDrivers();
+			$drivers = \PDO::getAvailableDrivers(); // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO is required for SQLite (loupe/loupe engine); no $wpdb alternative.
 		} catch ( \Throwable $e ) {
 			$drivers = [];
 		}
@@ -151,8 +151,8 @@ class WP_Loupe_Utils {
 	 */
 	private static function get_sqlite_version_string(): ?string {
 		try {
-			$pdo = new \PDO( 'sqlite::memory:' );
-			$pdo->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
+			$pdo = new \PDO( 'sqlite::memory:' ); // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO is required for SQLite version detection; no $wpdb alternative.
+			$pdo->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION ); // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO constant usage for SQLite.
 			$stmt = $pdo->query( 'select sqlite_version()' );
 			$ver  = $stmt ? $stmt->fetchColumn() : null;
 			if ( is_string( $ver ) && $ver !== '' ) {
@@ -326,12 +326,12 @@ class WP_Loupe_Utils {
 		$query = implode( ' ', $sql );
 
 		// Prepare
-		$prepared = $wpdb->prepare( $query, $esc_name, $esc_time );
+		$prepared = $wpdb->prepare( $query, $esc_name, $esc_time ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- query assembled from trusted parts.
 
 		// Query
 		$transients = empty( $r[ 'count' ] )
-			? $wpdb->get_results( $prepared ) // Rows
-			: $wpdb->get_var( $prepared );    // Count
+			? $wpdb->get_results( $prepared ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- prepared above. Rows
+			: $wpdb->get_var( $prepared );    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- prepared above. Count
 
 		// Return transients
 		return $transients;

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">WP Loupe icon</title>
+  <desc id="desc">A magnifying glass over indexed WordPress search results.</desc>
+  <rect width="256" height="256" rx="44" fill="#ffffff"/>
+
+  <circle cx="104" cy="104" r="56" fill="none" stroke="#0b0d12" stroke-width="17"/>
+  <path d="M144 144l52 52" fill="none" stroke="#0b0d12" stroke-width="20" stroke-linecap="round"/>
+
+  <path d="M70 88h68" stroke="#0b0d12" stroke-width="12" stroke-linecap="round"/>
+  <path d="M70 115h86" stroke="#356bff" stroke-width="12" stroke-linecap="round"/>
+  <path d="M70 142h48" stroke="#16c79a" stroke-width="12" stroke-linecap="round"/>
+
+  <circle cx="176" cy="77" r="14" fill="#356bff"/>
+  <circle cx="198" cy="111" r="14" fill="#16c79a"/>
+  <circle cx="176" cy="145" r="14" fill="#ffb020"/>
+  <path d="M160 77h-18" stroke="#0b0d12" stroke-width="10" stroke-linecap="round"/>
+  <path d="M182 111h-26" stroke="#0b0d12" stroke-width="10" stroke-linecap="round"/>
+  <path d="M160 145h-20" stroke="#0b0d12" stroke-width="10" stroke-linecap="round"/>
+
+  <path d="M61 187c16-14 35-14 51 0s35 14 51 0" fill="none" stroke="#ff4f6d" stroke-width="10" stroke-linecap="round"/>
+</svg>

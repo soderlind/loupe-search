@@ -1,6 +1,10 @@
 <?php
 namespace Soderlind\Plugin\WPLoupe;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * WP Loupe migration routines.
  *
@@ -134,7 +138,7 @@ class WP_Loupe_Migration {
 		}
 
 		try {
-			$cols  = $db->query( 'PRAGMA table_info(documents)' )->fetchAll( \PDO::FETCH_ASSOC );
+			$cols  = $db->query( 'PRAGMA table_info(documents)' )->fetchAll( \PDO::FETCH_ASSOC ); // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO constant for SQLite PRAGMA; no $wpdb alternative.
 			$found = false;
 			foreach ( $cols as $c ) {
 				if ( isset( $c[ 'name' ] ) && $c[ 'name' ] === 'post_date' ) {

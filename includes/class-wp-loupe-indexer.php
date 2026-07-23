@@ -596,11 +596,11 @@ class WP_Loupe_Indexer {
 				continue; // Fresh index will create schema.
 			}
 			try {
-				$pdo           = new \PDO( 'sqlite:' . $sqlite_file );
+				$pdo           = new \PDO( 'sqlite:' . $sqlite_file ); // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO required for SQLite (loupe/loupe); no $wpdb alternative.
 				$stmt          = $pdo->query( 'PRAGMA table_info(documents)' );
 				$has_post_date = false;
 				if ( $stmt ) {
-					foreach ( $stmt->fetchAll( \PDO::FETCH_ASSOC ) as $col ) {
+					foreach ( $stmt->fetchAll( \PDO::FETCH_ASSOC ) as $col ) { // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO constant for SQLite PRAGMA.
 						if ( isset( $col[ 'name' ] ) && 'post_date' === $col[ 'name' ] ) {
 							$has_post_date = true;
 							break;
@@ -819,7 +819,7 @@ class WP_Loupe_Indexer {
 	 */
 	public function action_wp_footer(): void {
 		if ( ! is_admin() ) {
-			echo "\n" . '<!--' . $this->log . ' -->' . "\n";
+			echo "\n<!-- " . esc_html( $this->log ) . " -->\n";
 		}
 	}
 

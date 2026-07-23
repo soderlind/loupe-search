@@ -1,9 +1,9 @@
-=== WP Loupe – WordPress Search Enhancement ===
+=== WP Loupe ===
 Contributors: PerS
-Tags: search, full-text search, relevance, typo-tolerant, fast search, search engine
-Requires at least: 6.7
+Tags: search, full-text search, typo-tolerant, fast search, SQLite
+Requires at least: 6.9
 Tested up to: 7.0
-Requires PHP: 8.3
+Requires PHP: 8.1
 Stable tag: 0.8.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -15,18 +15,13 @@ A search enhancement plugin for WordPress that delivers fast, accurate, and typo
 
 WP Loupe improves WordPress core search by maintaining its own index for fast lookups, supporting typo tolerance, phrase matching, basic exclusion operators, and per–post-type customization.
 
-= MCP (Model Context Protocol) Integration =
-WP Loupe includes an optional MCP server (disabled by default) for external agents / automation.
+= AI Agent Integration (WordPress Abilities API) =
+WP Loupe registers two abilities via the WordPress Abilities API (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively:
 
-Key points:
-* Discovery endpoints: `/.well-known/mcp.json` and `/.well-known/oauth-protected-resource` (toggle in Settings → WP Loupe → MCP)
-* Commands include `searchPosts`, `getPost`, `getSchema`, and `healthCheck`
-* Anonymous access can be enabled with lower rate limits; tokens raise limits and can unlock health checks
-* Tokens are scoped (`search.read`, `health.read`), have configurable TTL (1–168 hours, or 0 = indefinite), and can be revoked
-* Tokens are stored hashed (raw value shown once); pagination cursors are HMAC-protected
-* Rate limits are configurable (anonymous vs authenticated), with filter hooks and a WP-CLI token command available
+* `wp-loupe/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
+* `wp-loupe/get-post` — Retrieve a single published post by ID. Publicly accessible.
 
-Full documentation: https://github.com/soderlind/wp-loupe/blob/main/docs/mcp.md
+These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration.
 
 = Core Features =
 
@@ -110,7 +105,7 @@ For usage examples, see the [filter documentation at GitHub](https://github.com/
    * Click 'Reindex' to build the initial search index (runs in batches to avoid timeouts)
 
 3. **Updates**
-   * Plugin updates are handled automatically via GitHub. No need to manually download and install updates.
+   * Plugin updates are handled automatically by WordPress.org.
 
 == Frequently Asked Questions ==
 
@@ -145,10 +140,10 @@ Use Settings > WP Loupe > Reindex (batched), or run via WP-CLI:
 
 = What are the technical requirements? =
 
-* PHP 8.3 or higher
+* PHP 8.1 or higher
 * SQLite 3.35+ (required by Loupe 0.13.x)
 * PHP extensions: pdo_sqlite, intl, mbstring
-* WordPress 6.7+
+* WordPress 6.9+
 
 
 == Changelog ==

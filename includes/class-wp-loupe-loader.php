@@ -35,10 +35,6 @@ class WP_Loupe_Loader {
 	 */
 	private function load_dependencies() {
 		require_once WP_LOUPE_PATH . 'vendor/autoload.php';
-		// Include plugin updater
-		if ( ! class_exists( 'Soderlind\WordPress\GitHub_Plugin_Updater' ) ) {
-			require_once WP_LOUPE_PATH . 'includes/class-github-plugin-updater.php';
-		}
 		require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-schema-manager.php';
 		require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-factory.php';
 		require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-search.php';
@@ -49,8 +45,7 @@ class WP_Loupe_Loader {
 		require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-utils.php';
 		require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-settings.php';
 		require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-rest.php';
-		// MCP server class
-		require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-mcp-server.php';
+		require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-abilities.php';
 	}
 
 	/**
@@ -76,14 +71,6 @@ class WP_Loupe_Loader {
 	 * @return void
 	 */
 	private function init_components() {
-		// Initialize the plugin updater.
-		\Soderlind\WordPress\GitHub_Plugin_Updater::create_with_assets(
-			'https://github.com/soderlind/wp-loupe',
-			WP_LOUPE_FILE,
-			'wp-loupe',
-			'/wp-loupe\.zip/',
-			'main'
-		);
 		new WPLoupe_Settings_Page();
 
 		$this->search_engine = new WP_Loupe_Search_Engine( $this->post_types );
@@ -97,8 +84,8 @@ class WP_Loupe_Loader {
 		// Initialize REST API handler
 		new WP_Loupe_REST();
 
-		// Initialize MCP Server (lazy hooks)
-		WP_Loupe_MCP_Server::get_instance();
+		// Register Abilities API (WordPress 6.9+)
+		WP_Loupe_Abilities::init();
 	}
 
 	/**

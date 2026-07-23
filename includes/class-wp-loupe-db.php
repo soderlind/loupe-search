@@ -1,6 +1,10 @@
 <?php
 namespace Soderlind\Plugin\WPLoupe;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Database management class for WP Loupe
  *
@@ -104,7 +108,7 @@ class WP_Loupe_DB {
 
 		// Fallback for very early contexts.
 		if ( ! is_dir( $path ) ) {
-			@mkdir( $path, 0755, true );
+			@mkdir( $path, 0755, true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- fallback for very early contexts before wp_mkdir_p() is available.
 		}
 	}
 }
