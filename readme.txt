@@ -109,6 +109,13 @@ For usage examples, see the [filter documentation at GitHub](https://github.com/
 3. **Updates**
    * Plugin updates are handled automatically by WordPress.org.
 
+==  Screenshots ==
+
+1. WP Loupe Settings page with tabs for Dashboard, Fields, and Search Behavior.
+2. Field configuration interface for each post type, allowing selection of indexable, filterable, and sortable fields.
+3. Search Behavior tab with options for typo tolerance, stemming, and stop words.
+4. Contextual help tabs explaining field configuration options and search behavior settings.
+
 == Frequently Asked Questions ==
 
 = How does it handle updates to posts? =
@@ -156,6 +163,7 @@ Use Settings > WP Loupe > Reindex (batched), or run via WP-CLI:
 * Added: REST endpoint `GET /wp-json/wp-loupe/v1/index-status` returning index health for configured post types.
 * Changed: Replaced the Select2 post-type dropdown with an accessible native checkbox picker.
 * Changed: Field configuration for each post type is now shown in collapsible accordions.
+* Changed: Updated the contextual help tabs to match the redesigned settings screen and removed references to controls that no longer exist.
 * Removed: Select2 dependency and its bundled assets.
 * Removed: Auto-update settings toggle; per-plugin auto-updates are now handled by WordPress core.
 

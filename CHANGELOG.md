@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced the Select2 post-type dropdown with an accessible native checkbox picker.
 - Field configuration for each post type is now shown in collapsible accordions.
 - Reindexing is consolidated on the Dashboard and shows determinate progress with a Cancel option.
+- Updated the contextual help tabs to match the redesigned settings screen and removed references to controls that no longer exist (Languages, Typo Thresholds).
 
 ### Removed
 - Removed the Select2 dependency and its bundled assets.

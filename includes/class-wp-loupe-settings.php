@@ -767,17 +767,18 @@ class WPLoupe_Settings_Page {
 			'id'      => 'wp_loupe_help_overview',
 			'title'   => __( 'Overview', 'wp-loupe' ),
 			'content' => sprintf(
-				'<h2>%s</h2><p>%s</p><div class="wp-loupe-help-sections"><div class="wp-loupe-help-section basic"><h3>%s</h3><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul></div><div class="wp-loupe-help-section advanced"><h3>%s</h3><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul></div></div>',
+				'<h2>%s</h2><p>%s</p><p>%s</p><div class="wp-loupe-help-sections"><div class="wp-loupe-help-section basic"><h3>%s</h3><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul></div><div class="wp-loupe-help-section advanced"><h3>%s</h3><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul></div></div>',
 				__( 'WP Loupe Help', 'wp-loupe' ),
-				__( 'WP Loupe provides powerful search functionality with both basic and advanced configuration options.', 'wp-loupe' ),
-				__( 'Basic Settings', 'wp-loupe' ),
+				__( 'WP Loupe settings are organized into three tabs: Dashboard, Fields, and Search Behavior.', 'wp-loupe' ),
+				__( 'The Dashboard tab shows index health for each post type, lets you reindex your content, and reports whether the required PHP extensions are available.', 'wp-loupe' ),
+				__( 'Fields', 'wp-loupe' ),
 				__( 'Configure which content is searchable and how:', 'wp-loupe' ),
 				__( 'Select post types to include in search', 'wp-loupe' ),
 				__( 'Configure field weights for relevance', 'wp-loupe' ),
 				__( 'Set filterable and sortable fields', 'wp-loupe' ),
-				__( 'Advanced Settings', 'wp-loupe' ),
-				__( 'Fine-tune search behavior with advanced options:', 'wp-loupe' ),
-				__( 'Tokenization and language settings', 'wp-loupe' ),
+				__( 'Search Behavior', 'wp-loupe' ),
+				__( 'Fine-tune how queries are matched:', 'wp-loupe' ),
+				__( 'Tokenization (max query tokens)', 'wp-loupe' ),
 				__( 'Prefix search configuration', 'wp-loupe' ),
 				__( 'Typo tolerance customization', 'wp-loupe' )
 			),
@@ -833,13 +834,11 @@ class WPLoupe_Settings_Page {
 			'id'      => 'wp_loupe_tokenization',
 			'title'   => __( 'Tokenization', 'wp-loupe' ),
 			'content' => sprintf(
-				'<h2>%s</h2><p>%s</p><h3>%s</h3><p>%s</p><h3>%s</h3><p>%s</p>',
+				'<h2>%s</h2><p>%s</p><h3>%s</h3><p>%s</p>',
 				__( 'Tokenization Settings', 'wp-loupe' ),
 				__( 'Tokenization controls how search queries are split into searchable pieces.', 'wp-loupe' ),
 				__( 'Max Query Tokens', 'wp-loupe' ),
-				__( 'Limits the number of words processed in a search query. Higher values allow longer queries but may impact performance.', 'wp-loupe' ),
-				__( 'Languages', 'wp-loupe' ),
-				__( 'Select languages to properly handle word splitting, stemming, and special characters. Include all languages your content uses.', 'wp-loupe' )
+				__( 'Limits the number of words processed in a search query. Higher values allow longer queries but may impact performance.', 'wp-loupe' )
 			),
 		] );
 
@@ -874,12 +873,10 @@ class WPLoupe_Settings_Page {
 			'id'      => 'wp_loupe_typo_advanced',
 			'title'   => __( 'Typo Details', 'wp-loupe' ),
 			'content' => sprintf(
-				'<h2>%s</h2><h3>%s</h3><p>%s</p><h3>%s</h3><p>%s</p><h3>%s</h3><p>%s</p><h3>%s</h3><p>%s</p>',
+				'<h2>%s</h2><h3>%s</h3><p>%s</p><h3>%s</h3><p>%s</p><h3>%s</h3><p>%s</p>',
 				__( 'Advanced Typo Settings', 'wp-loupe' ),
 				__( 'Alphabet Size & Index Length', 'wp-loupe' ),
 				__( 'These settings affect index size and search performance. Higher values improve accuracy but increase index size. Default values work well for most sites.', 'wp-loupe' ),
-				__( 'Typo Thresholds', 'wp-loupe' ),
-				__( 'Control how many typos are allowed based on word length. Longer words typically allow more typos than shorter words.', 'wp-loupe' ),
 				__( 'First Character Typo Weight', 'wp-loupe' ),
 				__( 'When enabled, typos at the beginning of a word count as two mistakes. This helps prioritize more relevant results, as most typos occur in the middle of words.', 'wp-loupe' ),
 				__( 'Typo Tolerance for Prefix Search', 'wp-loupe' ),
@@ -915,35 +912,5 @@ class WPLoupe_Settings_Page {
 				}
 			</style>',
 		] );
-	}
-
-	/**
-	 * Callback for typo thresholds
-	 */
-	public function typo_thresholds_callback( $args ) {
-		$thresholds = $args[ 'value' ];
-
-		echo '<div class="wp-loupe-typo-thresholds">';
-
-		// First threshold
-		echo '<div class="wp-loupe-threshold-row">';
-		echo '<label>' . esc_html__( 'Word length ≥', 'wp-loupe' ) . ' </label>';
-		echo '<input type="number" name="' . esc_attr( $args[ 'name' ] ) . '[threshold1][length]" value="' . ( isset( $thresholds[ '9' ] ) ? '9' : ( isset( $thresholds[ 'threshold1' ][ 'length' ] ) ? esc_attr( $thresholds[ 'threshold1' ][ 'length' ] ) : '9' ) ) . '" min="3" max="20" step="1">';
-		echo ' ' . esc_html__( 'characters: Allow', 'wp-loupe' ) . ' ';
-		echo '<input type="number" name="' . esc_attr( $args[ 'name' ] ) . '[threshold1][typos]" value="' . ( isset( $thresholds[ '9' ] ) ? esc_attr( $thresholds[ '9' ] ) : ( isset( $thresholds[ 'threshold1' ][ 'typos' ] ) ? esc_attr( $thresholds[ 'threshold1' ][ 'typos' ] ) : '2' ) ) . '" min="1" max="3" step="1">';
-		echo ' ' . esc_html__( 'typos', 'wp-loupe' );
-		echo '</div>';
-
-		// Second threshold
-		echo '<div class="wp-loupe-threshold-row">';
-		echo '<label>' . esc_html__( 'Word length ≥', 'wp-loupe' ) . ' </label>';
-		echo '<input type="number" name="' . esc_attr( $args[ 'name' ] ) . '[threshold2][length]" value="' . ( isset( $thresholds[ '5' ] ) ? '5' : ( isset( $thresholds[ 'threshold2' ][ 'length' ] ) ? esc_attr( $thresholds[ 'threshold2' ][ 'length' ] ) : '5' ) ) . '" min="2" max="8" step="1">';
-		echo ' ' . esc_html__( 'characters: Allow', 'wp-loupe' ) . ' ';
-		echo '<input type="number" name="' . esc_attr( $args[ 'name' ] ) . '[threshold2][typos]" value="' . ( isset( $thresholds[ '5' ] ) ? esc_attr( $thresholds[ '5' ] ) : ( isset( $thresholds[ 'threshold2' ][ 'typos' ] ) ? esc_attr( $thresholds[ 'threshold2' ][ 'typos' ] ) : '1' ) ) . '" min="1" max="2" step="1">';
-		echo ' ' . esc_html__( 'typos', 'wp-loupe' );
-		echo '</div>';
-
-		echo '</div>';
-		echo '<p class="description">' . esc_html( $args[ 'description' ] ) . '</p>';
 	}
 }
