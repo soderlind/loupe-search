@@ -7,15 +7,15 @@
  * @package           WP_Loupe
  *
  * @wordpress-plugin
- * Plugin Name:       WP Loupe
+ * Plugin Name:       Loupe Search
  * Plugin URI:        https://github.com/soderlind/wp-loupe
- * Description:       Enhance the search functionality of your WordPress site with WP Loupe.
+ * Description:       Enhance the search functionality of your WordPress site with Loupe Search.
  * Version:           1.0.0
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       wp-loupe
+ * Text Domain:       loupe-search
  * Domain Path:       /languages
  */
 

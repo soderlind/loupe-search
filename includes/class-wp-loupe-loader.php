@@ -103,6 +103,6 @@ class WP_Loupe_Loader {
 	 * @return void
 	 */
 	public function load_textdomain() {
-		load_plugin_textdomain( 'wp-loupe', false, dirname( plugin_basename( WP_LOUPE_FILE ) ) . '/languages' );
+		load_plugin_textdomain( 'loupe-search', false, dirname( plugin_basename( WP_LOUPE_FILE ) ) . '/languages' );
 	}
 }

@@ -205,7 +205,7 @@ class WP_Loupe_Indexer {
 		) {
 			$this->reindex_all();
 			$this->maybe_add_reindex_rebuild_notice();
-			add_settings_error( 'wp-loupe', 'wp-loupe-reindex', __( 'Reindexing completed successfully!', 'wp-loupe' ), 'updated' );
+			add_settings_error( 'wp-loupe', 'wp-loupe-reindex', __( 'Reindexing completed successfully!', 'loupe-search' ), 'updated' );
 
 		}
 	}
@@ -503,7 +503,7 @@ class WP_Loupe_Indexer {
 
 		$message = sprintf(
 			/* translators: %s: list of post types and reasons */
-			__( 'WP Loupe debug: index rebuild triggered for %s.', 'wp-loupe' ),
+			__( 'Loupe Search debug: index rebuild triggered for %s.', 'loupe-search' ),
 			esc_html( implode( ', ', $parts ) )
 		);
 

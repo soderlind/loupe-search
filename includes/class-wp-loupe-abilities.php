@@ -25,8 +25,8 @@ class WP_Loupe_Abilities {
 		wp_register_ability_category(
 			'wp-loupe',
 			[
-				'label'       => __( 'WP Loupe Search', 'wp-loupe' ),
-				'description' => __( 'Search abilities provided by the WP Loupe plugin.', 'wp-loupe' ),
+				'label'       => __( 'Loupe Search', 'loupe-search' ),
+				'description' => __( 'Search abilities provided by the Loupe Search plugin.', 'loupe-search' ),
 			]
 		);
 	}
@@ -46,8 +46,8 @@ class WP_Loupe_Abilities {
 		wp_register_ability(
 			'wp-loupe/search',
 			[
-				'label'               => __( 'Search Posts', 'wp-loupe' ),
-				'description'         => __( 'Search WordPress content using WP Loupe\'s typo-tolerant full-text search engine. Supports phrase matching with quotes, exclusion with -, and OR searches.', 'wp-loupe' ),
+				'label'               => __( 'Search Posts', 'loupe-search' ),
+				'description'         => __( 'Search WordPress content using Loupe Search\'s typo-tolerant full-text search engine. Supports phrase matching with quotes, exclusion with -, and OR searches.', 'loupe-search' ),
 				'category'            => 'wp-loupe',
 				'input_schema'        => [
 					'type'       => 'object',
@@ -55,23 +55,23 @@ class WP_Loupe_Abilities {
 					'properties' => [
 						'query'      => [
 							'type'        => 'string',
-							'description' => __( 'The search query. Supports phrases ("hello world"), exclusions (-term), and OR searches.', 'wp-loupe' ),
+							'description' => __( 'The search query. Supports phrases ("hello world"), exclusions (-term), and OR searches.', 'loupe-search' ),
 						],
 						'post_types' => [
 							'type'        => 'array',
 							'items'       => [ 'type' => 'string' ],
-							'description' => __( 'Post types to search. Defaults to all indexed post types.', 'wp-loupe' ),
+							'description' => __( 'Post types to search. Defaults to all indexed post types.', 'loupe-search' ),
 						],
 						'per_page'   => [
 							'type'        => 'integer',
-							'description' => __( 'Number of results to return. Default: 10. Max: 100.', 'wp-loupe' ),
+							'description' => __( 'Number of results to return. Default: 10. Max: 100.', 'loupe-search' ),
 							'default'     => 10,
 							'minimum'     => 1,
 							'maximum'     => 100,
 						],
 						'page'       => [
 							'type'        => 'integer',
-							'description' => __( 'Page of results to return. Default: 1.', 'wp-loupe' ),
+							'description' => __( 'Page of results to return. Default: 1.', 'loupe-search' ),
 							'default'     => 1,
 							'minimum'     => 1,
 						],
@@ -82,30 +82,30 @@ class WP_Loupe_Abilities {
 					'properties' => [
 						'hits'       => [
 							'type'        => 'array',
-							'description' => __( 'Array of matching posts.', 'wp-loupe' ),
+							'description' => __( 'Array of matching posts.', 'loupe-search' ),
 							'items'       => [
 								'type'       => 'object',
 								'properties' => [
-									'id'         => [ 'type' => 'integer', 'description' => __( 'Post ID.', 'wp-loupe' ) ],
-									'title'      => [ 'type' => 'string', 'description' => __( 'Post title.', 'wp-loupe' ) ],
-									'url'        => [ 'type' => 'string', 'description' => __( 'Post permalink.', 'wp-loupe' ) ],
-									'excerpt'    => [ 'type' => 'string', 'description' => __( 'Post excerpt.', 'wp-loupe' ) ],
-									'post_type'  => [ 'type' => 'string', 'description' => __( 'Post type slug.', 'wp-loupe' ) ],
-									'post_date'  => [ 'type' => 'string', 'description' => __( 'Publication date (ISO 8601).', 'wp-loupe' ) ],
+									'id'         => [ 'type' => 'integer', 'description' => __( 'Post ID.', 'loupe-search' ) ],
+									'title'      => [ 'type' => 'string', 'description' => __( 'Post title.', 'loupe-search' ) ],
+									'url'        => [ 'type' => 'string', 'description' => __( 'Post permalink.', 'loupe-search' ) ],
+									'excerpt'    => [ 'type' => 'string', 'description' => __( 'Post excerpt.', 'loupe-search' ) ],
+									'post_type'  => [ 'type' => 'string', 'description' => __( 'Post type slug.', 'loupe-search' ) ],
+									'post_date'  => [ 'type' => 'string', 'description' => __( 'Publication date (ISO 8601).', 'loupe-search' ) ],
 								],
 							],
 						],
 						'total_hits' => [
 							'type'        => 'integer',
-							'description' => __( 'Total number of matching posts.', 'wp-loupe' ),
+							'description' => __( 'Total number of matching posts.', 'loupe-search' ),
 						],
 						'page'       => [
 							'type'        => 'integer',
-							'description' => __( 'Current page number.', 'wp-loupe' ),
+							'description' => __( 'Current page number.', 'loupe-search' ),
 						],
 						'total_pages' => [
 							'type'        => 'integer',
-							'description' => __( 'Total number of pages.', 'wp-loupe' ),
+							'description' => __( 'Total number of pages.', 'loupe-search' ),
 						],
 					],
 				],
@@ -123,8 +123,8 @@ class WP_Loupe_Abilities {
 		wp_register_ability(
 			'wp-loupe/get-post',
 			[
-				'label'               => __( 'Get Post', 'wp-loupe' ),
-				'description'         => __( 'Retrieve a single published post by its ID, including title, content, excerpt, URL, author, and publication date.', 'wp-loupe' ),
+				'label'               => __( 'Get Post', 'loupe-search' ),
+				'description'         => __( 'Retrieve a single published post by its ID, including title, content, excerpt, URL, author, and publication date.', 'loupe-search' ),
 				'category'            => 'wp-loupe',
 				'input_schema'        => [
 					'type'       => 'object',
@@ -132,7 +132,7 @@ class WP_Loupe_Abilities {
 					'properties' => [
 						'id' => [
 							'type'        => 'integer',
-							'description' => __( 'The post ID to retrieve.', 'wp-loupe' ),
+							'description' => __( 'The post ID to retrieve.', 'loupe-search' ),
 							'minimum'     => 1,
 						],
 					],
@@ -140,14 +140,14 @@ class WP_Loupe_Abilities {
 				'output_schema'       => [
 					'type'       => 'object',
 					'properties' => [
-						'id'         => [ 'type' => 'integer', 'description' => __( 'Post ID.', 'wp-loupe' ) ],
-						'title'      => [ 'type' => 'string', 'description' => __( 'Post title.', 'wp-loupe' ) ],
-						'content'    => [ 'type' => 'string', 'description' => __( 'Post content (HTML stripped).', 'wp-loupe' ) ],
-						'excerpt'    => [ 'type' => 'string', 'description' => __( 'Post excerpt.', 'wp-loupe' ) ],
-						'url'        => [ 'type' => 'string', 'description' => __( 'Post permalink.', 'wp-loupe' ) ],
-						'post_type'  => [ 'type' => 'string', 'description' => __( 'Post type slug.', 'wp-loupe' ) ],
-						'post_date'  => [ 'type' => 'string', 'description' => __( 'Publication date (ISO 8601).', 'wp-loupe' ) ],
-						'author'     => [ 'type' => 'string', 'description' => __( 'Display name of the post author.', 'wp-loupe' ) ],
+						'id'         => [ 'type' => 'integer', 'description' => __( 'Post ID.', 'loupe-search' ) ],
+						'title'      => [ 'type' => 'string', 'description' => __( 'Post title.', 'loupe-search' ) ],
+						'content'    => [ 'type' => 'string', 'description' => __( 'Post content (HTML stripped).', 'loupe-search' ) ],
+						'excerpt'    => [ 'type' => 'string', 'description' => __( 'Post excerpt.', 'loupe-search' ) ],
+						'url'        => [ 'type' => 'string', 'description' => __( 'Post permalink.', 'loupe-search' ) ],
+						'post_type'  => [ 'type' => 'string', 'description' => __( 'Post type slug.', 'loupe-search' ) ],
+						'post_date'  => [ 'type' => 'string', 'description' => __( 'Publication date (ISO 8601).', 'loupe-search' ) ],
+						'author'     => [ 'type' => 'string', 'description' => __( 'Display name of the post author.', 'loupe-search' ) ],
 					],
 				],
 				'execute_callback'    => [ __CLASS__, 'execute_get_post' ],
@@ -228,17 +228,17 @@ class WP_Loupe_Abilities {
 	public static function execute_get_post( array $input ) {
 		$post_id = (int) ( $input['id'] ?? 0 );
 		if ( ! $post_id ) {
-			return new \WP_Error( 'invalid_id', __( 'A valid post ID is required.', 'wp-loupe' ) );
+			return new \WP_Error( 'invalid_id', __( 'A valid post ID is required.', 'loupe-search' ) );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post || 'publish' !== $post->post_status ) {
-			return new \WP_Error( 'post_not_found', __( 'Post not found or not publicly accessible.', 'wp-loupe' ) );
+			return new \WP_Error( 'post_not_found', __( 'Post not found or not publicly accessible.', 'loupe-search' ) );
 		}
 
 		$post_type_obj = get_post_type_object( $post->post_type );
 		if ( ! $post_type_obj || ! $post_type_obj->public ) {
-			return new \WP_Error( 'post_not_found', __( 'Post not found or not publicly accessible.', 'wp-loupe' ) );
+			return new \WP_Error( 'post_not_found', __( 'Post not found or not publicly accessible.', 'loupe-search' ) );
 		}
 
 		return [

@@ -1,8 +1,8 @@
-# WP Loupe - Enhanced WordPress Search
+# Loupe Search - Enhanced WordPress Search
 
 >  New! :rocket: WP Loupe - Admin Search** is here! Search your admin content with the same powerful Loupe engine. Available at [wp-loupe-admin-search](https://github.com/soderlind/wp-loupe-admin-search)
 
-A search enhancement plugin for WordPress that builds a fast, typo-tolerant index and exposes a developer-friendly API so you can build your own search UI. **WP Loupe works out of the box with WordPress’s standard search.**
+A search enhancement plugin for WordPress that builds a fast, typo-tolerant index and exposes a developer-friendly API so you can build your own search UI. **Loupe Search works out of the box with WordPress’s standard search.**
 
 ## Quick Links
 
@@ -11,18 +11,18 @@ A search enhancement plugin for WordPress that builds a fast, typo-tolerant inde
 
 ## Overview
 
-WP Loupe transforms WordPress's search functionality by:
+Loupe Search transforms WordPress's search functionality by:
 
 - Creating a dedicated search index for lightning-fast results
 - Supporting typo-tolerant searches
 - Automatically maintaining the search index
 - Providing a stable REST API for custom search experiences
 
-> Integrating with AI agents or automation? WP Loupe registers native abilities via the [WordPress Abilities API](#ai-agent-integration-wordpress-abilities-api).
+> Integrating with AI agents or automation? Loupe Search registers native abilities via the [WordPress Abilities API](#ai-agent-integration-wordpress-abilities-api).
 
 ## REST API
 
-WP Loupe exposes search via REST endpoints:
+Loupe Search exposes search via REST endpoints:
 
 - **POST** `/wp-json/wp-loupe/v1/search` (recommended; supports JSON filters, facets, geo, and explicit sorting)
 - **GET** `/wp-json/wp-loupe/v1/search?q=...` (legacy; kept for backward compatibility)
@@ -31,7 +31,7 @@ Developer documentation (schema + examples + Gutenberg block example): **[docs/s
 
 ## AI Agent Integration (WordPress Abilities API)
 
-WP Loupe registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra configuration required:
+Loupe Search registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra configuration required:
 
 - `wp-loupe/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
 - `wp-loupe/get-post` — Retrieve a single published post by ID. Publicly accessible.
@@ -50,37 +50,43 @@ Both abilities are discoverable through the standard WordPress Abilities registr
 
 ## Installation
 
-1. **Quick Install**
+1. **Install from WordPress.org**
+
+   - In your WordPress admin, go to Plugins > Add New
+   - Search for "Loupe Search"
+   - Click "Install Now", then "Activate"
+
+2. **Quick Install**
 
    - Download [`wp-loupe.zip`](https://github.com/soderlind/wp-loupe/releases/latest/download/wp-loupe.zip)
    - Upload via WordPress Plugins > Add New > Upload Plugin
 
-2. **Composer Install**
+3. **Composer Install**
 
    ```bash
    composer require soderlind/wp-loupe
    ```
 
-3. **Post-Installation**
+4. **Post-Installation**
    - Activate the plugin
-   - Go to Settings > WP Loupe
+   - Go to Settings > Loupe Search
 	- Click "Reindex" to build the initial search index (runs in batches; safe for large sites)
 
-* Plugin updates are handled automatically by WordPress.org. No need to manually download and install updates.
+
 
 ## Building Your Own Search UI
 
-**WP Loupe works out of the box with WordPress’s standard search.**
-If your theme uses the normal search flow (e.g. a search form that routes to the built-in search results page), WP Loupe will power the results automatically — no custom UI required.
+**Loupe Search works out of the box with WordPress’s standard search.**
+If your theme uses the normal search flow (e.g. a search form that routes to the built-in search results page), Loupe Search will power the results automatically — no custom UI required.
 
-WP Loupe intentionally does **not** ship a front-end search block/shortcode UI.
-If you want a custom search experience (autocomplete, filters/facets, geo, custom sorting, etc.), build the UI you want and query WP Loupe via the REST API.
+Loupe Search intentionally does **not** ship a front-end search block/shortcode UI.
+If you want a custom search experience (autocomplete, filters/facets, geo, custom sorting, etc.), build the UI you want and query Loupe Search via the REST API.
 
 Start here: **[docs/search-api.md](docs/search-api.md)**
 
 ## Settings
 
-You can configure WP Loupe's search behavior and performance via the WordPress admin: Settings > WP Loupe.
+You can configure Loupe Search's search behavior and performance via the WordPress admin: Settings > Loupe Search.
 
 
 ### General Settings
@@ -114,7 +120,7 @@ Sortable fields can be used to order search results:
 
 ### Advanced Settings
 
-WP Loupe provides advanced configuration options to fine-tune your search experience:
+Loupe Search provides advanced configuration options to fine-tune your search experience:
 
 #### Prefix Search
 
@@ -139,13 +145,13 @@ WP Loupe provides advanced configuration options to fine-tune your search experi
 
 - Configure which languages the search index should optimize for. Default is English ('en').
 
-These advanced settings can be accessed in the WordPress admin under Settings > WP Loupe > Advanced tab.
+These advanced settings can be accessed in the WordPress admin under Settings > Loupe Search > Advanced tab.
 
 ## Reindexing
 
 Reindexing rebuilds the index for your configured post types.
 
-- **Admin UI:** Settings → WP Loupe → click **Reindex** (runs in batches to avoid timeouts)
+- **Admin UI:** Settings → Loupe Search → click **Reindex** (runs in batches to avoid timeouts)
 - **WP-CLI (recommended for large sites):**
 
 	```bash
@@ -182,7 +188,7 @@ The search index automatically updates when content is created, modified, or del
 
 ### Will it slow down my site?
 
-No. WP Loupe uses a separate, optimized search index and doesn't impact your main database performance.
+No. Loupe Search uses a separate, optimized search index and doesn't impact your main database performance.
 
 ### Can I customize what content is searchable?
 
@@ -206,7 +212,7 @@ add_filter( 'wp_loupe_db_path', function ( $path ) {
 
 ### `wp_loupe_post_types`
 
-This filter allows you to modify the array of post types that the WP Loupe plugin works with. By default, it includes 'post' and 'page'.
+This filter allows you to modify the array of post types that the Loupe Search plugin works with. By default, it includes 'post' and 'page'.
 
 ```php
 add_filter( 'wp_loupe_post_types', [ 'post', 'page', 'book' ] );
@@ -314,15 +320,15 @@ This architecture provides a balance between search quality, performance, and ea
 
 ## Acknowledgements
 
-- WP Loupe is built upon [Loupe](https://github.com/loupe-php/loupe/). Loupe is licensed under the MIT license.
+- Loupe Search is built upon [Loupe](https://github.com/loupe-php/loupe/). Loupe is licensed under the MIT license.
 
 ## Copyright and License
 
-WP Loupe is copyright © 2024 [Per Søderlind](http://github.com/soderlind).
+Loupe Search is copyright © 2024 [Per Søderlind](http://github.com/soderlind).
 
-WP Loupe is open-source software; you can redistribute it and/or modify it under the terms of the GNU General Public License, version 2, as published by the Free Software Foundation.
+Loupe Search is open-source software; you can redistribute it and/or modify it under the terms of the GNU General Public License, version 2, as published by the Free Software Foundation.
 
-WP Loupe is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for more information.
+Loupe Search is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for more information.
 
 <!--
 TOC MAINTENANCE

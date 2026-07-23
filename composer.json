@@ -1,7 +1,7 @@
 {
 	"name": "soderlind/wp-loupe",
 	"type": "wordpress-plugin",
-	"description": "WP Loupe is a powerful search enhancement plugin for WordPress that delivers fast, accurate, and typo-tolerant search results. WP Loupe exposes a developer-friendly API so you can build your own search UI.",
+	"description": "Loupe Search is a powerful search enhancement plugin for WordPress that delivers fast, accurate, and typo-tolerant search results. Loupe Search exposes a developer-friendly API so you can build your own search UI.",
 	"keywords": [
 		"wordpress-plugin",
 		"search-engine",

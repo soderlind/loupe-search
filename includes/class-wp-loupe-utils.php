@@ -42,10 +42,10 @@ class WP_Loupe_Utils {
 
 		if ( ! class_exists( '\\PDO' ) || ! extension_loaded( 'pdo_sqlite' ) ) {
 			self::display_error_and_deactivate_plugin(
-				__( 'SQLite PDO driver not available', 'wp-loupe' ),
+				__( 'SQLite PDO driver not available', 'loupe-search' ),
 				sprintf(
 					/* translators: %s: required sqlite version */
-					__( 'WP Loupe requires the pdo_sqlite extension and SQLite version %s or newer.', 'wp-loupe' ),
+					__( 'Loupe Search requires the pdo_sqlite extension and SQLite version %s or newer.', 'loupe-search' ),
 					self::REQUIRED_SQLITE_VERSION
 				)
 			);
@@ -60,10 +60,10 @@ class WP_Loupe_Utils {
 		}
 		if ( ! is_array( $drivers ) || ! in_array( 'sqlite', $drivers, true ) ) {
 			self::display_error_and_deactivate_plugin(
-				__( 'SQLite PDO driver not available', 'wp-loupe' ),
+				__( 'SQLite PDO driver not available', 'loupe-search' ),
 				sprintf(
 					/* translators: %s: required sqlite version */
-					__( 'WP Loupe requires the pdo_sqlite extension and SQLite version %s or newer.', 'wp-loupe' ),
+					__( 'Loupe Search requires the pdo_sqlite extension and SQLite version %s or newer.', 'loupe-search' ),
 					self::REQUIRED_SQLITE_VERSION
 				)
 			);
@@ -73,10 +73,10 @@ class WP_Loupe_Utils {
 		$sqlite_version = self::get_sqlite_version_string();
 		if ( ! $sqlite_version ) {
 			self::display_error_and_deactivate_plugin(
-				__( 'Unable to detect SQLite version', 'wp-loupe' ),
+				__( 'Unable to detect SQLite version', 'loupe-search' ),
 				sprintf(
 					/* translators: %s: required sqlite version */
-					__( 'WP Loupe requires SQLite version %s or newer.', 'wp-loupe' ),
+					__( 'Loupe Search requires SQLite version %s or newer.', 'loupe-search' ),
 					self::REQUIRED_SQLITE_VERSION
 				)
 			);
@@ -85,10 +85,10 @@ class WP_Loupe_Utils {
 
 		if ( version_compare( $sqlite_version, self::REQUIRED_SQLITE_VERSION, '<' ) ) {
 			self::display_error_and_deactivate_plugin(
-				__( 'SQLite version too old', 'wp-loupe' ),
+				__( 'SQLite version too old', 'loupe-search' ),
 				sprintf(
 					/* translators: %s: required sqlite version */
-					__( 'WP Loupe requires SQLite version %s or newer.', 'wp-loupe' ),
+					__( 'Loupe Search requires SQLite version %s or newer.', 'loupe-search' ),
 					self::REQUIRED_SQLITE_VERSION
 				)
 			);
@@ -135,38 +135,38 @@ class WP_Loupe_Utils {
 			? version_compare( $sqlite_version, self::REQUIRED_SQLITE_VERSION, '>=' )
 			: false;
 
-		$yes = __( 'Installed', 'wp-loupe' );
-		$no  = __( 'Missing', 'wp-loupe' );
+		$yes = __( 'Installed', 'loupe-search' );
+		$no  = __( 'Missing', 'loupe-search' );
 
 		return [
 			[
 				'id'       => 'pdo_sqlite',
-				'label'    => __( 'PDO SQLite extension', 'wp-loupe' ),
+				'label'    => __( 'PDO SQLite extension', 'loupe-search' ),
 				'ok'       => $has_pdo_sqlite,
 				'value'    => $has_pdo_sqlite ? $yes : $no,
-				'required' => __( 'Required', 'wp-loupe' ),
+				'required' => __( 'Required', 'loupe-search' ),
 			],
 			[
 				'id'       => 'sqlite',
-				'label'    => __( 'SQLite version', 'wp-loupe' ),
+				'label'    => __( 'SQLite version', 'loupe-search' ),
 				'ok'       => $sqlite_ok,
-				'value'    => $sqlite_version ? $sqlite_version : __( 'Unknown', 'wp-loupe' ),
+				'value'    => $sqlite_version ? $sqlite_version : __( 'Unknown', 'loupe-search' ),
 				/* translators: %s: required SQLite version */
-				'required' => sprintf( __( '>= %s', 'wp-loupe' ), self::REQUIRED_SQLITE_VERSION ),
+				'required' => sprintf( __( '>= %s', 'loupe-search' ), self::REQUIRED_SQLITE_VERSION ),
 			],
 			[
 				'id'       => 'intl',
-				'label'    => __( 'intl extension', 'wp-loupe' ),
+				'label'    => __( 'intl extension', 'loupe-search' ),
 				'ok'       => $has_intl,
 				'value'    => $has_intl ? $yes : $no,
-				'required' => __( 'Required', 'wp-loupe' ),
+				'required' => __( 'Required', 'loupe-search' ),
 			],
 			[
 				'id'       => 'mbstring',
-				'label'    => __( 'mbstring extension', 'wp-loupe' ),
+				'label'    => __( 'mbstring extension', 'loupe-search' ),
 				'ok'       => $has_mbstring,
 				'value'    => $has_mbstring ? $yes : $no,
-				'required' => __( 'Required', 'wp-loupe' ),
+				'required' => __( 'Required', 'loupe-search' ),
 			],
 		];
 	}
@@ -204,7 +204,7 @@ class WP_Loupe_Utils {
 
 		return sprintf(
 			/* translators: 1: pdo_sqlite yes/no, 2: sqlite version or ?, 3: required sqlite version, 4: ok/missing, 5: intl yes/no, 6: mbstring yes/no */
-			__( 'Requirements: pdo_sqlite=%1$s; SQLite=%2$s (>= %3$s): %4$s; intl=%5$s; mbstring=%6$s', 'wp-loupe' ),
+			__( 'Requirements: pdo_sqlite=%1$s; SQLite=%2$s (>= %3$s): %4$s; intl=%5$s; mbstring=%6$s', 'loupe-search' ),
 			$has_pdo_sqlite ? 'yes' : 'no',
 			$sqlite_version ? $sqlite_version : '?',
 			self::REQUIRED_SQLITE_VERSION,

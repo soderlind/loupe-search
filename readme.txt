@@ -1,4 +1,4 @@
-=== WP Loupe ===
+=== Loupe Search ===
 Contributors: PerS
 Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
@@ -13,10 +13,10 @@ A search enhancement plugin for WordPress that delivers fast, accurate, and typo
 
 == Description ==
 
-WP Loupe improves WordPress core search by maintaining its own index for fast lookups, supporting typo tolerance, phrase matching, basic exclusion operators, and per–post-type customization.
+Loupe Search improves WordPress core search by maintaining its own index for fast lookups, supporting typo tolerance, phrase matching, basic exclusion operators, and per–post-type customization.
 
 = AI Agent Integration (WordPress Abilities API) =
-WP Loupe registers two abilities via the WordPress Abilities API (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively:
+Loupe Search registers two abilities via the WordPress Abilities API (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively:
 
 * `wp-loupe/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
 * `wp-loupe/get-post` — Retrieve a single published post by ID. Publicly accessible.
@@ -62,7 +62,7 @@ Upgrading from the experimental MCP server? The MCP server, token service, and W
 
 = Filters =
 
-These filters allow developers to customize WP Loupe's behavior:
+These filters allow developers to customize Loupe Search's behavior:
 
 `wp_loupe_db_path`
 
@@ -103,7 +103,7 @@ For usage examples, see the [filter documentation at GitHub](https://github.com/
    * Activate through the 'Plugins' menu in WordPress
 
 2. **Post-Installation**
-   * Visit Settings > WP Loupe to configure
+   * Visit Settings > Loupe Search to configure
    * Click 'Reindex' to build the initial search index (runs in batches to avoid timeouts)
 
 3. **Updates**
@@ -111,7 +111,7 @@ For usage examples, see the [filter documentation at GitHub](https://github.com/
 
 ==  Screenshots ==
 
-1. WP Loupe Settings page with tabs for Dashboard, Fields, and Search Behavior.
+1. Loupe Search Settings page with tabs for Dashboard, Fields, and Search Behavior.
 2. Field configuration interface for each post type, allowing selection of indexable, filterable, and sortable fields.
 3. Search Behavior tab with options for typo tolerance, stemming, and stop words.
 4. Contextual help tabs explaining field configuration options and search behavior settings.
@@ -124,7 +124,7 @@ The search index automatically updates when content is created, modified, or del
 
 = Will it slow down my site? =
 
-No. WP Loupe uses a separate, optimized search index and doesn't impact your main database performance.
+No. Loupe Search uses a separate, optimized search index and doesn't impact your main database performance.
 
 = Can I customize what content is searchable? =
 
@@ -136,7 +136,7 @@ Yes, you can select which post types to include in the Settings page or via filt
 
 = How do I reindex on large sites? =
 
-Use Settings > WP Loupe > Reindex (batched), or run via WP-CLI:
+Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 * `wp wp-loupe reindex`
 * `wp wp-loupe reindex --post-types=post,page --batch-size=1000`

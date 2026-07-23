@@ -1,12 +1,12 @@
 {
 	"name": "wp-loupe",
 	"version": "1.0.0",
-	"description": "Enhance the search functionality of your WordPress site with WP Loupe.",
+	"description": "Enhance the search functionality of your WordPress site with Loupe Search.",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"build": "npm run lint -- && npm run format --",
-		"bump": "wp-update-project-version -s package.json -p readme.txt composer.json wp-loupe.php",
+		"bump": "wp-update-project-version -s package.json -p readme.txt composer.json loupe-search.php",
 		"lint": "wp-scripts lint-js ./lib/js/admin.js",
 		"format": "wp-scripts format ./lib/js/admin.js",
 		"makepot": "wp i18n make-pot . languages/wp-loupe.pot --exclude=vendor,node_modules",
