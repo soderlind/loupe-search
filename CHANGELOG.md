@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prepared the plugin for the WordPress.org plugin directory: updates are now handled by WordPress.org.
 
 ### Removed
-- Removed the experimental MCP (Model Context Protocol) server, token service, and WP-CLI token commands in favor of the WordPress Abilities API.
+- Removed the experimental MCP (Model Context Protocol) server, token service, and WP-CLI token commands in favor of the WordPress Abilities API. **Breaking change** — see the [migration guide](docs/migration-mcp-to-abilities.md).
 - Removed the GitHub-based plugin updater.
 
 ## [0.8.4] - 2026-04-13

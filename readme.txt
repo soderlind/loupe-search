@@ -23,6 +23,8 @@ WP Loupe registers two abilities via the WordPress Abilities API (WordPress 6.9+
 
 These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration.
 
+Upgrading from the experimental MCP server? The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the migration guide: https://github.com/soderlind/wp-loupe/blob/main/docs/migration-mcp-to-abilities.md
+
 = Core Features =
 
 * 🚀 Enhanced search engine replacing WordPress default

@@ -38,6 +38,8 @@ WP Loupe registers two abilities via the [WordPress Abilities API](https://devel
 
 Both abilities are discoverable through the standard WordPress Abilities registry and exposed via REST (`show_in_rest`).
 
+> **Upgrading from the MCP server?** The experimental MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the **[MCP → Abilities API migration guide](docs/migration-mcp-to-abilities.md)**.
+
 ## Features
 
 - Fast index-backed search for configured post types
