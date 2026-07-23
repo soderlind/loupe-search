@@ -14,6 +14,7 @@ require_once __DIR__ . '/wp-shims-hooks.php';
 // Composer's classmap autoloader in vendor/ is not regenerated automatically here.
 require_once __DIR__ . '/../includes/class-wp-loupe-search-engine.php';
 require_once __DIR__ . '/../includes/class-wp-loupe-search-hooks.php';
+require_once __DIR__ . '/../includes/class-wp-loupe-abilities.php';
 
 // Basic WP function shims (only those actually touched by tested units). If a test needs more, add here.
 // Simple in-memory option store shared across calls.
@@ -48,6 +49,11 @@ if ( ! function_exists( 'delete_option' ) ) {
 if ( ! function_exists( 'apply_filters' ) ) {
 	function apply_filters( $tag, $value ) {
 		return $value;
+	}
+}
+if ( ! function_exists( '__' ) ) {
+	function __( $text, $domain = null ) {
+		return $text;
 	}
 }
 if ( ! function_exists( 'home_url' ) ) {
@@ -248,9 +254,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Minimal $wpdb shim for REST meta key discovery queries.
 if ( ! isset( $GLOBALS[ 'wpdb' ] ) ) {
 	class WP_Loupe_Test_WPDB {
-		public function prepare( $query, $arg ) {
-			// very naive replacement for single %s
-			return str_replace( '%s', addslashes( (string) $arg ), $query );
+		public function prepare( $query, ...$args ) {
+			// Naive sequential replacement for %s / %d placeholders.
+			foreach ( $args as $arg ) {
+				$replacement = is_int( $arg ) ? (string) $arg : "'" . addslashes( (string) $arg ) . "'";
+				$query       = preg_replace( '/%[sd]/', $replacement, $query, 1 );
+			}
+			return $query;
+		}
+		public function esc_like( $text ) {
+			return addcslashes( (string) $text, '_%\\' );
 		}
 		public function get_col( $sql ) {
 			// Return empty list; tests only assert structure, not specific meta keys.
@@ -287,27 +300,54 @@ if ( ! function_exists( 'get_post' ) ) {
 			'post_type'    => ( (int) $id % 2 === 0 ) ? 'post' : 'page', // alternate types deterministically
 			'post_title'   => 'Title ' . $id,
 			'post_content' => 'Content for ' . $id,
+			'post_author'  => 1,
 		];
 	}
 }
 if ( ! function_exists( 'get_post_type_object' ) ) {
 	function get_post_type_object( $pt ) {
-		return (object) [ 'labels' => (object) [ 'singular_name' => ucfirst( $pt ) ] ];
+		return (object) [
+			'labels' => (object) [ 'singular_name' => ucfirst( $pt ) ],
+			'public' => true,
+		];
 	}
 }
 if ( ! function_exists( 'get_the_title' ) ) {
-	function get_the_title( $id ) {
+	function get_the_title( $post ) {
+		$id = is_object( $post ) ? $post->ID : $post;
 		return 'Title ' . $id;
 	}
 }
 if ( ! function_exists( 'get_permalink' ) ) {
-	function get_permalink( $id ) {
+	function get_permalink( $post ) {
+		$id = is_object( $post ) ? $post->ID : $post;
 		return 'https://example.test/post/' . $id;
 	}
 }
 if ( ! function_exists( 'get_the_excerpt' ) ) {
-	function get_the_excerpt( $id ) {
+	function get_the_excerpt( $post ) {
+		$id = is_object( $post ) ? $post->ID : $post;
 		return 'Excerpt ' . $id;
+	}
+}
+if ( ! function_exists( 'get_the_date' ) ) {
+	function get_the_date( $format = '', $post = null ) {
+		return '2026-01-01T00:00:00+00:00';
+	}
+}
+if ( ! function_exists( 'get_the_author_meta' ) ) {
+	function get_the_author_meta( $field, $user_id = 0 ) {
+		return 'Author ' . (int) $user_id;
+	}
+}
+if ( ! function_exists( 'wp_strip_all_tags' ) ) {
+	function wp_strip_all_tags( $string, $remove_breaks = false ) {
+		return trim( strip_tags( (string) $string ) );
+	}
+}
+if ( ! function_exists( 'sanitize_text_field' ) ) {
+	function sanitize_text_field( $str ) {
+		return trim( preg_replace( '/[\r\n\t ]+/', ' ', wp_strip_all_tags( (string) $str ) ) );
 	}
 }
 if ( ! function_exists( 'post_type_exists' ) ) {
