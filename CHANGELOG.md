@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-07-24
+
+### Added
+- Redesigned settings screen with three tabs: **Dashboard**, **Fields**, and **Search Behavior**.
+- Dashboard tab showing per-post-type index health (Ready / Needs reindex / Not indexed) with published counts, a reindex panel with a determinate progress bar and Cancel button, and a system status check for required PHP extensions.
+- New REST endpoint `GET /wp-json/wp-loupe/v1/index-status` returning index health for configured post types.
+- `WP_Loupe_Utils::get_requirements_checks()` for structured requirement diagnostics.
+
+### Changed
+- Replaced the Select2 post-type dropdown with an accessible native checkbox picker.
+- Field configuration for each post type is now shown in collapsible accordions.
+- Reindexing is consolidated on the Dashboard and shows determinate progress with a Cancel option.
+
+### Removed
+- Removed the Select2 dependency and its bundled assets.
+- Removed the auto-update settings toggle; per-plugin auto-updates are now handled by WordPress core (see `docs/adr/0001-defer-auto-updates-to-core.md`).
+
 ## [0.8.5] - 2026-07-23
 
 ### Added

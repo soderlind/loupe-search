@@ -162,6 +162,16 @@ class WP_Loupe_REST {
 			],
 		] );
 
+		// Dashboard index health status (admin only).
+		register_rest_route( 'wp-loupe/v1', '/index-status', [
+			'methods'             => 'GET',
+			'callback'            => [ $this, 'handle_index_status_request' ],
+			'permission_callback' => function () {
+				return current_user_can( 'manage_options' );
+			},
+			'args'                => [],
+		] );
+
 		// Create database (directory + option update) for a post type.
 		register_rest_route( 'wp-loupe/v1', '/create-database', [
 			'methods'             => 'POST',
@@ -1045,6 +1055,39 @@ class WP_Loupe_REST {
 			'post_author'   => true,
 			'permalink'     => true,
 		];
+	}
+
+	/**
+	 * Return per-post-type index health for the Dashboard.
+	 *
+	 * GET /wp-json/wp-loupe/v1/index-status
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function handle_index_status_request() {
+		$engine = new WP_Loupe_Search_Engine( $this->post_types, $this->db );
+		$items  = [];
+		foreach ( $this->post_types as $pt ) {
+			$pt = is_string( $pt ) ? sanitize_key( $pt ) : '';
+			if ( '' === $pt ) {
+				continue;
+			}
+			$status  = $engine->is_index_ready( $pt );
+			$counts  = function_exists( 'wp_count_posts' ) ? wp_count_posts( $pt ) : null;
+			$publish = ( is_object( $counts ) && isset( $counts->publish ) ) ? (int) $counts->publish : 0;
+			$obj     = function_exists( 'get_post_type_object' ) ? get_post_type_object( $pt ) : null;
+			$label   = ( is_object( $obj ) && isset( $obj->labels->name ) ) ? (string) $obj->labels->name : $pt;
+
+			$items[] = [
+				'postType'  => $pt,
+				'label'     => $label,
+				'ready'     => ! empty( $status[ 'ready' ] ),
+				'reason'    => isset( $status[ 'reason' ] ) ? (string) $status[ 'reason' ] : null,
+				'published' => $publish,
+			];
+		}
+
+		return rest_ensure_response( [ 'items' => $items ] );
 	}
 
 	/**

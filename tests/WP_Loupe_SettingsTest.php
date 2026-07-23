@@ -10,18 +10,6 @@ require_once __DIR__ . '/bootstrap.php';
 
 class WP_Loupe_SettingsTest extends TestCase {
 
-	public function test_auto_update_option_defaults_true() {
-		// Simulate absence of option.
-		delete_option( 'wp_loupe_auto_update_enabled' );
-		$value = get_option( 'wp_loupe_auto_update_enabled', true );
-		$this->assertTrue( (bool) $value, 'Auto update should default to true when option missing.' );
-	}
-
-	public function test_can_disable_auto_update_option() {
-		update_option( 'wp_loupe_auto_update_enabled', false );
-		$this->assertFalse( (bool) get_option( 'wp_loupe_auto_update_enabled', true ), 'Auto update should be false after disabling.' );
-	}
-
 	public function test_sanitize_advanced_settings_numeric_and_boolean() {
 		$settings_page = $this->make_settings_page();
 		$input         = [

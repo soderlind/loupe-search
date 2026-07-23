@@ -168,21 +168,17 @@ class WPLoupe_Settings_Page {
 	 * @return void
 	 */
 	public function wp_loupe_setup_sections() {
-		// General tab sections
-		add_settings_section( 'wp_loupe_section', 'WP Loupe Settings', [ $this, 'general_section_callback' ], 'wp-loupe' );
-		add_settings_section( 'wp_loupe_fields_section', 'Field Settings', [ $this, 'fields_section_callback' ], 'wp-loupe' );
+		// Fields tab sections
+		add_settings_section( 'wp_loupe_section', __( 'Post Types', 'wp-loupe' ), [ $this, 'general_section_callback' ], 'wp-loupe' );
+		add_settings_section( 'wp_loupe_fields_section', __( 'Field Settings', 'wp-loupe' ), [ $this, 'fields_section_callback' ], 'wp-loupe' );
 
-		// Advanced tab sections
+		// Search Behavior tab sections
 		add_settings_section( 'wp_loupe_tokenization_section', __( 'Tokenization', 'wp-loupe' ),
 			[ $this, 'tokenization_section_callback' ], 'wp-loupe-advanced' );
 		add_settings_section( 'wp_loupe_prefix_section', __( 'Prefix Search', 'wp-loupe' ),
 			[ $this, 'prefix_section_callback' ], 'wp-loupe-advanced' );
 		add_settings_section( 'wp_loupe_typo_section', __( 'Typo Tolerance', 'wp-loupe' ),
 			[ $this, 'typo_section_callback' ], 'wp-loupe-advanced' );
-		add_settings_section( 'wp_loupe_updates_section', __( 'Plugin Updates', 'wp-loupe' ),
-			function () {
-				echo '<p>' . esc_html__( 'Control automatic update behavior for WP Loupe.', 'wp-loupe' ) . '</p>';
-			}, 'wp-loupe-advanced' );
 	}
 
 	/**
@@ -340,20 +336,6 @@ class WPLoupe_Settings_Page {
 				'description' => __( 'Treat a typo at the start of a word as two mistakes.', 'wp-loupe' ),
 			]
 		);
-
-		// Advanced tab: auto update moved here (page wp-loupe-advanced)
-		add_settings_field(
-			'wp_loupe_auto_update_enabled',
-			__( 'Automatic Plugin Updates', 'wp-loupe' ),
-			[ $this, 'checkbox_field_callback' ],
-			'wp-loupe-advanced',
-			'wp_loupe_updates_section',
-			[
-				'name'        => 'wp_loupe_auto_update_enabled',
-				'value'       => (bool) get_option( 'wp_loupe_auto_update_enabled', true ),
-				'description' => __( 'Automatically install new versions of WP Loupe when available.', 'wp-loupe' ),
-			]
-		);
 	}
 
 	/**
@@ -428,16 +410,20 @@ class WPLoupe_Settings_Page {
 			? (array) $options[ 'wp_loupe_post_type_field' ]
 			: [ 'post', 'page' ]; // Default selection
 
-		echo '<select id="wp_loupe_custom_post_types" name="wp_loupe_custom_post_types[wp_loupe_post_type_field][]" multiple>';
+		echo '<fieldset id="wp_loupe_custom_post_types" class="wp-loupe-post-types">';
+		echo '<legend class="screen-reader-text">' . esc_html__( 'Select Post Types', 'wp-loupe' ) . '</legend>';
 		foreach ( $this->cpt as $post_type ) {
+			$obj   = get_post_type_object( $post_type );
+			$label = ( is_object( $obj ) && isset( $obj->labels->name ) ) ? $obj->labels->name : $post_type;
 			echo sprintf(
-				'<option value="%s" %s>%s</option>',
+				'<label class="wp-loupe-post-type-option"><input type="checkbox" class="wp-loupe-post-type-checkbox" name="wp_loupe_custom_post_types[wp_loupe_post_type_field][]" value="%1$s" %2$s> %3$s <code>%1$s</code></label>',
 				esc_attr( $post_type ),
-				selected( in_array( $post_type, $selected_ids, true ), true, false ),
-				esc_html( $post_type )
+				checked( in_array( $post_type, $selected_ids, true ), true, false ),
+				esc_html( $label )
 			);
 		}
-		echo '</select>';
+		echo '</fieldset>';
+		echo '<p class="description">' . esc_html__( 'Adding a post type creates its index; removing it deletes the index. Save settings, then run Reindex from the Dashboard.', 'wp-loupe' ) . '</p>';
 	}
 
 	/**
@@ -451,46 +437,127 @@ class WPLoupe_Settings_Page {
 			return;
 		}
 
-		$current_tab = isset( $_GET[ 'tab' ] ) ? sanitize_key( $_GET[ 'tab' ] ) : 'general';
+		$current_tab = isset( $_GET[ 'tab' ] ) ? sanitize_key( $_GET[ 'tab' ] ) : 'dashboard';
+		$valid_tabs  = [ 'dashboard', 'fields', 'search-behavior' ];
+		if ( ! in_array( $current_tab, $valid_tabs, true ) ) {
+			$current_tab = 'dashboard';
+		}
 
 		?>
 		<div class="wrap">
 			<h2><?php echo esc_html( get_admin_page_title() ); ?></h2>
-			<p class="description" style="margin-top:0;">
-				<?php echo esc_html( WP_Loupe_Utils::get_requirements_diagnostic_line() ); ?>
-			</p>
 
 			<nav class="nav-tab-wrapper">
-				<a href="?page=wp-loupe" class="nav-tab <?php echo $current_tab === 'general' ? 'nav-tab-active' : ''; ?>">
-					<?php esc_html_e( 'General', 'wp-loupe' ); ?>
+				<a href="?page=wp-loupe&tab=dashboard"
+					class="nav-tab <?php echo $current_tab === 'dashboard' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Dashboard', 'wp-loupe' ); ?>
 				</a>
-				<a href="?page=wp-loupe&tab=advanced"
-					class="nav-tab <?php echo $current_tab === 'advanced' ? 'nav-tab-active' : ''; ?>">
-					<?php esc_html_e( 'Advanced', 'wp-loupe' ); ?>
+				<a href="?page=wp-loupe&tab=fields"
+					class="nav-tab <?php echo $current_tab === 'fields' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Fields', 'wp-loupe' ); ?>
+				</a>
+				<a href="?page=wp-loupe&tab=search-behavior"
+					class="nav-tab <?php echo $current_tab === 'search-behavior' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Search Behavior', 'wp-loupe' ); ?>
 				</a>
 			</nav>
 
-			<form action="options.php" method="POST">
-				<?php
-				wp_nonce_field( 'wp_loupe_nonce_action', 'wp_loupe_nonce_field' );
-
-				if ( $current_tab === 'advanced' ) {
-					settings_fields( 'wp-loupe-advanced' );
-					do_settings_sections( 'wp-loupe-advanced' );
-				} else {
-					settings_fields( 'wp-loupe' );
-					do_settings_sections( 'wp-loupe' );
-				}
-
-				submit_button( __( 'Save Settings', 'wp-loupe' ) );
-				if ( $current_tab === 'general' ) {
-					echo '<button type="button" class="button button-secondary" id="wp-loupe-reindex-button" style="margin-left:8px;">' . esc_html__( 'Reindex', 'wp-loupe' ) . '</button>';
-					echo '<p class="description" style="max-width:800px;">' . esc_html__( 'Reindex runs in small batches to avoid request timeouts. Save settings first, then click Reindex.', 'wp-loupe' ) . '</p>';
-				}
+			<?php
+			if ( 'dashboard' === $current_tab ) {
+				$this->render_dashboard_tab();
+			} else {
 				?>
-			</form>
+				<form action="options.php" method="POST">
+					<?php
+					wp_nonce_field( 'wp_loupe_nonce_action', 'wp_loupe_nonce_field' );
+
+					if ( 'search-behavior' === $current_tab ) {
+						settings_fields( 'wp-loupe-advanced' );
+						do_settings_sections( 'wp-loupe-advanced' );
+					} else {
+						settings_fields( 'wp-loupe' );
+						do_settings_sections( 'wp-loupe' );
+					}
+
+					submit_button( __( 'Save Settings', 'wp-loupe' ) );
+					?>
+				</form>
+				<?php
+			}
+			?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Render the Dashboard tab: index health, reindex, and system status.
+	 *
+	 * @return void
+	 */
+	public function render_dashboard_tab() {
+		?>
+		<div class="wp-loupe-dashboard">
+			<div class="wp-loupe-card">
+				<h3><?php esc_html_e( 'Index health', 'wp-loupe' ); ?></h3>
+				<p class="description">
+					<?php esc_html_e( 'Status of each indexed post type. Run Reindex after changing post types or field settings.', 'wp-loupe' ); ?>
+				</p>
+				<div id="wp-loupe-index-health" aria-live="polite">
+					<p class="description"><?php esc_html_e( 'Loading…', 'wp-loupe' ); ?></p>
+				</div>
+			</div>
+
+			<div class="wp-loupe-card">
+				<h3><?php esc_html_e( 'Reindex', 'wp-loupe' ); ?></h3>
+				<p class="description" style="max-width:800px;">
+					<?php esc_html_e( 'Reindexing runs in small batches to avoid request timeouts. Keep this tab open until it finishes.', 'wp-loupe' ); ?>
+				</p>
+				<p>
+					<button type="button" class="button button-primary" id="wp-loupe-reindex-button">
+						<?php esc_html_e( 'Reindex now', 'wp-loupe' ); ?>
+					</button>
+					<button type="button" class="button button-secondary hidden" id="wp-loupe-reindex-cancel">
+						<?php esc_html_e( 'Cancel', 'wp-loupe' ); ?>
+					</button>
+				</p>
+				<div id="wp-loupe-reindex-progress" class="wp-loupe-progress hidden">
+					<progress id="wp-loupe-reindex-bar" max="100" value="0"></progress>
+					<span id="wp-loupe-reindex-progress-label"></span>
+				</div>
+			</div>
+
+			<div class="wp-loupe-card">
+				<h3><?php esc_html_e( 'System status', 'wp-loupe' ); ?></h3>
+				<?php $this->render_system_status(); ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the system requirements status table.
+	 *
+	 * @return void
+	 */
+	private function render_system_status() {
+		$checks = WP_Loupe_Utils::get_requirements_checks();
+		echo '<table class="wp-loupe-status-table widefat striped">';
+		echo '<tbody>';
+		foreach ( $checks as $check ) {
+			$ok    = ! empty( $check[ 'ok' ] );
+			$icon  = $ok ? 'dashicons-yes-alt' : 'dashicons-warning';
+			$color = $ok ? '#46b450' : '#dc3232';
+			printf(
+				'<tr><td><span class="dashicons %1$s" style="color:%2$s;" aria-hidden="true"></span> %3$s</td><td>%4$s</td><td>%5$s</td></tr>',
+				esc_attr( $icon ),
+				esc_attr( $color ),
+				esc_html( $check[ 'label' ] ),
+				esc_html( $check[ 'value' ] ),
+				esc_html( $check[ 'required' ] )
+			);
+		}
+		echo '</tbody>';
+		echo '</table>';
 	}
 
 	/**
@@ -512,16 +579,6 @@ class WPLoupe_Settings_Page {
 			'type'              => 'array',
 			'description'       => 'Advanced search configuration options',
 			'sanitize_callback' => [ $this, 'sanitize_advanced_settings' ],
-		] );
-
-		// Auto-update option registered with advanced group (field rendered in Advanced tab)
-		register_setting( 'wp-loupe-advanced', 'wp_loupe_auto_update_enabled', [
-			'type'              => 'boolean',
-			'description'       => 'Enable or disable automatic WP Loupe plugin updates',
-			'sanitize_callback' => function ( $value ) {
-				return (bool) $value;
-			},
-			'default'           => true,
 		] );
 	}
 
@@ -598,42 +655,24 @@ class WPLoupe_Settings_Page {
 
 		$version = WP_Loupe_Utils::get_version_number();
 
-		// Register and enqueue Select2
-		wp_register_style(
-			'select2css',
-			WP_LOUPE_URL . 'lib/css/select2.min.css',
-			[],
-			$version
-		);
-
-		wp_register_script(
-			'select2',
-			WP_LOUPE_URL . 'lib/js/select2.min.js',
-			[ 'jquery' ],
-			$version,
-			true
-		);
-
 		// Register and enqueue admin assets
 		wp_register_style(
 			'wp-loupe-admin',
 			WP_LOUPE_URL . 'lib/css/admin.css',
-			[ 'select2css' ],
+			[],
 			$version
 		);
 
 		wp_register_script(
 			'wp-loupe-admin',
 			WP_LOUPE_URL . 'lib/js/admin.js',
-			[ 'jquery', 'select2', 'wp-api-fetch' ],
+			[ 'wp-api-fetch', 'wp-i18n' ],
 			$version,
 			true
 		);
 
 		// Enqueue all assets
-		wp_enqueue_style( 'select2css' );
 		wp_enqueue_style( 'wp-loupe-admin' );
-		wp_enqueue_script( 'select2' );
 		wp_enqueue_script( 'wp-loupe-admin' );
 
 		// Add some custom styles for the typo thresholds
@@ -652,23 +691,27 @@ class WPLoupe_Settings_Page {
 			}
 		' );
 
-		// Add Select2 initialization
-		wp_add_inline_script( 'select2', '
-			jQuery(document).ready(function($) {
-				$("#wp_loupe_custom_post_types").select2({
-					placeholder: "Select post types",
-					width: "400px"
-				});
-			});
-		' );
-
 		// Localize script with enhanced field data
 		wp_localize_script( 'wp-loupe-admin', 'wpLoupeAdmin', [
-			'restUrl'        => rest_url( 'wp-loupe/v1' ),
-			'nonce'          => wp_create_nonce( 'wp_rest' ),
-			'savedFields'    => $this->prepare_fields_for_js(),
-			'availableCache' => $this->prepare_available_fields_for_js(), // Provide available fields so JS can build UI even if REST route missing
+			'restUrl'             => rest_url( 'wp-loupe/v1' ),
+			'nonce'               => wp_create_nonce( 'wp_rest' ),
+			'savedFields'         => $this->prepare_fields_for_js(),
+			'availableCache'      => $this->prepare_available_fields_for_js(), // Provide available fields so JS can build UI even if REST route missing
+			'configuredPostTypes' => $this->get_configured_post_types(),
 		] );
+	}
+
+	/**
+	 * Get the list of post types currently saved in the index configuration.
+	 *
+	 * @return array
+	 */
+	private function get_configured_post_types() {
+		$options = get_option( 'wp_loupe_custom_post_types', [] );
+		if ( ! empty( $options ) && isset( $options[ 'wp_loupe_post_type_field' ] ) && is_array( $options[ 'wp_loupe_post_type_field' ] ) ) {
+			return array_values( array_map( 'sanitize_key', $options[ 'wp_loupe_post_type_field' ] ) );
+		}
+		return [ 'post', 'page' ];
 	}
 
 	/**
@@ -872,66 +915,6 @@ class WPLoupe_Settings_Page {
 				}
 			</style>',
 		] );
-	}
-
-	/**
-	 * Callback for language selection
-	 */
-	public function languages_field_callback( $args ) {
-		$available_languages = [
-			'ar' => __( 'Arabic', 'wp-loupe' ),
-			'hy' => __( 'Armenian', 'wp-loupe' ),
-			'eu' => __( 'Basque', 'wp-loupe' ),
-			'ca' => __( 'Catalan', 'wp-loupe' ),
-			'zh' => __( 'Chinese', 'wp-loupe' ),
-			'cs' => __( 'Czech', 'wp-loupe' ),
-			'da' => __( 'Danish', 'wp-loupe' ),
-			'nl' => __( 'Dutch', 'wp-loupe' ),
-			'en' => __( 'English', 'wp-loupe' ),
-			'fi' => __( 'Finnish', 'wp-loupe' ),
-			'fr' => __( 'French', 'wp-loupe' ),
-			'gl' => __( 'Galician', 'wp-loupe' ),
-			'de' => __( 'German', 'wp-loupe' ),
-			'el' => __( 'Greek', 'wp-loupe' ),
-			'hi' => __( 'Hindi', 'wp-loupe' ),
-			'hu' => __( 'Hungarian', 'wp-loupe' ),
-			'id' => __( 'Indonesian', 'wp-loupe' ),
-			'ga' => __( 'Irish', 'wp-loupe' ),
-			'it' => __( 'Italian', 'wp-loupe' ),
-			'ja' => __( 'Japanese', 'wp-loupe' ),
-			'ko' => __( 'Korean', 'wp-loupe' ),
-			'no' => __( 'Norwegian', 'wp-loupe' ),
-			'fa' => __( 'Persian', 'wp-loupe' ),
-			'pt' => __( 'Portuguese', 'wp-loupe' ),
-			'ro' => __( 'Romanian', 'wp-loupe' ),
-			'ru' => __( 'Russian', 'wp-loupe' ),
-			'sr' => __( 'Serbian', 'wp-loupe' ),
-			'es' => __( 'Spanish', 'wp-loupe' ),
-			'sv' => __( 'Swedish', 'wp-loupe' ),
-			'ta' => __( 'Tamil', 'wp-loupe' ),
-			'th' => __( 'Thai', 'wp-loupe' ),
-			'tr' => __( 'Turkish', 'wp-loupe' ),
-			'uk' => __( 'Ukrainian', 'wp-loupe' ),
-			'ur' => __( 'Urdu', 'wp-loupe' ),
-		];
-
-		echo '<select multiple name="' . esc_attr( $args[ 'name' ] ) . '[]" class="wp-loupe-select2" style="width: 400px;">';
-		foreach ( $available_languages as $code => $name ) {
-			$selected = in_array( $code, $args[ 'value' ] ) ? 'selected="selected"' : '';
-			echo '<option value="' . esc_attr( $code ) . '" ' . esc_attr( $selected ) . '>' . esc_html( $name ) . '</option>';
-		}
-		echo '</select>';
-		echo '<p class="description">' . esc_html( $args[ 'description' ] ) . '</p>';
-
-		// Add inline script to initialize Select2 on this field
-		wp_print_inline_script_tag( '
-		jQuery(document).ready(function($) {
-			$(".wp-loupe-select2").select2({
-				placeholder: "' . esc_js( __( "Select languages", "wp-loupe" ) ) . '"
-			});
-		});
-		' );
-
 	}
 
 	/**

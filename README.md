@@ -313,7 +313,6 @@ This architecture provides a balance between search quality, performance, and ea
 ## Acknowledgements
 
 - WP Loupe is built upon [Loupe](https://github.com/loupe-php/loupe/). Loupe is licensed under the MIT license.
-- The plugin uses [Select2](https://select2.org/) for the post type selection dropdown. Select2 is licensed under the MIT license.
 
 ## Copyright and License
 

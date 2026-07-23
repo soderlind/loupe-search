@@ -99,6 +99,79 @@ class WP_Loupe_Utils {
 	}
 
 	/**
+	 * Returns structured environment/requirements checks for the admin UI.
+	 *
+	 * Each check is an associative array with keys:
+	 *  - id:       stable identifier (string)
+	 *  - label:    human-readable label (string)
+	 *  - ok:       whether the requirement is satisfied (bool)
+	 *  - value:    the detected value to display (string)
+	 *  - required: the required value/threshold, if any (string)
+	 *
+	 * @since 1.0.0
+	 * @return array<int, array{id:string,label:string,ok:bool,value:string,required:string}>
+	 */
+	public static function get_requirements_checks(): array {
+		$has_pdo        = class_exists( '\\PDO' );
+		$has_pdo_sqlite = extension_loaded( 'pdo_sqlite' );
+		$has_intl       = extension_loaded( 'intl' );
+		$has_mbstring   = extension_loaded( 'mbstring' );
+
+		$sqlite_version = null;
+		if ( $has_pdo && $has_pdo_sqlite ) {
+			$sqlite_version = self::get_sqlite_version_string();
+		} elseif ( class_exists( 'SQLite3' ) ) {
+			try {
+				$info = \SQLite3::version();
+				if ( is_array( $info ) && ! empty( $info['versionString'] ) ) {
+					$sqlite_version = (string) $info['versionString'];
+				}
+			} catch ( \Throwable $e ) {
+				$sqlite_version = null;
+			}
+		}
+
+		$sqlite_ok = ( is_string( $sqlite_version ) && $sqlite_version !== '' )
+			? version_compare( $sqlite_version, self::REQUIRED_SQLITE_VERSION, '>=' )
+			: false;
+
+		$yes = __( 'Installed', 'wp-loupe' );
+		$no  = __( 'Missing', 'wp-loupe' );
+
+		return [
+			[
+				'id'       => 'pdo_sqlite',
+				'label'    => __( 'PDO SQLite extension', 'wp-loupe' ),
+				'ok'       => $has_pdo_sqlite,
+				'value'    => $has_pdo_sqlite ? $yes : $no,
+				'required' => __( 'Required', 'wp-loupe' ),
+			],
+			[
+				'id'       => 'sqlite',
+				'label'    => __( 'SQLite version', 'wp-loupe' ),
+				'ok'       => $sqlite_ok,
+				'value'    => $sqlite_version ? $sqlite_version : __( 'Unknown', 'wp-loupe' ),
+				/* translators: %s: required SQLite version */
+				'required' => sprintf( __( '>= %s', 'wp-loupe' ), self::REQUIRED_SQLITE_VERSION ),
+			],
+			[
+				'id'       => 'intl',
+				'label'    => __( 'intl extension', 'wp-loupe' ),
+				'ok'       => $has_intl,
+				'value'    => $has_intl ? $yes : $no,
+				'required' => __( 'Required', 'wp-loupe' ),
+			],
+			[
+				'id'       => 'mbstring',
+				'label'    => __( 'mbstring extension', 'wp-loupe' ),
+				'ok'       => $has_mbstring,
+				'value'    => $has_mbstring ? $yes : $no,
+				'required' => __( 'Required', 'wp-loupe' ),
+			],
+		];
+	}
+
+	/**
 	 * Returns a short, admin-facing requirements diagnostic line.
 	 *
 	 * This is informational only and does not deactivate the plugin.

@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.8.5
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -147,6 +147,15 @@ Use Settings > WP Loupe > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.0.0 =
+* Added: Redesigned settings screen with Dashboard, Fields, and Search Behavior tabs.
+* Added: Dashboard showing per-post-type index health, a reindex panel with a progress bar and Cancel button, and a system status check for required PHP extensions.
+* Added: REST endpoint `GET /wp-json/wp-loupe/v1/index-status` returning index health for configured post types.
+* Changed: Replaced the Select2 post-type dropdown with an accessible native checkbox picker.
+* Changed: Field configuration for each post type is now shown in collapsible accordions.
+* Removed: Select2 dependency and its bundled assets.
+* Removed: Auto-update settings toggle; per-plugin auto-updates are now handled by WordPress core.
 
 = 0.8.5 =
 * Added: WordPress Abilities API integration (WordPress 6.9+) registering `wp-loupe/search` and `wp-loupe/get-post` abilities for native AI agent and automation discovery.
