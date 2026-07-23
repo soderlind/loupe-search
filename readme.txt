@@ -148,6 +148,13 @@ Use Settings > WP Loupe > Reindex (batched), or run via WP-CLI:
 
 == Changelog ==
 
+= 0.8.5 =
+* Added: WordPress Abilities API integration (WordPress 6.9+) registering `wp-loupe/search` and `wp-loupe/get-post` abilities for native AI agent and automation discovery.
+* Changed: Lowered minimum PHP requirement to 8.1; raised minimum WordPress to 6.9.
+* Changed: Prepared for the WordPress.org plugin directory; updates are now handled by WordPress.org.
+* Removed: Experimental MCP (Model Context Protocol) server, token service, and WP-CLI token commands (replaced by the WordPress Abilities API).
+* Removed: GitHub-based plugin updater.
+
 = 0.8.4 =
 * Changed: Updated PHP dependencies to `loupe/loupe` 0.13.12, `phpunit/phpunit` 12.5, and `pestphp/pest` 4.5.
 * Changed: Updated JavaScript tooling dependencies and lockfile to address open dependency advisories.

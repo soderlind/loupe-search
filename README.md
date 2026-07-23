@@ -1,5 +1,3 @@
-> **0.5.2 and later, require PHP 8.3**
-
 # WP Loupe - Enhanced WordPress Search
 
 >  New! :rocket: WP Loupe - Admin Search** is here! Search your admin content with the same powerful Loupe engine. Available at [wp-loupe-admin-search](https://github.com/soderlind/wp-loupe-admin-search)
@@ -8,7 +6,7 @@ A search enhancement plugin for WordPress that builds a fast, typo-tolerant inde
 
 ## Quick Links
 
-[Installation](#installation) | [REST API](#rest-api) | [Building Your Own Search UI](#building-your-own-search-ui) | [Settings](#settings) | [Filters](#filters) | [MCP Docs](docs/mcp.md) | [Changelog](CHANGELOG.md)
+[Installation](#installation) | [REST API](#rest-api) | [AI Agent Integration](#ai-agent-integration-wordpress-abilities-api) | [Building Your Own Search UI](#building-your-own-search-ui) | [Settings](#settings) | [Filters](#filters) | [Changelog](CHANGELOG.md)
 
 
 ## Overview
@@ -20,7 +18,7 @@ WP Loupe transforms WordPress's search functionality by:
 - Automatically maintaining the search index
 - Providing a stable REST API for custom search experiences
 
-> Integrating with external agents or automation? See **[docs/mcp.md](docs/mcp.md)**.
+> Integrating with AI agents or automation? WP Loupe registers native abilities via the [WordPress Abilities API](#ai-agent-integration-wordpress-abilities-api).
 
 ## REST API
 
@@ -31,20 +29,14 @@ WP Loupe exposes search via REST endpoints:
 
 Developer documentation (schema + examples + Gutenberg block example): **[docs/search-api.md](docs/search-api.md)**
 
-## MCP (Model Context Protocol) Integration (Summary)
+## AI Agent Integration (WordPress Abilities API)
 
-WP Loupe ships with an optional MCP server enabling external AI agents or automation tools to discover commands and query your site.
+WP Loupe registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra configuration required:
 
-Key points:
-- Discovery endpoints: `/.well-known/mcp.json` & `/.well-known/oauth-protected-resource` (enable in Settings → WP Loupe → MCP)
-- Hybrid access: anonymous users can run limited `searchPosts`; tokens increase limits & unlock `healthCheck`
-- Token UI: create, scope-limit, set TTL (1–168h) or indefinite (0), revoke individually or all
-- Last-used tracking for tokens; copy raw token once on creation
-- Configurable rate limits (window, per-window quotas, max hits) via admin UI + filter overrides
-- WP-CLI command for issuing tokens (mirrors into UI registry)
-- Secure pagination cursors (HMAC) and standardized envelope responses
+- `wp-loupe/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
+- `wp-loupe/get-post` — Retrieve a single published post by ID. Publicly accessible.
 
-Full details, filter references, and examples: see [docs/mcp.md](docs/mcp.md).
+Both abilities are discoverable through the standard WordPress Abilities registry and exposed via REST (`show_in_rest`).
 
 ## Features
 
@@ -52,7 +44,7 @@ Full details, filter references, and examples: see [docs/mcp.md](docs/mcp.md).
 - Typo-tolerance (Loupe)
 - Per-field weighting, filterable fields, sortable fields (configured in Settings)
 - Developer-facing REST API for building custom UIs
-- Optional MCP server for external agent/automation access
+- Native AI agent integration via the WordPress Abilities API
 
 ## Installation
 
@@ -72,7 +64,7 @@ Full details, filter references, and examples: see [docs/mcp.md](docs/mcp.md).
    - Go to Settings > WP Loupe
 	- Click "Reindex" to build the initial search index (runs in batches; safe for large sites)
 
-* Plugin [updates are handled automatically](https://github.com/soderlind/wordpress-plugin-github-updater#readme) via GitHub. No need to manually download and install updates.
+* Plugin updates are handled automatically by WordPress.org. No need to manually download and install updates.
 
 ## Building Your Own Search UI
 
@@ -117,19 +109,6 @@ Sortable fields can be used to order search results:
 - Enable this option to allow sorting search results by this field's values
 - Works best with numerical fields, dates, or short text values
 - Examples: date, price, rating, title
-
-### MCP Settings
-
-WP Loupe can optionally expose an MCP (Model Context Protocol) server so external AI agents or automation tools can discover capabilities and query your site.
-
-You can configure MCP in the WordPress admin under Settings > WP Loupe > MCP, including:
-
-- Enable/disable the discovery endpoints (`/.well-known/mcp.json` and `/.well-known/oauth-protected-resource`)
-- Create and manage access tokens (scope + TTL + revoke)
-- Configure rate limits for anonymous vs token-authenticated requests
-- Add access tokens.
-
-Full details: **[docs/mcp.md](docs/mcp.md)**
 
 ### Advanced Settings
 
@@ -323,10 +302,10 @@ Default schema fields:
 
 ## Technical Requirements
 
-- PHP 8.3
+- PHP 8.1 or higher
 - SQLite 3.35+ (required by Loupe 0.13.x)
 - PHP extensions: `pdo_sqlite`, `intl`, `mbstring`
-- WordPress 6.7+
+- WordPress 6.9+
 
 This architecture provides a balance between search quality, performance, and ease of integration with WordPress.
 
@@ -335,7 +314,6 @@ This architecture provides a balance between search quality, performance, and ea
 
 - WP Loupe is built upon [Loupe](https://github.com/loupe-php/loupe/). Loupe is licensed under the MIT license.
 - The plugin uses [Select2](https://select2.org/) for the post type selection dropdown. Select2 is licensed under the MIT license.
-- The plugin uses Yannick Lefebvre's [WP Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker?tab=readme-ov-file#github-integration) for updates. WP Plugin Update Checker is licensed under the MIT license.
 
 ## Copyright and License
 

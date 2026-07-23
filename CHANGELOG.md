@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.5] - 2026-07-23
+
+### Added
+- WordPress Abilities API integration (WordPress 6.9+): registers `wp-loupe/search` and `wp-loupe/get-post` abilities for native AI agent and automation discovery.
+
+### Changed
+- Lowered minimum PHP requirement to 8.1 and raised minimum WordPress to 6.9.
+- Prepared the plugin for the WordPress.org plugin directory: updates are now handled by WordPress.org.
+
+### Removed
+- Removed the experimental MCP (Model Context Protocol) server, token service, and WP-CLI token commands in favor of the WordPress Abilities API.
+- Removed the GitHub-based plugin updater.
+
 ## [0.8.4] - 2026-04-13
 
 ### Changed
