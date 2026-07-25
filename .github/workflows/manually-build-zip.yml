@@ -24,7 +24,7 @@ jobs:
 
       - name: Stage release files
         run: |
-          mkdir -p /tmp/wp-loupe
+          mkdir -p /tmp/loupe-search
           rsync -a \
             --exclude='.git/' \
             --exclude='.github/' \
@@ -48,11 +48,11 @@ jobs:
             --exclude='.editorconfig' \
             --exclude='.wp-env.json' \
             --exclude='vendor/bin/' \
-            . /tmp/wp-loupe/
+            . /tmp/loupe-search/
 
       - name: Archive Release
         working-directory: /tmp
-        run: zip -r ${{ github.workspace }}/wp-loupe.zip wp-loupe/
+        run: zip -r ${{ github.workspace }}/loupe-search.zip loupe-search/
 
       - name: Upload zip to release
         env:
@@ -60,7 +60,7 @@ jobs:
         run: |
           TAG="${{ github.event.inputs.tag }}"
           if gh release view "$TAG" > /dev/null 2>&1; then
-            gh release upload "$TAG" wp-loupe.zip --clobber
+            gh release upload "$TAG" loupe-search.zip --clobber
           else
-            gh release create "$TAG" wp-loupe.zip --title "$TAG" --generate-notes
+            gh release create "$TAG" loupe-search.zip --title "$TAG" --generate-notes
           fi

@@ -19,7 +19,7 @@ jobs:
 
       - name: Stage release files
         run: |
-          mkdir -p /tmp/wp-loupe
+          mkdir -p /tmp/loupe-search
           rsync -a \
             --exclude='.git/' \
             --exclude='.github/' \
@@ -43,16 +43,16 @@ jobs:
             --exclude='.editorconfig' \
             --exclude='.wp-env.json' \
             --exclude='vendor/bin/' \
-            . /tmp/wp-loupe/
+            . /tmp/loupe-search/
 
       - name: Archive Release
         working-directory: /tmp
-        run: zip -r ${{ github.workspace }}/wp-loupe.zip wp-loupe/
+        run: zip -r ${{ github.workspace }}/loupe-search.zip loupe-search/
 
       - name: Upload zip to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ github.event.release.tag_name }}" \
-            wp-loupe.zip \
+            loupe-search.zip \
             --clobber
