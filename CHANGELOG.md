@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - Unreleased
+## [1.1.0] - 2026-07-26
 
 ### Changed
 - Developer filters now use the `loupe_search_*` prefix (e.g. `loupe_search_db_path`, `loupe_search_post_types`, `loupe_search_posts_per_page`, `loupe_search_index_protected`, `loupe_search_field_{$field_name}`, `loupe_search_schema_{$post_type}`, `loupe_search_is_safely_sortable_{$post_type}`).
