@@ -297,7 +297,9 @@ class WP_Loupe_Factory {
 		}
 
 		// Allow plugins to override for custom field types
-		return apply_filters( "wp_loupe_is_safely_sortable_{$post_type}", false, $field_name );
+		$sortable = apply_filters( "loupe_search_is_safely_sortable_{$post_type}", false, $field_name );
+		$sortable = apply_filters_deprecated( "wp_loupe_is_safely_sortable_{$post_type}", array( $sortable, $field_name ), '1.1.0', "loupe_search_is_safely_sortable_{$post_type}" );
+		return $sortable;
 	}
 
 	/**
@@ -342,7 +344,9 @@ class WP_Loupe_Factory {
 		}
 
 		// Allow plugins/themes to override meta-field sortability.
-		return (bool) apply_filters( "wp_loupe_is_safely_sortable_meta_{$post_type}", $result, $field_name );
+		$sortable = apply_filters( "loupe_search_is_safely_sortable_meta_{$post_type}", $result, $field_name );
+		$sortable = apply_filters_deprecated( "wp_loupe_is_safely_sortable_meta_{$post_type}", array( $sortable, $field_name ), '1.1.0', "loupe_search_is_safely_sortable_meta_{$post_type}" );
+		return (bool) $sortable;
 	}
 
 	/**

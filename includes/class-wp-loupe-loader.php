@@ -62,7 +62,8 @@ class WP_Loupe_Loader {
 			$this->post_types = [ 'post', 'page' ];
 		}
 
-		$this->post_types = apply_filters( 'wp_loupe_post_types', $this->post_types );
+		$this->post_types = apply_filters( 'loupe_search_post_types', $this->post_types );
+		$this->post_types = apply_filters_deprecated( 'wp_loupe_post_types', array( $this->post_types ), '1.1.0', 'loupe_search_post_types' );
 	}
 
 	/**

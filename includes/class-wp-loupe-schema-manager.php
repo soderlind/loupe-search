@@ -51,9 +51,15 @@ class WP_Loupe_Schema_Manager {
 			}
 
 			// Allow further customization through filter
-			$this->schema_cache[ $post_type ] = apply_filters(
-				"wp_loupe_schema_{$post_type}",
+			$schema_filtered                  = apply_filters(
+				"loupe_search_schema_{$post_type}",
 				$schema
+			);
+			$this->schema_cache[ $post_type ] = apply_filters_deprecated(
+				"wp_loupe_schema_{$post_type}",
+				array( $schema_filtered ),
+				'1.1.0',
+				"loupe_search_schema_{$post_type}"
 			);
 		}
 		return $this->schema_cache[ $post_type ];

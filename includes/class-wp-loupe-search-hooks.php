@@ -57,7 +57,8 @@ class WP_Loupe_Search_Hooks {
 		$all_posts   = $this->create_post_objects( $hits );
 
 		$this->total_found_posts = count( $all_posts );
-		$posts_per_page          = apply_filters( 'wp_loupe_posts_per_page', $query->get( 'posts_per_page' ) ?: get_option( 'posts_per_page' ) );
+		$posts_per_page          = apply_filters( 'loupe_search_posts_per_page', $query->get( 'posts_per_page' ) ?: get_option( 'posts_per_page' ) );
+		$posts_per_page          = apply_filters_deprecated( 'wp_loupe_posts_per_page', array( $posts_per_page ), '1.1.0', 'loupe_search_posts_per_page' );
 		$paged                   = $query->get( 'paged' ) ? $query->get( 'paged' ) : 1;
 		$offset                  = ( $paged - 1 ) * $posts_per_page;
 		$this->max_num_pages     = (int) ceil( $this->total_found_posts / $posts_per_page );

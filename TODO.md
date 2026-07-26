@@ -21,8 +21,13 @@ This is a list of features, both implemented and planned. Checked items are comp
 - [x] Geo radius + geo sorting via POST `/wp-json/wp-loupe/v1/search`.
 - [x] Removed bundled UI integration (block/shortcode/search-form override). Build your own UI via the API.
 - [ ] Categories, tags, and custom taxonomies (indexing + allowlisting for filtering/faceting).
-- [ ] Custom fields (indexing + allowlisting for filtering/faceting).
+- [ ] 2.0.0: Custom fields (indexing + allowlisting for filtering/faceting).
 - [ ] Multisite support, including the option to index all sites in a network.
 - [ ] Multisite support. Select which sites to index.
 - [ ] Multisite support. Select which site to do search from.
 - [ ] Expose/filter/sort on any allowlisted attribute (within schema constraints).
+- [x] 1.1.0: Rename developer hooks `wp_loupe_*` → `loupe_search_*` non-breakingly. Fire the new hook names and keep the old ones via `apply_filters_deprecated()`/`do_action_deprecated()` (deprecated since 1.1.0) so existing integrations keep working.
+- [x] 1.1.0: Rename WP CLI commands `wp loupe` → `wp loupe-search` non-breakingly. Keep the old command names via `WP_CLI::add_command_deprecated()` (deprecated since 1.1.0) so existing integrations keep working.
+- [x] 1.1.0: Rename REST API namespace `wp-loupe` → `loupe-search` non-breakingly. Keep the old namespace via `register_rest_route_deprecated()` (deprecated since 1.1.0) so existing integrations keep working.
+- [x] 1.1.0: Rename wp-loupe-db folder → loupe-search-db non-breakingly. Keep the old folder name for backwards compatibility (deprecated since 1.1.0) so existing integrations keep working. Investigate if needed. Databases are created if missing, so it should be safe to rename the folder. The plugin will create the new folder and populate it with a new index on first run. The old folder can be deleted after the plugin has been updated.
+

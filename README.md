@@ -24,8 +24,10 @@ Loupe Search transforms WordPress's search functionality by:
 
 Loupe Search exposes search via REST endpoints:
 
-- **POST** `/wp-json/wp-loupe/v1/search` (recommended; supports JSON filters, facets, geo, and explicit sorting)
-- **GET** `/wp-json/wp-loupe/v1/search?q=...` (legacy; kept for backward compatibility)
+- **POST** `/wp-json/loupe-search/v1/search` (recommended; supports JSON filters, facets, geo, and explicit sorting)
+- **GET** `/wp-json/loupe-search/v1/search?q=...` (legacy; kept for backward compatibility)
+
+> **Note:** As of 1.1.0 the REST namespace is `loupe-search/v1`. The old `wp-loupe/v1` namespace still works but is deprecated and will be removed in a future major release.
 
 Developer documentation (schema + examples + Gutenberg block example): **[docs/search-api.md](docs/search-api.md)**
 
@@ -58,13 +60,13 @@ Both abilities are discoverable through the standard WordPress Abilities registr
 
 2. **Quick Install**
 
-   - Download [`wp-loupe.zip`](https://github.com/soderlind/wp-loupe/releases/latest/download/wp-loupe.zip)
+   - Download [`loupe-search.zip`](https://github.com/soderlind/loupe-search/releases/latest/download/loupe-search.zip)
    - Upload via WordPress Plugins > Add New > Upload Plugin
 
 3. **Composer Install**
 
    ```bash
-   composer require soderlind/wp-loupe
+   composer require soderlind/loupe-search
    ```
 
 4. **Post-Installation**
@@ -155,13 +157,13 @@ Reindexing rebuilds the index for your configured post types.
 - **WP-CLI (recommended for large sites):**
 
 	```bash
-	wp wp-loupe reindex
+	wp loupe-search reindex
 	```
 
 	Optional flags:
 
 	```bash
-	wp wp-loupe reindex --post-types=post,page --batch-size=1000
+	wp loupe-search reindex --post-types=post,page --batch-size=1000
 	```
 
 ## Testing
@@ -200,57 +202,59 @@ Yes, you can select which post types to include in the Settings page or via filt
 
 ## Filters
 
-### `wp_loupe_db_path`
+> **Note:** As of 1.1.0 the developer filters use the `loupe_search_*` prefix. The old `wp_loupe_*` names still work but are deprecated and will be removed in a future major release. Update your `add_filter()` calls to the new names.
 
-This filter allows you to change the path where the Loupe database files are stored. By default, it's in the `WP_CONTENT_DIR .'/wp-loupe-db'` directory.
+### `loupe_search_db_path`
+
+This filter allows you to change the path where the Loupe database files are stored. By default, it's in the `WP_CONTENT_DIR .'/loupe-search-db'` directory.
 
 ```php
-add_filter( 'wp_loupe_db_path', function ( $path ) {
+add_filter( 'loupe_search_db_path', function ( $path ) {
 	return WP_CONTENT_DIR . '/my-path';
 } );
 ```
 
-### `wp_loupe_post_types`
+### `loupe_search_post_types`
 
 This filter allows you to modify the array of post types that the Loupe Search plugin works with. By default, it includes 'post' and 'page'.
 
 ```php
-add_filter( 'wp_loupe_post_types', [ 'post', 'page', 'book' ] );
+add_filter( 'loupe_search_post_types', [ 'post', 'page', 'book' ] );
 ```
 
-### `wp_loupe_posts_per_page`
+### `loupe_search_posts_per_page`
 
 This filter allows you to modify the number of search results per page. By default it's 10, set in `WPAdmin->Settings->Reading->"Blog pages show at most"`.
 
 ```php
-add_filter( 'wp_loupe_posts_per_page', 20 );
+add_filter( 'loupe_search_posts_per_page', 20 );
 ```
 
-### `wp_loupe_index_protected`
+### `loupe_search_index_protected`
 
 This filter allows you to index posts and pages that are protected by a password. By default, it's set to `false`.
 
 ```php
-add_filter( 'wp_loupe_index_protected','__return_true' );
+add_filter( 'loupe_search_index_protected','__return_true' );
 ```
 
-### `wp_loupe_field_{$field_name}`
+### `loupe_search_field_{$field_name}`
 
 This filter allows you to change the field content before it is indexed.
 
 By default, the following is used to remove HTML tags and comments from `post_content`. Among others, it removes the WordPress block comments.
 
 ```php
-add_filter( 'wp_loupe_field_post_content', 'wp_strip_all_tags' );
+add_filter( 'loupe_search_field_post_content', 'wp_strip_all_tags' );
 ```
 
-### `wp_loupe_schema_{$post_type}`
+### `loupe_search_schema_{$post_type}`
 
 Modify the search schema for a specific post type. The filter name is dynamically generated based on the post type.
 
 ```php
 // Customize the schema for 'book' post type
-add_filter( 'wp_loupe_schema_book', function( $schema ) {
+add_filter( 'loupe_search_schema_book', function( $schema ) {
 	$schema['book_isbn'] = [		// Add a new field
 		'weight'     => 2.0,		// Higher weight means higher relevance in search results
 		'filterable' => true,		// Allow filtering by this field

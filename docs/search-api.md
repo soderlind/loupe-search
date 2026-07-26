@@ -4,8 +4,8 @@ WP Loupe exposes a REST API that lets you build your own search UI (theme templa
 
 **Endpoints**
 
-- **GET** ` /wp-json/wp-loupe/v1/search?q=...` (legacy, kept for backward compatibility)
-- **POST** ` /wp-json/wp-loupe/v1/search` (recommended: JSON filters, facets, geo, rich sorting)
+- **GET** ` /wp-json/loupe-search/v1/search?q=...` (legacy, kept for backward compatibility)
+- **POST** ` /wp-json/loupe-search/v1/search` (recommended: JSON filters, facets, geo, rich sorting)
 
 ## Concepts
 
@@ -144,7 +144,7 @@ add_action( 'save_post', function ( int $post_id ) {
 } );
 ```
 
-Note: if you already have data in meta, you typically only need the schema hook + a reindex (Settings → WP Loupe → Reindex, or `wp wp-loupe reindex`).
+Note: if you already have data in meta, you typically only need the schema hook + a reindex (Settings → WP Loupe → Reindex, or `wp loupe-search reindex`).
 
 ## POST /search
 
@@ -359,7 +359,7 @@ export default function Edit() {
 
 		setIsLoading(true);
 		apiFetch({
-			path: '/wp-loupe/v1/search',
+			path: '/loupe-search/v1/search',
 			method: 'POST',
 			data: body,
 		}).then((res) => {
@@ -401,7 +401,7 @@ export default function Edit() {
 
 ```php
 $response = wp_remote_post(
-	rest_url( 'wp-loupe/v1/search' ),
+	rest_url( 'loupe-search/v1/search' ),
 	[
 		'headers' => [ 'Content-Type' => 'application/json' ],
 		'body'    => wp_json_encode(

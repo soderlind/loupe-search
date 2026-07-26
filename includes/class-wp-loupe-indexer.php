@@ -807,7 +807,9 @@ class WP_Loupe_Indexer {
 		}
 
 		// Check if the post is password protected.
-		if ( ! \apply_filters( 'wp_loupe_index_protected', empty( $post->post_password ) ) ) {
+		$should_index = \apply_filters( 'loupe_search_index_protected', empty( $post->post_password ) );
+		$should_index = \apply_filters_deprecated( 'wp_loupe_index_protected', array( $should_index ), '1.1.0', 'loupe_search_index_protected' );
+		if ( ! $should_index ) {
 			return false;
 		}
 
@@ -852,7 +854,8 @@ class WP_Loupe_Indexer {
 			$field_value = null;
 
 			if ( property_exists( $post, $field_name ) ) {
-				$field_value = apply_filters( "wp_loupe_field_{$field_name}", $post->{$field_name} );
+				$field_value = apply_filters( "loupe_search_field_{$field_name}", $post->{$field_name} );
+				$field_value = apply_filters_deprecated( "wp_loupe_field_{$field_name}", array( $field_value ), '1.1.0', "loupe_search_field_{$field_name}" );
 			} elseif ( strpos( $field_name, 'taxonomy_' ) === 0 ) {
 				$taxonomy = substr( $field_name, 9 );
 				$terms    = wp_get_post_terms( $post->ID, $taxonomy, [ 'fields' => 'names' ] );
