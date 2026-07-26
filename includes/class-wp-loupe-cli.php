@@ -24,10 +24,10 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\\WP_CLI' ) ) {
 		 * ## EXAMPLES
 		 *
 		 *   # Reindex all configured post types
-		 *   wp wp-loupe reindex
+		 *   wp loupe-search reindex
 		 *
 		 *   # Reindex only posts in bigger batches
-		 *   wp wp-loupe reindex --post-types=post --batch-size=1000
+		 *   wp loupe-search reindex --post-types=post --batch-size=1000
 		 */
 		public function reindex( $args, $assoc_args ) {
 			$batch_size = isset( $assoc_args[ 'batch-size' ] ) ? (int) $assoc_args[ 'batch-size' ] : 500;
@@ -98,5 +98,16 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\\WP_CLI' ) ) {
 		}
 	}
 
-	\WP_CLI::add_command( 'wp-loupe', '\\Soderlind\\Plugin\\WPLoupe\\WP_Loupe_CLI_Command' );
+	\WP_CLI::add_command( 'loupe-search', '\\Soderlind\\Plugin\\WPLoupe\\WP_Loupe_CLI_Command' );
+
+	// Deprecated alias, kept for backward compatibility. Deprecated since 1.1.0; use `wp loupe-search`.
+	\WP_CLI::add_command(
+		'wp-loupe',
+		'\\Soderlind\\Plugin\\WPLoupe\\WP_Loupe_CLI_Command',
+		[
+			'before_invoke' => function () {
+				\WP_CLI::warning( 'The `wp wp-loupe` command is deprecated since 1.1.0 and will be removed in a future major release. Use `wp loupe-search` instead.' );
+			},
+		]
+	);
 }

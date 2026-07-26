@@ -693,7 +693,7 @@ class WPLoupe_Settings_Page {
 
 		// Localize script with enhanced field data
 		wp_localize_script( 'wp-loupe-admin', 'wpLoupeAdmin', [
-			'restUrl'             => rest_url( 'wp-loupe/v1' ),
+			'restUrl'             => rest_url( 'loupe-search/v1' ),
 			'nonce'               => wp_create_nonce( 'wp_rest' ),
 			'savedFields'         => $this->prepare_fields_for_js(),
 			'availableCache'      => $this->prepare_available_fields_for_js(), // Provide available fields so JS can build UI even if REST route missing

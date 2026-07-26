@@ -77,8 +77,20 @@ class WP_Loupe_DB {
 	 * @return string Base path
 	 */
 	public function get_base_path() {
-		$default = defined( 'WP_CONTENT_DIR' ) ? ( WP_CONTENT_DIR . '/wp-loupe-db' ) : '';
-		$path    = apply_filters( 'wp_loupe_db_path', $default );
+		$default = defined( 'WP_CONTENT_DIR' ) ? ( WP_CONTENT_DIR . '/loupe-search-db' ) : '';
+
+		// Backward compatibility (deprecated since 1.1.0): if the legacy `wp-loupe-db`
+		// folder exists and the new `loupe-search-db` folder does not, keep using the
+		// legacy path so existing indexes are not orphaned.
+		if ( '' !== $default ) {
+			$legacy = WP_CONTENT_DIR . '/wp-loupe-db';
+			if ( is_dir( $legacy ) && ! is_dir( $default ) ) {
+				$default = $legacy;
+			}
+		}
+
+		$path    = apply_filters( 'loupe_search_db_path', $default );
+		$path    = apply_filters_deprecated( 'wp_loupe_db_path', array( $path ), '1.1.0', 'loupe_search_db_path' );
 		$path    = is_string( $path ) ? trim( $path ) : '';
 
 		// Guard against misbehaving filters returning empty/false.

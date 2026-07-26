@@ -114,7 +114,21 @@ class WP_Loupe_REST {
 	 */
 	public function on_rest_api_init() {
 		$this->log( 'Registering routes.' );
-		register_rest_route( 'wp-loupe/v1', '/search', [
+		// Primary namespace since 1.1.0. The legacy `wp-loupe/v1` namespace is kept as a
+		// deprecated alias for backward compatibility and will be removed in a future major release.
+		foreach ( array( 'loupe-search/v1', 'wp-loupe/v1' ) as $namespace ) {
+			$this->register_routes_for_namespace( $namespace );
+		}
+		$this->log( 'Routes registered.' );
+	}
+
+	/**
+	 * Register all REST routes under the given namespace.
+	 *
+	 * @param string $namespace REST namespace (e.g. 'loupe-search/v1').
+	 */
+	private function register_routes_for_namespace( $namespace ) {
+		register_rest_route( $namespace, '/search', [
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'handle_search_request' ],
@@ -148,7 +162,7 @@ class WP_Loupe_REST {
 		] );
 
 		// Dynamic field discovery for settings UI.
-		register_rest_route( 'wp-loupe/v1', '/post-type-fields/(?P<post_type>[a-zA-Z0-9_-]+)', [
+		register_rest_route( $namespace, '/post-type-fields/(?P<post_type>[a-zA-Z0-9_-]+)', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'handle_post_type_fields_request' ],
 			'permission_callback' => function () {
@@ -163,7 +177,7 @@ class WP_Loupe_REST {
 		] );
 
 		// Dashboard index health status (admin only).
-		register_rest_route( 'wp-loupe/v1', '/index-status', [
+		register_rest_route( $namespace, '/index-status', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'handle_index_status_request' ],
 			'permission_callback' => function () {
@@ -173,7 +187,7 @@ class WP_Loupe_REST {
 		] );
 
 		// Create database (directory + option update) for a post type.
-		register_rest_route( 'wp-loupe/v1', '/create-database', [
+		register_rest_route( $namespace, '/create-database', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'handle_create_database_request' ],
 			'permission_callback' => function () {
@@ -188,7 +202,7 @@ class WP_Loupe_REST {
 		] );
 
 		// Delete database for a post type.
-		register_rest_route( 'wp-loupe/v1', '/delete-database', [
+		register_rest_route( $namespace, '/delete-database', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'handle_delete_database_request' ],
 			'permission_callback' => function () {
@@ -203,7 +217,7 @@ class WP_Loupe_REST {
 		] );
 
 		// Batched reindex runner (admin only).
-		register_rest_route( 'wp-loupe/v1', '/reindex-batch', [
+		register_rest_route( $namespace, '/reindex-batch', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'handle_reindex_batch_request' ],
 			'permission_callback' => function () {
@@ -229,7 +243,6 @@ class WP_Loupe_REST {
 				],
 			],
 		] );
-		$this->log( 'Routes registered.' );
 	}
 
 	/**

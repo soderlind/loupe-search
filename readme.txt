@@ -62,38 +62,38 @@ Upgrading from the experimental MCP server? The MCP server, token service, and W
 
 = Filters =
 
-These filters allow developers to customize Loupe Search's behavior:
+These filters allow developers to customize Loupe Search's behavior. As of 1.1.0 they use the `loupe_search_*` prefix; the old `wp_loupe_*` names still work but are deprecated and will be removed in a future major release.
 
-`wp_loupe_db_path`
+`loupe_search_db_path`
 
 Controls where the search index is stored.
-Default: WP_CONTENT_DIR . '/wp-loupe-db'
+Default: WP_CONTENT_DIR . '/loupe-search-db'
 
-`wp_loupe_post_types`
+`loupe_search_post_types`
 
 Modifies which post types are included in search.
 Default: ['post', 'page']
 
-`wp_loupe_posts_per_page`
+`loupe_search_posts_per_page`
 
 Controls search results per page.
 Default: WordPress "Blog pages show at most" setting
 
-`wp_loupe_index_protected`
+`loupe_search_index_protected`
 
 Controls indexing of password-protected posts.
 Default: false
 
-`wp_loupe_field_{$field_name}`
+`loupe_search_field_{$field_name}`
 
 Modifies a field before indexing.
-Example: The plugin uses `wp_loupe_field_post_content` to strip HTML tags from content
+Example: The plugin uses `loupe_search_field_post_content` to strip HTML tags from content
 
-`wp_loupe_schema_{$post_type}`
+`loupe_search_schema_{$post_type}`
 
 Customizes the schema for a post type.
 
-For usage examples, see the [filter documentation at GitHub](https://github.com/soderlind/wp-loupe?tab=readme-ov-file#filters).
+For usage examples, see the [filter documentation at GitHub](https://github.com/soderlind/loupe-search?tab=readme-ov-file#filters).
 
 
 == Installation ==
@@ -138,8 +138,8 @@ Yes, you can select which post types to include in the Settings page or via filt
 
 Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
-* `wp wp-loupe reindex`
-* `wp wp-loupe reindex --post-types=post,page --batch-size=1000`
+* `wp loupe-search reindex`
+* `wp loupe-search reindex --post-types=post,page --batch-size=1000`
 
 = How do I use advanced search operators? =
 
@@ -156,6 +156,11 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.1.0 =
+* Changed: Developer filters now use the `loupe_search_*` prefix.
+* Changed: REST namespace is now `loupe-search/v1`; WP-CLI command is now `wp loupe-search`; the index folder is now `wp-content/loupe-search-db` (existing installs keep using `wp-loupe-db` if present).
+* Deprecated: The `wp_loupe_*` filters, the `wp-loupe/v1` REST namespace, the `wp wp-loupe` CLI command, and the `wp-loupe-db` folder name are deprecated but still work for backward compatibility; they will be removed in a future major release.
 
 = 1.0.0 =
 * Added: Redesigned settings screen with Dashboard, Fields, and Search Behavior tabs.

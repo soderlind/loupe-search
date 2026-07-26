@@ -284,8 +284,13 @@ class WP_Loupe_Utils {
 			return false;
 		}
 
-		return 'publish' === $post->post_status &&
-			apply_filters( 'wp_loupe_index_protected', empty( $post->post_password ) );
+		if ( 'publish' !== $post->post_status ) {
+			return false;
+		}
+
+		$should_index = apply_filters( 'loupe_search_index_protected', empty( $post->post_password ) );
+
+		return (bool) apply_filters_deprecated( 'wp_loupe_index_protected', array( $should_index ), '1.1.0', 'loupe_search_index_protected' );
 	}
 
 	/**

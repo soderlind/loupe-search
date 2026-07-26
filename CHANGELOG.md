@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - Unreleased
+
+### Changed
+- Developer filters now use the `loupe_search_*` prefix (e.g. `loupe_search_db_path`, `loupe_search_post_types`, `loupe_search_posts_per_page`, `loupe_search_index_protected`, `loupe_search_field_{$field_name}`, `loupe_search_schema_{$post_type}`, `loupe_search_is_safely_sortable_{$post_type}`).
+- REST namespace is now `loupe-search/v1` (e.g. `/wp-json/loupe-search/v1/search`).
+- WP-CLI command is now `wp loupe-search` (e.g. `wp loupe-search reindex`).
+- Index database folder is now `wp-content/loupe-search-db`. Existing installs keep using the legacy `wp-content/wp-loupe-db` folder automatically if it is present.
+
+### Deprecated
+- The `wp_loupe_*` filter names are deprecated since 1.1.0. They still fire via `apply_filters_deprecated()` for backward compatibility and will be removed in a future major release.
+- The `wp-loupe/v1` REST namespace is deprecated since 1.1.0; the routes are still registered as an alias and will be removed in a future major release.
+- The `wp wp-loupe` WP-CLI command is deprecated since 1.1.0; it still runs (with a warning) as an alias and will be removed in a future major release.
+- The legacy `wp-content/wp-loupe-db` folder name is deprecated since 1.1.0.
+
 ## [1.0.0] - 2026-07-24
 
 ### Added
