@@ -26,3 +26,4 @@ This is a list of features, both implemented and planned. Checked items are comp
 - [ ] Multisite support. Select which sites to index.
 - [ ] Multisite support. Select which site to do search from.
 - [ ] Expose/filter/sort on any allowlisted attribute (within schema constraints).
+- [ ] 1.1.0: Rename developer hooks `wp_loupe_*` → `loupe_search_*` non-breakingly. Fire the new hook names and keep the old ones via `apply_filters_deprecated()`/`do_action_deprecated()` (deprecated since 1.1.0) so existing integrations keep working.
