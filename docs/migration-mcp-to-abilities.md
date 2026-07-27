@@ -17,7 +17,8 @@ move your integration to the Abilities API.
   `wp-loupe-mcp/v1/*` REST namespace no longer exist.
 - The `wp wp-loupe mcp issue-token` WP-CLI command was removed.
 - Search and single-post retrieval are now exposed as two abilities:
-  `wp-loupe/search` and `wp-loupe/get-post`.
+  `loupe-search/search` and `loupe-search/get-post` (legacy `wp-loupe/*`
+  aliases still work).
 - No tokens, scopes, or rate-limit configuration are required anymore.
 - If you only need a plain HTTP/JSON API, use the existing
   [REST search API](search-api.md) instead.
@@ -37,11 +38,16 @@ move your integration to the Abilities API.
 
 ## The replacement abilities
 
-WP Loupe registers two abilities under the `wp-loupe` category. Both are
+Loupe Search registers two abilities under the `loupe-search` category. Both are
 publicly accessible (`permission_callback` returns true) and exposed via REST
 (`show_in_rest`).
 
-### `wp-loupe/search`
+> As of 1.2.0 the primary names are `loupe-search/*` (category `loupe-search`).
+> The legacy `wp-loupe/search` and `wp-loupe/get-post` abilities (category
+> `wp-loupe`) remain registered as deprecated aliases and will be removed in a
+> future major release.
+
+### `loupe-search/search`
 
 Typo-tolerant full-text search across indexed post types. Supports phrase
 matching (`"..."`), exclusion (`-term`), and OR operators.
@@ -58,7 +64,7 @@ Input:
 Output: `{ hits[], total_hits, page, total_pages }`, where each hit contains
 `id`, `title`, `url`, `excerpt`, `post_type`, and `post_date`.
 
-### `wp-loupe/get-post`
+### `loupe-search/get-post`
 
 Retrieve a single published post by ID.
 
@@ -72,8 +78,8 @@ Output: `{ id, title, content, excerpt, url, post_type, post_date, author }`.
 
 | Old MCP command | New approach |
 |-----------------|--------------|
-| `searchPosts` | `wp-loupe/search` ability, or `POST /wp-json/wp-loupe/v1/search` |
-| `getPost` | `wp-loupe/get-post` ability |
+| `searchPosts` | `loupe-search/search` ability, or `POST /wp-json/loupe-search/v1/search` |
+| `getPost` | `loupe-search/get-post` ability |
 | `getSchema` | No direct equivalent; field configuration lives in Settings → WP Loupe |
 | `listCommands` | Discover via the Abilities registry (`wp_get_abilities()`) |
 | `healthCheck` | Removed |
@@ -88,7 +94,7 @@ revoke.
 ### 3. Call an ability in PHP
 
 ```php
-$result = wp_get_ability( 'wp-loupe/search' )->execute( [
+$result = wp_get_ability( 'loupe-search/search' )->execute( [
 	'query'    => 'hello world',
 	'per_page' => 10,
 ] );
@@ -103,7 +109,7 @@ search API is unchanged and remains the simplest option:
 curl -s -X POST \
   -H 'Content-Type: application/json' \
   -d '{"query":"hello world","per_page":10}' \
-  https://example.com/wp-json/wp-loupe/v1/search
+  https://example.com/wp-json/loupe-search/v1/search
 ```
 
 See **[docs/search-api.md](search-api.md)** for the full request/response

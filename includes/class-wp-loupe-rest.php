@@ -248,7 +248,7 @@ class WP_Loupe_REST {
 	/**
 	 * Run a single batched reindex step.
 	 *
-	 * POST /wp-json/wp-loupe/v1/reindex-batch
+	 * POST /wp-json/loupe-search/v1/reindex-batch
 	 *
 	 * @param mixed $request Request object implementing typical WP_REST_Request methods.
 	 * @return \WP_REST_Response|\WP_Error
@@ -1209,7 +1209,7 @@ class WP_Loupe_REST {
 	/**
 	 * Return per-post-type index health for the Dashboard.
 	 *
-	 * GET /wp-json/wp-loupe/v1/index-status
+	 * GET /wp-json/loupe-search/v1/index-status
 	 *
 	 * @return \WP_REST_Response
 	 */

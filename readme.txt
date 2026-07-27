@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -18,10 +18,10 @@ Loupe Search improves WordPress core search by maintaining its own index for fas
 = AI Agent Integration (WordPress Abilities API) =
 Loupe Search registers two abilities via the WordPress Abilities API (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively:
 
-* `wp-loupe/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
-* `wp-loupe/get-post` — Retrieve a single published post by ID. Publicly accessible.
+* `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
+* `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
 
-These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration.
+These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration. As of 1.2.0 the ability namespace is `loupe-search`; the legacy `wp-loupe/search` and `wp-loupe/get-post` abilities still work but are deprecated aliases.
 
 Upgrading from the experimental MCP server? The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the migration guide: https://github.com/soderlind/wp-loupe/blob/main/docs/migration-mcp-to-abilities.md
 
@@ -156,6 +156,10 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.2.0 =
+* Added: REST search now supports opt-in highlighting and cropping. Send `attributesToHighlight` and/or `attributesToCrop` (field names or `["*"]`) to the POST `/search` endpoint; each hit then includes a `_formatted` object with matched terms wrapped in tags and/or cropped snippets. Tag/marker and length are configurable via `highlightStartTag`, `highlightEndTag`, `cropLength`, and `cropMarker`. Highlight tags are sanitized to a safe allowlist.
+* Changed: WordPress Abilities are now registered as `loupe-search/search` and `loupe-search/get-post` under the `loupe-search` category. The legacy `wp-loupe/search` and `wp-loupe/get-post` abilities remain registered as deprecated aliases and will be removed in a future major release.
 
 = 1.1.1 =
 * Fixed: Front-end search now works when a public, searchable post type (e.g. attachments) is not indexed. Previously the plugin bailed out and fell back to WordPress's default search, returning no Loupe results.

@@ -380,6 +380,18 @@ if ( ! function_exists( 'taxonomy_exists' ) ) {
 		return false;
 	}
 }
+if ( ! function_exists( 'wp_register_ability' ) ) {
+	function wp_register_ability( $name, $args = [] ) {
+		$GLOBALS[ '__wp_loupe_registered_abilities' ][ $name ] = $args;
+		return true;
+	}
+}
+if ( ! function_exists( 'wp_register_ability_category' ) ) {
+	function wp_register_ability_category( $slug, $args = [] ) {
+		$GLOBALS[ '__wp_loupe_registered_ability_categories' ][ $slug ] = $args;
+		return true;
+	}
+}
 
 // Shut down Monkey after suite.
 // (No shutdown handler needed in this lightweight bootstrap)
