@@ -7,6 +7,9 @@
 .gitignore
 .gitattributes
 .DS_Store
+.editorconfig
+.wp-env.json
+.phpunit.cache/
 phpunit.xml.dist
 tests/
 
@@ -19,6 +22,8 @@ composer.lock
 # Documentation (GitHub-only)
 CHANGELOG.md
 TODO.md
+README.md
+CONTEXT.md
 docs/
 
 # Dev-only vendor packages (phpunit, pest, brain/monkey, etc.)

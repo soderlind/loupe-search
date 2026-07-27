@@ -27,27 +27,8 @@ jobs:
           mkdir -p /tmp/loupe-search
           rsync -a \
             --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='.gitattributes' \
-            --exclude='.gitignore' \
-            --exclude='.phpunit.cache/' \
             --exclude='node_modules/' \
-            --exclude='tests/' \
-            --exclude='docs/' \
-            --exclude='composer.json' \
-            --exclude='composer.lock' \
-            --exclude='package.json' \
-            --exclude='package-lock.json' \
-            --exclude='phpunit.xml.dist' \
-            --exclude='debug.php' \
-            --exclude='test-mcp-search.sh' \
-            --exclude='mcp-design.md' \
-            --exclude='TODO.md' \
-            --exclude='CHANGELOG.md' \
-            --exclude='README.md' \
-            --exclude='.editorconfig' \
-            --exclude='.wp-env.json' \
-            --exclude='vendor/bin/' \
+            --exclude-from='.distignore' \
             . /tmp/loupe-search/
 
       - name: Archive Release
