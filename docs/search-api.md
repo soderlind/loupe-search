@@ -1,6 +1,6 @@
-# WP Loupe Search API (Developer Guide)
+# Loupe Search API (Developer Guide)
 
-WP Loupe exposes a REST API that lets you build your own search UI (theme template, JS widget, Gutenberg block, React app, etc.) on top of the same index WP Loupe uses internally.
+Loupe Search exposes a REST API that lets you build your own search UI (theme template, JS widget, Gutenberg block, React app, etc.) on top of the same index Loupe Search uses internally.
 
 **Endpoints**
 
@@ -13,12 +13,12 @@ WP Loupe exposes a REST API that lets you build your own search UI (theme templa
 
 Search requires a ready index per post type.
 
-- When `postTypes: "all"` is used, WP Loupe only searches post types that have a ready index.
+- When `postTypes: "all"` is used, Loupe Search only searches post types that have a ready index.
 - If **no** configured post type has a ready index, the API returns **HTTP 400**.
 
 ### Allowlisted fields
 
-Filtering, sorting, facets, and geo operations are restricted to fields that are explicitly enabled in **Settings → WP Loupe**.
+Filtering, sorting, facets, and geo operations are restricted to fields that are explicitly enabled in **Settings → Loupe Search**.
 
 - Filter fields must be enabled as **Filterable**
 - Sort fields must be enabled as **Sortable**
@@ -31,9 +31,9 @@ If you request an operation on a non-allowlisted field, the API returns **HTTP 4
 
 #### Preparing fields (hooks + data shape)
 
-WP Loupe’s REST API only lets clients **filter/sort/facet/geo** on fields that are enabled in the schema.
+Loupe Search’s REST API only lets clients **filter/sort/facet/geo** on fields that are enabled in the schema.
 
-Most sites will configure this in **Settings → WP Loupe → Field Settings**.
+Most sites will configure this in **Settings → Loupe Search → Field Settings**.
 If you’re building an integration or need to enforce fields programmatically, use the schema hooks below.
 
 ##### 1) Facets (terms)
@@ -48,7 +48,7 @@ Example: add a facet field backed by post meta.
 
 ```php
 // 1) Allowlist the field in the schema.
-add_filter( 'wp_loupe_schema_post', function ( array $schema ): array {
+add_filter( 'loupe_search_schema_post', function ( array $schema ): array {
   $schema['audience'] = [
     'weight'         => 1.0,
     'indexable'      => true,
@@ -86,7 +86,7 @@ Example:
 
 ```php
 // 1) Allowlist the geo field.
-add_filter( 'wp_loupe_schema_post', function ( array $schema ): array {
+add_filter( 'loupe_search_schema_post', function ( array $schema ): array {
   $schema['location'] = [
     'weight'         => 1.0,
     'indexable'      => true,
@@ -109,7 +109,7 @@ add_action( 'save_post', function ( int $post_id ) {
 If your geo field is stored as post meta and you need to override “meta sortability” decisions, you can use:
 
 ```php
-add_filter( 'wp_loupe_is_safely_sortable_meta_post', function ( bool $is_sortable, string $field_name ): bool {
+add_filter( 'loupe_search_is_safely_sortable_meta_post', function ( bool $is_sortable, string $field_name ): bool {
   if ( 'location' === $field_name ) {
     return true;
   }
@@ -128,7 +128,7 @@ Sorting requires the field to be:
 Example:
 
 ```php
-add_filter( 'wp_loupe_schema_post', function ( array $schema ): array {
+add_filter( 'loupe_search_schema_post', function ( array $schema ): array {
   $schema['rating'] = [
     'weight'         => 1.0,
     'indexable'      => true,
@@ -144,7 +144,7 @@ add_action( 'save_post', function ( int $post_id ) {
 } );
 ```
 
-Note: if you already have data in meta, you typically only need the schema hook + a reindex (Settings → WP Loupe → Reindex, or `wp loupe-search reindex`).
+Note: if you already have data in meta, you typically only need the schema hook + a reindex (Settings → Loupe Search → Reindex, or `wp loupe-search reindex`).
 
 ## POST /search
 
@@ -263,7 +263,7 @@ Notes:
 
 ## Filter AST (JSON)
 
-WP Loupe accepts a structured JSON filter. The server translates it into the underlying Loupe filter syntax.
+Loupe Search accepts a structured JSON filter. The server translates it into the underlying Loupe filter syntax.
 
 ### Groups
 
@@ -402,7 +402,7 @@ export default function Edit() {
 	}, [body, query]);
 
 	return (
-		<div className="wp-loupe-search-block">
+		<div className="loupe-search-block">
 			<TextControl
 				label="Search"
 				value={ query }

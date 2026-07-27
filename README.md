@@ -2,7 +2,7 @@
 
 A search enhancement plugin for WordPress that builds a fast, typo-tolerant index and exposes a [developer-friendly API](https://github.com/soderlind/loupe-search/blob/main/docs/search-api.md) so you can build your own search UI. **Loupe Search works out of the box with WordPress’s standard search.**
 
-> **Renamed from WP Loupe.** Loupe Search is the successor to the **WP Loupe** plugin. Existing installs upgrade seamlessly: the legacy `wp-content/wp-loupe-db` index folder is reused automatically, and the deprecated `wp_loupe_*` filters, `wp-loupe/v1` REST namespace, and `wp wp-loupe` CLI command still work (with deprecation warnings) until a future major release. See the [Changelog](CHANGELOG.md) for the full list of renamed hooks and endpoints.
+> **Renamed from WP Loupe.** Loupe Search is the successor to the **WP Loupe** plugin. Existing installs upgrade seamlessly, and the legacy filters, REST namespace, CLI command, and index folder still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)** for details.
 
 ## Quick Links
 
@@ -27,7 +27,7 @@ Loupe Search exposes search via REST endpoints:
 - **POST** `/wp-json/loupe-search/v1/search` (recommended; supports JSON filters, facets, geo, explicit sorting, and search-result highlighting/snippets)
 - **GET** `/wp-json/loupe-search/v1/search?q=...` (legacy; kept for backward compatibility)
 
-> **Note:** As of 1.1.0 the REST namespace is `loupe-search/v1`. The old `wp-loupe/v1` namespace still works but is deprecated and will be removed in a future major release.
+> The old `wp-loupe/v1` namespace still works as a deprecated alias. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
 
 Developer documentation (schema + examples + Gutenberg block example): **[docs/search-api.md](docs/search-api.md)**
 
@@ -40,7 +40,7 @@ Loupe Search registers two abilities via the [WordPress Abilities API](https://d
 
 Both abilities are discoverable through the standard WordPress Abilities registry and exposed via REST (`show_in_rest`).
 
-> **Note:** As of 1.2.0 the ability namespace and category are `loupe-search`. The legacy `wp-loupe/search` and `wp-loupe/get-post` abilities (category `wp-loupe`) still work but are deprecated aliases and will be removed in a future major release.
+> The legacy `wp-loupe/*` abilities (category `wp-loupe`) still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
 
 > **Upgrading from the MCP server?** The experimental MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the **[MCP → Abilities API migration guide](docs/migration-mcp-to-abilities.md)**.
 
@@ -215,7 +215,7 @@ Yes, you can select which post types to include in the Settings page or via filt
 
 ## Filters
 
-> **Note:** As of 1.1.0 the developer filters use the `loupe_search_*` prefix. The old `wp_loupe_*` names still work but are deprecated and will be removed in a future major release. Update your `add_filter()` calls to the new names.
+> Filters use the `loupe_search_*` prefix; the old `wp_loupe_*` names still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
 
 ### `loupe_search_db_path`
 
