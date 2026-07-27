@@ -16,7 +16,7 @@ tests/
 # Build / tooling config
 package.json
 package-lock.json
-composer.json
+# composer.json should be included when vendor dependencies are committed, but excluded when they are not.
 composer.lock
 
 # Documentation (GitHub-only)
