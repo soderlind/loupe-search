@@ -593,6 +593,53 @@ class WP_Loupe_REST {
 			array_unshift( $sort_strings, sprintf( '_geoPoint(%s, %s, %s):%s', $geo_field, (string) $geo_lat, (string) $geo_lon, $geo_sort_order ) );
 		}
 
+		// Highlighting / cropping (opt-in). Validate requested field names against the
+		// indexable set for the requested post types; unknown names are dropped and the
+		// `["*"]` wildcard expands to that bounded set. Tag/marker strings are sanitized
+		// so the API never emits script-capable markup.
+		$highlight_fields = [];
+		$crop_fields      = [];
+		$highlight_start  = '<em>';
+		$highlight_end    = '</em>';
+		$crop_length      = 50;
+		$crop_marker      = '…';
+
+		$wants_highlight = isset( $payload[ 'attributesToHighlight' ] );
+		$wants_crop      = isset( $payload[ 'attributesToCrop' ] );
+		if ( $wants_highlight || $wants_crop ) {
+			if ( $wants_highlight && ! is_array( $payload[ 'attributesToHighlight' ] ) ) {
+				return new \WP_Error( 'wp_loupe_invalid_highlight', __( 'attributesToHighlight must be an array.', 'loupe-search' ), [ 'status' => 400 ] );
+			}
+			if ( $wants_crop && ! is_array( $payload[ 'attributesToCrop' ] ) ) {
+				return new \WP_Error( 'wp_loupe_invalid_crop', __( 'attributesToCrop must be an array.', 'loupe-search' ), [ 'status' => 400 ] );
+			}
+
+			$highlightable = $this->get_common_highlightable( $post_types_to_search );
+			if ( $wants_highlight ) {
+				$highlight_fields = $this->resolve_highlight_fields( $payload[ 'attributesToHighlight' ], $highlightable );
+			}
+			if ( $wants_crop ) {
+				$crop_fields = $this->resolve_highlight_fields( $payload[ 'attributesToCrop' ], $highlightable );
+			}
+		}
+
+		$want_formatting = ! empty( $highlight_fields ) || ! empty( $crop_fields );
+
+		if ( $want_formatting ) {
+			if ( isset( $payload[ 'highlightStartTag' ] ) ) {
+				$highlight_start = $this->sanitize_highlight_tag( (string) $payload[ 'highlightStartTag' ] );
+			}
+			if ( isset( $payload[ 'highlightEndTag' ] ) ) {
+				$highlight_end = $this->sanitize_highlight_tag( (string) $payload[ 'highlightEndTag' ] );
+			}
+			if ( isset( $payload[ 'cropLength' ] ) ) {
+				$crop_length = max( 10, min( 500, (int) $payload[ 'cropLength' ] ) );
+			}
+			if ( isset( $payload[ 'cropMarker' ] ) ) {
+				$crop_marker = sanitize_text_field( (string) $payload[ 'cropMarker' ] );
+			}
+		}
+
 		// Always include score.
 		$attrs_to_retrieve = [ 'id' ];
 		// Ensure sort fields are retrievable so we can merge/sort across post types if needed.
@@ -607,19 +654,36 @@ class WP_Loupe_REST {
 		if ( null !== $geo && $geo_include_distance ) {
 			$attrs_to_retrieve[] = sprintf( '_geoDistance(%s)', $geo_field );
 		}
+		// Highlighted / cropped fields must be retrieved so they appear in each hit's
+		// `_formatted` payload.
+		if ( $want_formatting ) {
+			$attrs_to_retrieve = array_merge( $attrs_to_retrieve, $highlight_fields, $crop_fields );
+		}
 		$attrs_to_retrieve = array_values( array_unique( $attrs_to_retrieve ) );
 
 		$engine = ( count( $post_types_to_search ) === count( $this->post_types ) )
 			? $this->search_service
 			: new WP_Loupe_Search_Engine( $post_types_to_search, $this->db );
 
-		$raw = $engine->search_advanced( $q, [
+		$adv_options = [
 			'filter'               => $filter_str,
 			'sort'                 => $sort_strings,
 			'facets'               => $requested_facets,
 			'limit'                => $fetch_count,
 			'attributesToRetrieve' => $attrs_to_retrieve,
-		] );
+		];
+		if ( ! empty( $highlight_fields ) ) {
+			$adv_options[ 'attributesToHighlight' ] = $highlight_fields;
+			$adv_options[ 'highlightStartTag' ]     = $highlight_start;
+			$adv_options[ 'highlightEndTag' ]       = $highlight_end;
+		}
+		if ( ! empty( $crop_fields ) ) {
+			$adv_options[ 'attributesToCrop' ] = $crop_fields;
+			$adv_options[ 'cropLength' ]       = $crop_length;
+			$adv_options[ 'cropMarker' ]       = $crop_marker;
+		}
+
+		$raw = $engine->search_advanced( $q, $adv_options );
 
 		$raw_hits = isset( $raw[ 'hits' ] ) && is_array( $raw[ 'hits' ] ) ? $raw[ 'hits' ] : [];
 		// Enforce allowed post types.
@@ -668,6 +732,12 @@ class WP_Loupe_REST {
 			];
 			if ( isset( $hit[ '_distanceMeters' ] ) ) {
 				$row[ '_distanceMeters' ] = (int) $hit[ '_distanceMeters' ];
+			}
+			// Native Loupe highlighting/cropping passthrough. Present only when the
+			// request opted in via attributesToHighlight / attributesToCrop. Keys are
+			// Loupe field names (e.g. post_title, post_content).
+			if ( isset( $hit[ '_formatted' ] ) && is_array( $hit[ '_formatted' ] ) ) {
+				$row[ '_formatted' ] = $hit[ '_formatted' ];
 			}
 			$enriched[] = $row;
 		}
@@ -747,6 +817,72 @@ class WP_Loupe_REST {
 			'filterable' => $filterable,
 			'sortable'   => $sortable,
 		];
+	}
+
+	/**
+	 * Compute the intersection of indexable (retrievable) fields across post types.
+	 *
+	 * Used to validate `attributesToHighlight` / `attributesToCrop` requests and to
+	 * expand the `["*"]` wildcard to a bounded set of field names.
+	 *
+	 * @param array<int,string> $post_types
+	 * @return array<int,string>
+	 */
+	private function get_common_highlightable( array $post_types ) {
+		$sets = [];
+		foreach ( $post_types as $pt ) {
+			$schema = $this->schema_manager->get_schema_for_post_type( $pt );
+			$sets[] = $this->schema_manager->get_indexable_fields( $schema );
+		}
+
+		$fields = $this->intersect_string_lists( $sets );
+
+		// Only keep Loupe-compatible attribute names.
+		return array_values( array_filter( $fields, [ WP_Loupe_Search_Engine::class, 'is_valid_loupe_attribute_name' ] ) );
+	}
+
+	/**
+	 * Resolve a requested highlight/crop field list against the allowed set.
+	 *
+	 * The `["*"]` wildcard expands to the full allowed set. Any requested name that is
+	 * not in the allowed set is dropped silently.
+	 *
+	 * @param array<int,mixed>  $requested
+	 * @param array<int,string> $allowed
+	 * @return array<int,string>
+	 */
+	private function resolve_highlight_fields( array $requested, array $allowed ) {
+		if ( in_array( '*', $requested, true ) ) {
+			return array_values( $allowed );
+		}
+		$out = [];
+		foreach ( $requested as $field ) {
+			if ( is_string( $field ) && in_array( $field, $allowed, true ) ) {
+				$out[] = $field;
+			}
+		}
+		return array_values( array_unique( $out ) );
+	}
+
+	/**
+	 * Sanitize a highlight tag string to a safe allowlist.
+	 *
+	 * Guarantees the API never emits script-capable markup even if a caller supplies
+	 * an arbitrary tag. Only a small set of inline formatting tags is permitted.
+	 *
+	 * @param string $tag
+	 * @return string
+	 */
+	private function sanitize_highlight_tag( string $tag ) {
+		$allowed = [
+			'mark'   => [ 'class' => true ],
+			'em'     => [ 'class' => true ],
+			'strong' => [ 'class' => true ],
+			'span'   => [ 'class' => true ],
+			'b'      => [ 'class' => true ],
+			'i'      => [ 'class' => true ],
+		];
+		return wp_kses( $tag, $allowed );
 	}
 
 	/**

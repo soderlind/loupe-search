@@ -24,7 +24,7 @@ Loupe Search transforms WordPress's search functionality by:
 
 Loupe Search exposes search via REST endpoints:
 
-- **POST** `/wp-json/loupe-search/v1/search` (recommended; supports JSON filters, facets, geo, and explicit sorting)
+- **POST** `/wp-json/loupe-search/v1/search` (recommended; supports JSON filters, facets, geo, explicit sorting, and search-result highlighting/snippets)
 - **GET** `/wp-json/loupe-search/v1/search?q=...` (legacy; kept for backward compatibility)
 
 > **Note:** As of 1.1.0 the REST namespace is `loupe-search/v1`. The old `wp-loupe/v1` namespace still works but is deprecated and will be removed in a future major release.
