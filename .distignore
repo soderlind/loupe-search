@@ -44,5 +44,12 @@ vendor/nunomaduro/
 vendor/staabm/
 vendor/ta-tikoma/
 
+# Unused nitotm language-detector n-gram databases (~131 MB).
+# Loupe loads only resources/ngrams/large.php (EldDataFile::LARGE, MODE_ARRAY).
+# - extralarge.php: never loadable (MODE_ARRAY needs memory_limit >= 2000 MB).
+# - blob/: only used by string/bytes/disk modes, which Loupe does not use.
+vendor/nitotm/efficient-language-detector/resources/ngrams/extralarge.php
+vendor/nitotm/efficient-language-detector/resources/ngrams/blob/
+
 # wp.org assets live in .wordpress-org/ (mapped to SVN assets/ by the action)
 .wordpress-org/
