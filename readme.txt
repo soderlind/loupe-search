@@ -52,6 +52,8 @@ Upgrading from the experimental MCP server? The MCP server, token service, and W
 * 🔧 Customizable indexing
 * Field weighting control
 
+See the [Search API documentation](https://github.com/soderlind/loupe-search/blob/main/docs/search-api.md) for REST endpoint details.
+
 = Administration =
 
 * Simple settings interface
