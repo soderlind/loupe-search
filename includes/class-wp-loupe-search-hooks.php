@@ -86,21 +86,19 @@ class WP_Loupe_Search_Hooks {
 			return false;
 		}
 
-		// Only intercept if all queried post types are indexed by WP Loupe.
+		// When a post_type is explicitly requested, only intercept if every
+		// requested type is indexed by WP Loupe; otherwise let WordPress handle
+		// the query so unindexed types are not silently dropped.
 		$queried_type = $query->get( 'post_type' );
-		if ( empty( $queried_type ) || 'any' === $queried_type ) {
-			// When no post_type specified, only intercept if we index all public searchable types.
-			$searchable_types = get_post_types( [ 'public' => true, 'exclude_from_search' => false ] );
-			if ( array_diff( $searchable_types, $this->post_types ) ) {
-				return false;
-			}
-		} else {
+		if ( ! empty( $queried_type ) && 'any' !== $queried_type ) {
 			$queried_types = (array) $queried_type;
 			if ( array_diff( $queried_types, $this->post_types ) ) {
 				return false;
 			}
 		}
 
+		// For default searches (no explicit post_type), intercept and restrict
+		// results to the indexed post types via posts_pre_query().
 		return true;
 	}
 

@@ -20,7 +20,7 @@ This is a list of features, both implemented and planned. Checked items are comp
 - [x] Facets (terms) via POST `/wp-json/wp-loupe/v1/search`.
 - [x] Geo radius + geo sorting via POST `/wp-json/wp-loupe/v1/search`.
 - [x] Removed bundled UI integration (block/shortcode/search-form override). Build your own UI via the API.
-- [ ] Categories, tags, and custom taxonomies (indexing + allowlisting for filtering/faceting).
+- [ ] 2.0.0: Categories, tags, and custom taxonomies (indexing + allowlisting for filtering/faceting).
 - [ ] 2.0.0: Custom fields (indexing + allowlisting for filtering/faceting).
 - [ ] Multisite support, including the option to index all sites in a network.
 - [ ] Multisite support. Select which sites to index.
