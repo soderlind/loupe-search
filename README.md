@@ -4,6 +4,8 @@
 
 A search enhancement plugin for WordPress that builds a fast, typo-tolerant index and exposes a developer-friendly API so you can build your own search UI. **Loupe Search works out of the box with WordPress’s standard search.**
 
+> **Renamed from WP Loupe.** Loupe Search is the successor to the **WP Loupe** plugin. Existing installs upgrade seamlessly: the legacy `wp-content/wp-loupe-db` index folder is reused automatically, and the deprecated `wp_loupe_*` filters, `wp-loupe/v1` REST namespace, and `wp wp-loupe` CLI command still work (with deprecation warnings) until a future major release. See the [Changelog](CHANGELOG.md) for the full list of renamed hooks and endpoints.
+
 ## Quick Links
 
 [Installation](#installation) | [REST API](#rest-api) | [AI Agent Integration](#ai-agent-integration-wordpress-abilities-api) | [Building Your Own Search UI](#building-your-own-search-ui) | [Settings](#settings) | [Filters](#filters) | [Changelog](CHANGELOG.md)
