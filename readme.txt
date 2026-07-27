@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -156,6 +156,9 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.1.1 =
+* Fixed: Front-end search now works when a public, searchable post type (e.g. attachments) is not indexed. Previously the plugin bailed out and fell back to WordPress's default search, returning no Loupe results.
 
 = 1.1.0 =
 * Changed: Developer filters now use the `loupe_search_*` prefix.
