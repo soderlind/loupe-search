@@ -195,6 +195,12 @@ class WP_Loupe_Search_Engine {
 	 *   facets?: array<string>,
 	 *   limit?: int,
 	 *   attributesToRetrieve?: array<string>,
+	 *   attributesToHighlight?: array<string>,
+	 *   highlightStartTag?: string,
+	 *   highlightEndTag?: string,
+	 *   attributesToCrop?: array<string>,
+	 *   cropLength?: int,
+	 *   cropMarker?: string,
 	 * } $options
 	 * @return array{hits:array<int,array<string,mixed>>, totalHits:int, processingTimeMs:int, facetDistribution:array<string,array<string,int>>}
 	 */
@@ -206,6 +212,22 @@ class WP_Loupe_Search_Engine {
 		$limit  = isset( $options[ 'limit' ] ) ? (int) $options[ 'limit' ] : 0;
 		$attrs  = isset( $options[ 'attributesToRetrieve' ] ) && is_array( $options[ 'attributesToRetrieve' ] ) ? array_values( $options[ 'attributesToRetrieve' ] ) : [];
 
+		// Highlighting / cropping. The caller (REST) is responsible for validating field
+		// names against the indexed set and sanitizing the tag/marker strings.
+		$highlight        = isset( $options[ 'attributesToHighlight' ] ) && is_array( $options[ 'attributesToHighlight' ] ) ? array_values( array_unique( $options[ 'attributesToHighlight' ] ) ) : [];
+		$crop             = isset( $options[ 'attributesToCrop' ] ) && is_array( $options[ 'attributesToCrop' ] ) ? array_values( array_unique( $options[ 'attributesToCrop' ] ) ) : [];
+		$highlight_start  = isset( $options[ 'highlightStartTag' ] ) ? (string) $options[ 'highlightStartTag' ] : '<em>';
+		$highlight_end    = isset( $options[ 'highlightEndTag' ] ) ? (string) $options[ 'highlightEndTag' ] : '</em>';
+		$crop_length      = isset( $options[ 'cropLength' ] ) ? (int) $options[ 'cropLength' ] : 50;
+		$crop_marker      = isset( $options[ 'cropMarker' ] ) ? (string) $options[ 'cropMarker' ] : '…';
+
+		// Loupe only formats attributes that are present in the returned hit (i.e. those
+		// listed in attributesToRetrieve). Ensure every highlighted/cropped field is
+		// retrieved so it appears in the hit's `_formatted` payload.
+		if ( ! empty( $attrs ) && ( ! empty( $highlight ) || ! empty( $crop ) ) ) {
+			$attrs = array_values( array_unique( array_merge( $attrs, $highlight, $crop ) ) );
+		}
+
 		$cache_key     = md5( wp_json_encode( [
 			'q'          => $query,
 			'post_types' => $this->post_types,
@@ -214,6 +236,12 @@ class WP_Loupe_Search_Engine {
 			'facets'     => $facets,
 			'limit'      => $limit,
 			'attrs'      => $attrs,
+			'highlight'  => $highlight,
+			'crop'       => $crop,
+			'hl_start'   => $highlight_start,
+			'hl_end'     => $highlight_end,
+			'crop_len'   => $crop_length,
+			'crop_mark'  => $crop_marker,
 		] ) );
 		$transient_key = "wp_loupe_search_adv_{$cache_key}";
 		$cached        = get_transient( $transient_key );
@@ -246,6 +274,13 @@ class WP_Loupe_Search_Engine {
 				}
 				if ( $limit > 0 ) {
 					$search_params = $search_params->withLimit( $limit );
+				}
+
+				if ( ! empty( $highlight ) ) {
+					$search_params = $search_params->withAttributesToHighlight( $highlight, $highlight_start, $highlight_end );
+				}
+				if ( ! empty( $crop ) ) {
+					$search_params = $search_params->withAttributesToCrop( $crop, $crop_length, $crop_marker );
 				}
 
 				$result = $this->loupe[ $post_type ]->search( $search_params );

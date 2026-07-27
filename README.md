@@ -24,7 +24,7 @@ Loupe Search transforms WordPress's search functionality by:
 
 Loupe Search exposes search via REST endpoints:
 
-- **POST** `/wp-json/loupe-search/v1/search` (recommended; supports JSON filters, facets, geo, and explicit sorting)
+- **POST** `/wp-json/loupe-search/v1/search` (recommended; supports JSON filters, facets, geo, explicit sorting, and search-result highlighting/snippets)
 - **GET** `/wp-json/loupe-search/v1/search?q=...` (legacy; kept for backward compatibility)
 
 > **Note:** As of 1.1.0 the REST namespace is `loupe-search/v1`. The old `wp-loupe/v1` namespace still works but is deprecated and will be removed in a future major release.
@@ -35,10 +35,12 @@ Developer documentation (schema + examples + Gutenberg block example): **[docs/s
 
 Loupe Search registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra configuration required:
 
-- `wp-loupe/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
-- `wp-loupe/get-post` — Retrieve a single published post by ID. Publicly accessible.
+- `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
+- `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
 
 Both abilities are discoverable through the standard WordPress Abilities registry and exposed via REST (`show_in_rest`).
+
+> **Note:** As of 1.2.0 the ability namespace and category are `loupe-search`. The legacy `wp-loupe/search` and `wp-loupe/get-post` abilities (category `wp-loupe`) still work but are deprecated aliases and will be removed in a future major release.
 
 > **Upgrading from the MCP server?** The experimental MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the **[MCP → Abilities API migration guide](docs/migration-mcp-to-abilities.md)**.
 

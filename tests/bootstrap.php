@@ -350,6 +350,20 @@ if ( ! function_exists( 'sanitize_text_field' ) ) {
 		return trim( preg_replace( '/[\r\n\t ]+/', ' ', wp_strip_all_tags( (string) $str ) ) );
 	}
 }
+if ( ! function_exists( 'wp_kses' ) ) {
+	// Minimal test shim: keep allowlisted tags verbatim, drop any other tag while
+	// preserving its inner text (mirrors wp_kses's tag-stripping behavior).
+	function wp_kses( $content, $allowed_html, $allowed_protocols = [] ) {
+		$allowed = array_map( 'strtolower', array_keys( (array) $allowed_html ) );
+		return preg_replace_callback(
+			'#</?\s*([a-zA-Z0-9]+)([^>]*)>#',
+			function ( $m ) use ( $allowed ) {
+				return in_array( strtolower( $m[ 1 ] ), $allowed, true ) ? $m[ 0 ] : '';
+			},
+			(string) $content
+		);
+	}
+}
 if ( ! function_exists( 'post_type_exists' ) ) {
 	function post_type_exists( $pt ) {
 		// Include custom post types referenced in tests.
@@ -364,6 +378,18 @@ if ( ! function_exists( 'get_object_taxonomies' ) ) {
 if ( ! function_exists( 'taxonomy_exists' ) ) {
 	function taxonomy_exists( $tax ) {
 		return false;
+	}
+}
+if ( ! function_exists( 'wp_register_ability' ) ) {
+	function wp_register_ability( $name, $args = [] ) {
+		$GLOBALS[ '__wp_loupe_registered_abilities' ][ $name ] = $args;
+		return true;
+	}
+}
+if ( ! function_exists( 'wp_register_ability_category' ) ) {
+	function wp_register_ability_category( $slug, $args = [] ) {
+		$GLOBALS[ '__wp_loupe_registered_ability_categories' ][ $slug ] = $args;
+		return true;
 	}
 }
 

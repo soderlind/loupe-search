@@ -175,7 +175,13 @@ Note: if you already have data in meta, you typically only need the schema hook 
     "radiusMeters": 5000,
     "sort": { "order": "asc" },
     "includeDistance": true
-  }
+  },
+  "attributesToHighlight": [ "post_title", "post_content" ],
+  "highlightStartTag": "<mark>",
+  "highlightEndTag": "</mark>",
+  "attributesToCrop": [ "post_content" ],
+  "cropLength": 50,
+  "cropMarker": "…"
 }
 ```
 
@@ -190,11 +196,25 @@ Note: if you already have data in meta, you typically only need the schema hook 
 - `sort` (array, optional): sorting instructions.
 - `facets` (array, optional): terms facets.
 - `geo` (object, optional): geo radius + geo sorting.
+- `attributesToHighlight` (string[], optional): field names to wrap matched terms in. Use `["*"]` for every indexed field.
+- `highlightStartTag` / `highlightEndTag` (string, optional, default `<em>` / `</em>`): markup wrapped around matches.
+- `attributesToCrop` (string[], optional): field names to return as a short snippet around the match. Use `["*"]` for every indexed field.
+- `cropLength` (int, optional, default 50, clamped 10–500): approximate snippet length in words.
+- `cropMarker` (string, optional, default `…`): marker inserted where text is cropped.
 
 Notes:
 
 - Fields used in `filter`, `sort`, `facets`, and `geo` must be allowlisted in Settings (see **Allowlisted fields** above).
 - For geo, `geo.near.lon` is supported; `geo.near.lng` is also accepted for convenience.
+
+#### Highlighting & cropping
+
+Highlighting and cropping are **opt-in** — the response includes a `_formatted` object per hit only when `attributesToHighlight` and/or `attributesToCrop` are supplied.
+
+- Requested field names are validated against the indexed field set for the searched post types; unknown names are dropped silently. `["*"]` expands to that set.
+- `highlightStartTag` / `highlightEndTag` are sanitized to a safe allowlist of inline tags (`mark`, `em`, `strong`, `span`, `b`, `i`, each allowing a `class` attribute). The API never emits script-capable markup.
+- Indexed content is stored as plain text (HTML stripped at index time), so `_formatted` values contain only the sanitized highlight tags plus the matched text.
+- `_formatted` keys are the underlying Loupe field names (e.g. `post_title`, `post_content`), which differ from the friendly top-level keys (`title`, `excerpt`).
 
 ### Response
 
@@ -209,7 +229,11 @@ Notes:
       "excerpt": "…",
       "url": "https://example.test/example",
       "_score": 12.345,
-      "_distanceMeters": 3210
+      "_distanceMeters": 3210,
+      "_formatted": {
+        "post_title": "Example <mark>title</mark>",
+        "post_content": "…matched <mark>title</mark> in context…"
+      }
     }
   ],
   "facets": {
@@ -235,6 +259,7 @@ Notes:
 
 - `_score` is always included.
 - `_distanceMeters` is included only when `geo.includeDistance` is `true`.
+- `_formatted` is included only when `attributesToHighlight` and/or `attributesToCrop` are supplied.
 
 ## Filter AST (JSON)
 

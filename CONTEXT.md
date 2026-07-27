@@ -50,3 +50,23 @@ The number of published posts of a post type (`wp_count_posts()->publish`),
 shown on the Dashboard as the reindex denominator. It is a target, not a
 precise count of documents currently in the index.
 _Avoid_: doc count, indexed count
+
+**Formatted hit**:
+The optional `_formatted` object returned per hit by the REST search endpoint
+when a request opts in via `attributesToHighlight` and/or `attributesToCrop`.
+It carries the matched fields with highlight tags and/or cropped snippets, keyed
+by the underlying Loupe field names. Distinct from the friendly top-level hit
+keys (`title`, `excerpt`).
+_Avoid_: formatted result, highlight object (as separate terms)
+
+**Highlight**:
+Wrapping matched query terms in the returned field value with a start/end tag
+(default `<em>`/`</em>`). Requested per field via `attributesToHighlight`.
+_Avoid_: emphasize, mark up
+
+**Snippet**:
+A cropped excerpt of a field centered on the match, produced via
+`attributesToCrop` + `cropLength` + `cropMarker`. Used for long fields like
+`post_content`.
+_Avoid_: crop, teaser, summary
+

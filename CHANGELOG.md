@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-27
+
+### Added
+- REST search now supports opt-in highlighting and cropping. Send `attributesToHighlight` and/or `attributesToCrop` (field names or `["*"]`) to the POST `/search` endpoint; each hit then includes a `_formatted` object with matched terms wrapped in tags and/or cropped snippets. Tag/marker and length are configurable via `highlightStartTag`, `highlightEndTag`, `cropLength`, and `cropMarker`. Highlight tags are sanitized to a safe allowlist.
+
+### Changed
+- WordPress Abilities are now registered as `loupe-search/search` and `loupe-search/get-post` under the `loupe-search` category. The legacy `wp-loupe/search` and `wp-loupe/get-post` abilities (category `wp-loupe`) remain registered as deprecated aliases and will be removed in a future major release.
+
 ## [1.1.1] - 2026-07-27
 
 ### Fixed

@@ -37,19 +37,24 @@ class WP_Loupe_REST_SearchPostTest extends TestCase {
 		};
 	}
 
-	private function setSchemaManagerStub( WP_Loupe_REST $rest, array $filterable, array $sortableFields ): void {
-		$stub = new class ($filterable, $sortableFields) {
+	private function setSchemaManagerStub( WP_Loupe_REST $rest, array $filterable, array $sortableFields, array $indexable = [] ): void {
+		$stub = new class ($filterable, $sortableFields, $indexable) {
 			private $filterable;
 			private $sortable;
-			public function __construct( $filterable, $sortable ) {
+			private $indexable;
+			public function __construct( $filterable, $sortable, $indexable ) {
 				$this->filterable = $filterable;
 				$this->sortable   = $sortable;
+				$this->indexable  = $indexable;
 			}
 			public function get_schema_for_post_type( $pt ) {
 				return [];
 			}
 			public function get_filterable_fields( $schema ) {
 				return $this->filterable;
+			}
+			public function get_indexable_fields( $schema ) {
+				return $this->indexable;
 			}
 			public function get_sortable_fields( $schema ) {
 				return array_map( function ( $f ) {
@@ -183,5 +188,118 @@ class WP_Loupe_REST_SearchPostTest extends TestCase {
 		$this->assertSame( 1, $response[ 'pagination' ][ 'per_page' ] );
 		$this->assertSame( 1, $response[ 'pagination' ][ 'current_page' ] );
 		$this->assertSame( 2, $response[ 'pagination' ][ 'total_pages' ] );
+	}
+
+	public function test_post_search_without_highlight_has_no_formatted_key() {
+		$this->seedIndex( 'post', [
+			[ 'id' => 1, 'post_title' => 'Hello world' ],
+		] );
+
+		$rest = new WP_Loupe_REST();
+		$this->setSchemaManagerStub( $rest, [ 'category' ], [ 'post_date' ], [ 'post_title' ] );
+
+		$response = $rest->handle_search_request_post(
+			$this->makeJsonRequest( [
+				'q'         => 'hello',
+				'postTypes' => [ 'post' ],
+			] )
+		);
+
+		$this->assertIsArray( $response );
+		$this->assertNotEmpty( $response[ 'hits' ] );
+		$this->assertArrayNotHasKey( '_formatted', $response[ 'hits' ][ 0 ] );
+	}
+
+	public function test_post_search_highlight_returns_formatted_field() {
+		$this->seedIndex( 'post', [
+			[ 'id' => 1, 'post_title' => 'Hello world' ],
+		] );
+
+		$rest = new WP_Loupe_REST();
+		$this->setSchemaManagerStub( $rest, [ 'category' ], [ 'post_date' ], [ 'post_title' ] );
+
+		$response = $rest->handle_search_request_post(
+			$this->makeJsonRequest( [
+				'q'                     => 'hello',
+				'postTypes'             => [ 'post' ],
+				'attributesToHighlight' => [ 'post_title' ],
+				'highlightStartTag'     => '<mark>',
+				'highlightEndTag'       => '</mark>',
+			] )
+		);
+
+		$this->assertIsArray( $response );
+		$this->assertNotEmpty( $response[ 'hits' ] );
+		$hit = $response[ 'hits' ][ 0 ];
+		$this->assertArrayHasKey( '_formatted', $hit );
+		$this->assertArrayHasKey( 'post_title', $hit[ '_formatted' ] );
+		$this->assertStringContainsString( '<mark>', $hit[ '_formatted' ][ 'post_title' ] );
+		$this->assertStringContainsString( '</mark>', $hit[ '_formatted' ][ 'post_title' ] );
+	}
+
+	public function test_post_search_highlight_unknown_field_is_dropped() {
+		$this->seedIndex( 'post', [
+			[ 'id' => 1, 'post_title' => 'Hello world' ],
+		] );
+
+		$rest = new WP_Loupe_REST();
+		$this->setSchemaManagerStub( $rest, [ 'category' ], [ 'post_date' ], [ 'post_title' ] );
+
+		$response = $rest->handle_search_request_post(
+			$this->makeJsonRequest( [
+				'q'                     => 'hello',
+				'postTypes'             => [ 'post' ],
+				'attributesToHighlight' => [ 'nonexistent_field' ],
+			] )
+		);
+
+		// Unknown field dropped => no formatting requested => no _formatted key.
+		$this->assertIsArray( $response );
+		$this->assertNotEmpty( $response[ 'hits' ] );
+		$this->assertArrayNotHasKey( '_formatted', $response[ 'hits' ][ 0 ] );
+	}
+
+	public function test_post_search_highlight_tag_is_sanitized() {
+		$this->seedIndex( 'post', [
+			[ 'id' => 1, 'post_title' => 'Hello world' ],
+		] );
+
+		$rest = new WP_Loupe_REST();
+		$this->setSchemaManagerStub( $rest, [ 'category' ], [ 'post_date' ], [ 'post_title' ] );
+
+		$response = $rest->handle_search_request_post(
+			$this->makeJsonRequest( [
+				'q'                     => 'hello',
+				'postTypes'             => [ 'post' ],
+				'attributesToHighlight' => [ 'post_title' ],
+				'highlightStartTag'     => '<script>alert(1)</script>',
+				'highlightEndTag'       => '</em>',
+			] )
+		);
+
+		$this->assertIsArray( $response );
+		$hit = $response[ 'hits' ][ 0 ];
+		$this->assertArrayHasKey( '_formatted', $hit );
+		$this->assertStringNotContainsString( '<script>', $hit[ '_formatted' ][ 'post_title' ] );
+	}
+
+	public function test_post_search_invalid_highlight_type_returns_error() {
+		$this->seedIndex( 'post', [
+			[ 'id' => 1, 'post_title' => 'Hello world' ],
+		] );
+
+		$rest = new WP_Loupe_REST();
+		$this->setSchemaManagerStub( $rest, [ 'category' ], [ 'post_date' ], [ 'post_title' ] );
+
+		$result = $rest->handle_search_request_post(
+			$this->makeJsonRequest( [
+				'q'                     => 'hello',
+				'postTypes'             => [ 'post' ],
+				'attributesToHighlight' => 'post_title',
+			] )
+		);
+
+		$this->assertInstanceOf( '\\WP_Error', $result );
+		$this->assertSame( 'wp_loupe_invalid_highlight', $result->get_error_code() );
 	}
 }
