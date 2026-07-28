@@ -1,0 +1,104 @@
+name: Bug report
+description: Something in Loupe Search does not work the way it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report.
+
+        Before you continue, please check the [existing issues](https://github.com/soderlind/loupe-search/issues?q=is%3Aissue) — someone may have hit this already.
+
+        If the problem is a security vulnerability, please email per@soderlind.no instead of opening a public issue.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the behaviour you saw, and what you expected instead.
+      placeholder: |
+        Searching for "colour" returns no results, but a post titled "Colour theory" is published and indexed.
+        I expected the typo-tolerant match to find it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence that triggers the problem, starting from a fresh install if you can.
+      placeholder: |
+        1. Activate Loupe Search on a site with the default post types.
+        2. Go to Settings → Loupe Search and reindex.
+        3. Search the front end for "…".
+        4. Observe …
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Loupe Search version
+      placeholder: "1.2.1"
+    validations:
+      required: true
+
+  - type: input
+    id: wp-version
+    attributes:
+      label: WordPress version
+      placeholder: "6.9"
+    validations:
+      required: true
+
+  - type: input
+    id: php-version
+    attributes:
+      label: PHP version
+      description: The plugin requires PHP 8.1 or later.
+      placeholder: "8.3"
+    validations:
+      required: true
+
+  - type: input
+    id: sqlite-version
+    attributes:
+      label: SQLite version
+      description: |
+        The plugin requires SQLite 3.35.0 or later. Find it with
+        `php -r "echo (new PDO('sqlite::memory:'))->query('select sqlite_version()')->fetchColumn();"`
+      placeholder: "3.45.1"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: multisite
+    attributes:
+      label: Is this a multisite install?
+      options:
+        - "No"
+        - "Yes, subdirectory"
+        - "Yes, subdomain"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Anything else about the environment
+      description: |
+        Other search or SEO plugins, a page cache, an object cache, custom post types, an unusual `wp-content` location,
+        or any [filters](https://github.com/soderlind/loupe-search/blob/main/docs/filters.md) you apply, such as
+        `loupe_search_post_types`, `loupe_search_db_path` or `loupe_search_index_protected`.
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Errors or log output
+      description: |
+        Anything from the PHP error log, `WP_DEBUG_LOG`, or the browser console. This is rendered as a code block, so no backticks needed.
+      render: text
+    validations:
+      required: false

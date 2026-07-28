@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest a capability or improvement for Loupe Search.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion.
+
+        Please check the [existing issues](https://github.com/soderlind/loupe-search/issues?q=is%3Aissue) first — the idea may already be under discussion.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation you are in, not the solution you have in mind. That comes next.
+      placeholder: |
+        I run a site with 40 000 products and reindexing from the settings screen times out,
+        so I have no way to rebuild the index after changing the schema.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to see?
+      description: How could the plugin address it? A filter, a setting, a WP-CLI flag, a REST field, a UI change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What have you tried?
+      description: |
+        Workarounds you use today, or other approaches you considered and rejected. If an existing hook nearly
+        works but falls short, say where it falls short.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the plugin does this touch?
+      description: Best guess is fine. See [docs/architecture.md](https://github.com/soderlind/loupe-search/blob/main/docs/architecture.md) if you want to check.
+      options:
+        - Indexing
+        - Search and ranking
+        - Settings screen
+        - REST API
+        - WP-CLI
+        - Abilities API
+        - Blocks or front-end output
+        - Something else, or not sure
+    validations:
+      required: true
