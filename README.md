@@ -215,129 +215,31 @@ Yes, you can select which post types to include in the Settings page or via filt
 
 ## Filters
 
-> Filters use the `loupe_search_*` prefix; the old `wp_loupe_*` names still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
+Eight filters let you change what gets indexed, how it is weighted, and how
+results are returned:
 
-### `loupe_search_db_path`
-
-This filter allows you to change the path where the Loupe database files are stored. By default, it's in the `WP_CONTENT_DIR .'/loupe-search-db'` directory.
-
-```php
-add_filter( 'loupe_search_db_path', function ( $path ) {
-	return WP_CONTENT_DIR . '/my-path';
-} );
-```
-
-### `loupe_search_post_types`
-
-This filter allows you to modify the array of post types that the Loupe Search plugin works with. By default, it includes 'post' and 'page'.
+| Filter | Use it to |
+| --- | --- |
+| `loupe_search_post_types` | Choose which post types are indexed |
+| `loupe_search_index_protected` | Index password-protected posts |
+| `loupe_search_db_path` | Move the index directory |
+| `loupe_search_field_{$field_name}` | Clean a core post field before indexing |
+| `loupe_search_schema_{$post_type}` | Add/remove fields, set weights and sorting |
+| `loupe_search_is_safely_sortable_{$post_type}` | Force a core field to be sortable |
+| `loupe_search_is_safely_sortable_meta_{$post_type}` | Correct meta-field sortability detection |
+| `loupe_search_posts_per_page` | Change results per page |
 
 ```php
 add_filter( 'loupe_search_post_types', function ( array $post_types ): array {
-	return [ 'post', 'page', 'book' ];
+	$post_types[] = 'book';
+	return $post_types;
 } );
 ```
 
-### `loupe_search_posts_per_page`
+**[Filters reference →](docs/filters.md)** — signatures, defaults, schema
+options, recipes, and when to reindex.
 
-This filter allows you to modify the number of search results per page. By default it's 10, set in `WPAdmin->Settings->Reading->"Blog pages show at most"`.
-
-```php
-add_filter( 'loupe_search_posts_per_page', function ( int $per_page ): int {
-	return 20;
-} );
-```
-
-### `loupe_search_index_protected`
-
-This filter allows you to index posts and pages that are protected by a password. By default, it's set to `false`.
-
-```php
-add_filter( 'loupe_search_index_protected','__return_true' );
-```
-
-### `loupe_search_field_{$field_name}`
-
-This filter allows you to change the field content before it is indexed.
-
-By default, the following is used to remove HTML tags and comments from `post_content`. Among others, it removes the WordPress block comments.
-
-```php
-add_filter( 'loupe_search_field_post_content', 'wp_strip_all_tags' );
-```
-
-### `loupe_search_schema_{$post_type}`
-
-Modify the search schema for a specific post type. The filter name is dynamically generated based on the post type.
-
-```php
-// Customize the schema for 'book' post type
-add_filter( 'loupe_search_schema_book', function( $schema ) {
-	$schema['book_isbn'] = [           // Add a new field
-		'weight'         => 2.0,       // Higher weight means higher relevance in search results
-		'indexable'      => true,      // Include the field in the index
-		'filterable'     => true,      // Allow filtering by this field
-		'sortable'       => true,      // Allow sorting by this field
-		'sort_direction' => 'asc',     // Default sort direction
-	];
-
-	// Modify existing field settings
-	$schema['post_title']['weight'] = 3.0; // Increase title weight for books
-
-	// Remove a field
-	unset( $schema['post_excerpt'] );
-
-
-	$schema['book_author'] = [
-		'weight'         => 1.5,
-		'indexable'      => true,
-		'filterable'     => true,
-		'sortable'       => true,
-		'sort_direction' => 'asc',
-	];
-
-	return $schema;
-});
-```
-
-The schema configuration supports the following options for each field:
-
-- `weight` (float): The relevance weight in search results. Default: 1.0
-- `indexable` (bool): Whether the field is added to the index. Default: false
-- `filterable` (bool): Whether the field can be used for filtering and terms facets. Default: false
-- `sortable` (bool): Whether the field can be used for sorting. Default: false
-- `sort_direction` (string): Default sort direction, `'asc'` or `'desc'`. Default: `'desc'`
-
-Default schema fields:
-
-```php
-[
-	'post_title'   => [
-		'weight'         => 2,
-		'indexable'      => true,
-		'filterable'     => true,
-		'sortable'       => true,
-		'sort_direction' => 'asc',
-	],
-	'post_content' => [ 'weight' => 1.0, 'indexable' => true ],
-	'post_excerpt' => [ 'weight' => 1.5, 'indexable' => true ],
-	'post_date'    => [
-		'weight'         => 1.0,
-		'indexable'      => true,
-		'filterable'     => true,
-		'sortable'       => true,
-		'sort_direction' => 'desc',
-	],
-	'post_author'  => [
-		'weight'         => 1.0,
-		'indexable'      => true,
-		'filterable'     => true,
-		'sortable'       => true,
-		'sort_direction' => 'asc',
-	],
-	'permalink'    => [ 'weight' => 1.0, 'indexable' => true ],
-]
-```
-
+> Filters use the `loupe_search_*` prefix; the old `wp_loupe_*` names still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
 
 ## Acknowledgements
 
