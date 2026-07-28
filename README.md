@@ -6,48 +6,23 @@ A search enhancement plugin for WordPress that builds a fast, typo-tolerant inde
 
 ## Quick Links
 
-[Requirements](#technical-requirements) | [Installation](#installation) | [REST API](#rest-api) | [AI Agent Integration](#ai-agent-integration-wordpress-abilities-api) | [Building Your Own Search UI](#building-your-own-search-ui) | [Settings](#settings) | [Reindexing](#reindexing) | [Filters](#filters) | [FAQ](#faq) | [Docs](docs/README.md) | [Changelog](CHANGELOG.md)
-
+[Requirements](#technical-requirements) | [Installation](#installation) | [Settings](#settings) | [Reindexing](#reindexing) | [FAQ](#faq) | [Building Your Own Search UI](#building-your-own-search-ui) | [REST API](#rest-api) | [AI Agent Integration](#ai-agent-integration-wordpress-abilities-api) | [Filters](#filters) | [Docs](docs/README.md) | [Changelog](CHANGELOG.md)
 
 ## Overview
 
-Loupe Search transforms WordPress's search functionality by:
+Loupe Search replaces WordPress core search:
 
-- Creating a dedicated search index for lightning-fast results
-- Supporting typo-tolerant searches
-- Automatically maintaining the search index
-- Providing a stable REST API for custom search experiences
+- Queries a dedicated SQLite index instead of the posts table
+- Tolerates misspellings, and supports phrase matching and exclusion operators
+- Keeps the index in sync as content is created, updated, and deleted
+- Exposes a stable REST API for custom search experiences
 
 > Integrating with AI agents or automation? Loupe Search registers native abilities via the [WordPress Abilities API](#ai-agent-integration-wordpress-abilities-api).
-
-## REST API
-
-Loupe Search exposes search via REST endpoints:
-
-- **POST** `/wp-json/loupe-search/v1/search` (recommended; supports JSON filters, facets, geo, explicit sorting, and search-result highlighting/snippets)
-- **GET** `/wp-json/loupe-search/v1/search?q=...` (legacy; kept for backward compatibility)
-
-> The old `wp-loupe/v1` namespace still works as a deprecated alias. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
-
-Developer documentation (schema + examples + Gutenberg block example): **[docs/search-api.md](docs/search-api.md)**
-
-## AI Agent Integration (WordPress Abilities API)
-
-Loupe Search registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/apis/abilities-api/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra configuration required:
-
-- `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
-- `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
-
-Both abilities are discoverable through the standard WordPress Abilities registry and exposed via REST (`show_in_rest`).
-
-> The legacy `wp-loupe/*` abilities (category `wp-loupe`) still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
->
-> **Upgrading from the MCP server?** The experimental MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the **[MCP → Abilities API migration guide](docs/migration-mcp-to-abilities.md)**.
 
 ## Features
 
 - Fast index-backed search for configured post types
-- Typo-tolerance (Loupe)
+- Typo-tolerant matching, phrase matching, and exclusion operators
 - Per-field weighting, filterable fields, sortable fields (configured in Settings)
 - Developer-facing REST API for building custom UIs, with filters, facets, geo search, and result highlighting/snippets
 - Native AI agent integration via the WordPress Abilities API
@@ -61,11 +36,9 @@ Both abilities are discoverable through the standard WordPress Abilities registr
 
 > **About the PHP extensions:** `pdo_sqlite` provides the SQLite driver Loupe uses to store and query the search index; `intl` powers locale-aware tokenizing, collation, and typo tolerance; and `mbstring` ensures multibyte (UTF-8) text is handled correctly during indexing and search. All three are required, but **they are enabled by default on most modern PHP installations and shared hosts**, so no action is usually needed. If your host is missing one, contact them or enable it in your PHP configuration.
 
-
-
 ## Installation
 
-1. ~~**Install from WordPress.org**~~ Availabel soon.
+1. **Install from WordPress.org** *(not yet available — the plugin is awaiting review)*
 
    - In your WordPress admin, go to Plugins > Add New
    - Search for "Loupe Search"
@@ -86,18 +59,6 @@ Both abilities are discoverable through the standard WordPress Abilities registr
    - Activate the plugin
    - Go to Settings > Loupe Search
    - Click "Reindex" to build the initial search index (runs in batches; safe for large sites)
-
-
-
-## Building Your Own Search UI
-
-**Loupe Search works out of the box with WordPress’s standard search.**
-If your theme uses the normal search flow (e.g. a search form that routes to the built-in search results page), Loupe Search will power the results automatically — no custom UI required.
-
-Loupe Search intentionally does **not** ship a front-end search block/shortcode UI.
-If you want a custom search experience (autocomplete, filters/facets, geo, custom sorting, etc.), build the UI you want and query Loupe Search via the REST API.
-
-Start here: **[docs/search-api.md](docs/search-api.md)**
 
 ## Settings
 
@@ -179,22 +140,6 @@ Reindexing rebuilds the index for your configured post types.
 	wp loupe-search reindex --post-types=post,page --batch-size=1000
 	```
 
-## Testing
-
-- PHPUnit:
-
-	```bash
-	composer test
-	```
-
-- Pest (runs using the PHPUnit config):
-
-	```bash
-	composer test:pest
-	```
-
-
-
 ## FAQ
 
 ### How does it handle updates to posts?
@@ -212,6 +157,40 @@ Yes, using filters you can control exactly what content gets indexed and how it'
 ### Does it work with custom post types?
 
 Yes, you can select which post types to include in the Settings page or via filters.
+
+## Building Your Own Search UI
+
+**Loupe Search works out of the box with WordPress’s standard search.**
+If your theme uses the normal search flow (e.g. a search form that routes to the built-in search results page), Loupe Search will power the results automatically — no custom UI required.
+
+Loupe Search intentionally does **not** ship a front-end search block/shortcode UI.
+If you want a custom search experience (autocomplete, filters/facets, geo, custom sorting, etc.), build the UI you want and query Loupe Search via the REST API.
+
+Start here: **[docs/search-api.md](docs/search-api.md)**
+
+## REST API
+
+Loupe Search exposes search via REST endpoints:
+
+- **POST** `/wp-json/loupe-search/v1/search` (recommended; supports JSON filters, facets, geo, explicit sorting, and search-result highlighting/snippets)
+- **GET** `/wp-json/loupe-search/v1/search?q=...` (legacy; kept for backward compatibility)
+
+> The old `wp-loupe/v1` namespace still works as a deprecated alias. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
+
+Developer documentation (schema + examples + Gutenberg block example): **[docs/search-api.md](docs/search-api.md)**
+
+## AI Agent Integration (WordPress Abilities API)
+
+Loupe Search registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/apis/abilities-api/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra configuration required:
+
+- `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
+- `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
+
+Both abilities are discoverable through the standard WordPress Abilities registry and exposed via REST (`show_in_rest`).
+
+> The legacy `wp-loupe/*` abilities (category `wp-loupe`) still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
+>
+> **Upgrading from the MCP server?** The experimental MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the **[MCP → Abilities API migration guide](docs/migration-mcp-to-abilities.md)**.
 
 ## Filters
 
@@ -240,6 +219,20 @@ add_filter( 'loupe_search_post_types', function ( array $post_types ): array {
 options, recipes, and when to reindex.
 
 > Filters use the `loupe_search_*` prefix; the old `wp_loupe_*` names still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
+
+## Testing
+
+- PHPUnit:
+
+	```bash
+	composer test
+	```
+
+- Pest (runs using the PHPUnit config):
+
+	```bash
+	composer test:pest
+	```
 
 ## Acknowledgements
 

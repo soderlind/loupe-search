@@ -15,36 +15,34 @@ A search enhancement plugin for WordPress that delivers fast, accurate, and typo
 
 Loupe Search improves WordPress core search by maintaining its own index for fast lookups, supporting typo tolerance, phrase matching, basic exclusion operators, and per–post-type customization.
 
-= AI Agent Integration (WordPress Abilities API) =
-Loupe Search registers two abilities via the WordPress Abilities API (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively:
-
-* `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
-* `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
-
-These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration. As of 1.2.0 the ability namespace is `loupe-search`; the legacy `wp-loupe/search` and `wp-loupe/get-post` abilities still work but are deprecated aliases.
-
-Upgrading from the experimental MCP server? The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the migration guide: https://github.com/soderlind/loupe-search/blob/main/docs/migration-mcp-to-abilities.md
-
 = Core Features =
 
-* 🚀 Enhanced search engine replacing WordPress default
-* ⚡ Lightning-fast, precise result delivery
+* 🚀 Index-backed search engine replacing the WordPress default
+* ⚡ Results served from a dedicated index, not the posts table
 * 🔄 Real-time index synchronization
 * 🌐 Support for multiple languages
 * 📦 Full custom post type integration
 * 📈 Integrated search performance metrics
-* ✅ Seamless compatibility with WordPress default themes
+* ✅ Works with the WordPress default themes
 
 = Search Capabilities =
 
 * 🔍 Typo-tolerant searching - find results even with misspellings
-* "..." Phrase matching with quotation marks
-* `-` Exclusion operator support (e.g., `term -excluded`)
-* OR search: `term1 term2` finds content with either term
+* 💬 Phrase matching with quotation marks: `"exact phrase"`
+* ➖ Exclusion operator support (e.g., `term -excluded`)
+* 🔀 OR search: `term1 term2` finds content with either term
 * 📖 Pagination support
 * Stemming support
 * Stop words recognition
 * Highlighting and cropped snippets via the REST API
+
+= Administration =
+
+* Simple settings interface
+* Post type selection
+* Field configuration options
+* One-click reindexing
+* Processing time monitoring
 
 = Developer Features =
 
@@ -55,13 +53,16 @@ Upgrading from the experimental MCP server? The MCP server, token service, and W
 
 See the [Search API documentation](https://github.com/soderlind/loupe-search/blob/main/docs/search-api.md) for REST endpoint details.
 
-= Administration =
+= AI Agent Integration (WordPress Abilities API) =
 
-* Simple settings interface
-* Post type selection
-* Field configuration options
-* One-click reindexing
-* Processing time monitoring
+Loupe Search registers two abilities via the WordPress Abilities API (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively:
+
+* `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
+* `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
+
+These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration. As of 1.2.0 the ability namespace is `loupe-search`; the legacy `wp-loupe/search` and `wp-loupe/get-post` abilities still work but are deprecated aliases.
+
+Upgrading from the experimental MCP server? The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the [MCP to Abilities API migration guide](https://github.com/soderlind/loupe-search/blob/main/docs/migration-mcp-to-abilities.md).
 
 = Filters =
 
