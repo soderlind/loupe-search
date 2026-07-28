@@ -65,7 +65,7 @@ Both abilities are discoverable through the standard WordPress Abilities registr
 
 ## Installation
 
-1. **Install from WordPress.org**
+1. ~~**Install from WordPress.org**~~ Availabel soon.
 
    - In your WordPress admin, go to Plugins > Add New
    - Search for "Loupe Search"
