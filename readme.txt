@@ -23,7 +23,7 @@ Loupe Search registers two abilities via the WordPress Abilities API (WordPress 
 
 These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration. As of 1.2.0 the ability namespace is `loupe-search`; the legacy `wp-loupe/search` and `wp-loupe/get-post` abilities still work but are deprecated aliases.
 
-Upgrading from the experimental MCP server? The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the migration guide: https://github.com/soderlind/wp-loupe/blob/main/docs/migration-mcp-to-abilities.md
+Upgrading from the experimental MCP server? The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the migration guide: https://github.com/soderlind/loupe-search/blob/main/docs/migration-mcp-to-abilities.md
 
 = Core Features =
 
@@ -44,6 +44,7 @@ Upgrading from the experimental MCP server? The MCP server, token service, and W
 * 📖 Pagination support
 * Stemming support
 * Stop words recognition
+* Highlighting and cropped snippets via the REST API
 
 = Developer Features =
 
@@ -74,7 +75,7 @@ Default: WP_CONTENT_DIR . '/loupe-search-db'
 `loupe_search_post_types`
 
 Modifies which post types are included in search.
-Default: ['post', 'page']
+Default: the post types selected on the settings screen, falling back to ['post', 'page']
 
 `loupe_search_posts_per_page`
 
@@ -83,25 +84,32 @@ Default: WordPress "Blog pages show at most" setting
 
 `loupe_search_index_protected`
 
-Controls indexing of password-protected posts.
-Default: false
+Controls indexing of password-protected posts. Receives false for protected posts and true for everything else; return true to index them anyway.
 
 `loupe_search_field_{$field_name}`
 
-Modifies a field before indexing.
+Modifies a core post field before indexing. Does not fire for custom fields.
 Example: The plugin uses `loupe_search_field_post_content` to strip HTML tags from content
 
 `loupe_search_schema_{$post_type}`
 
-Customizes the schema for a post type.
+Customizes the schema for a post type: which fields are indexed, their weight, and whether they are filterable or sortable.
 
-For usage examples, see the [filter documentation at GitHub](https://github.com/soderlind/loupe-search?tab=readme-ov-file#filters).
+`loupe_search_is_safely_sortable_{$post_type}`
+
+Overrides whether a core post field may be used for sorting.
+
+`loupe_search_is_safely_sortable_meta_{$post_type}`
+
+Overrides whether a custom field may be used for sorting.
+
+For signatures, defaults, and usage examples, see the [filter documentation](https://github.com/soderlind/loupe-search/blob/main/docs/filters.md).
 
 
 == Installation ==
 
 1. **Quick Install**
-   * Upload the plugin files to the `/wp-content/plugins/wp-loupe` directory, or install the plugin through the WordPress plugins screen directly
+   * Upload the plugin files to the `/wp-content/plugins/loupe-search` directory, or install the plugin through the WordPress plugins screen directly
    * Activate through the 'Plugins' menu in WordPress
 
 2. **Post-Installation**
@@ -111,7 +119,7 @@ For usage examples, see the [filter documentation at GitHub](https://github.com/
 3. **Updates**
    * Plugin updates are handled automatically by WordPress.org.
 
-==  Screenshots ==
+== Screenshots ==
 
 1. Loupe Search Settings page with tabs for Dashboard, Fields, and Search Behavior.
 2. Field configuration interface for each post type, allowing selection of indexable, filterable, and sortable fields.
@@ -278,13 +286,6 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 = 0.5.0 =
 * Initial MCP integration (preview): discovery manifest, commands, rate limiting, scoped tokens, pagination security
 * Requires PHP 8.3+ and Loupe 0.12.13
-
-= 0.5.0 =
-Introduces optional MCP (Model Context Protocol) server (disabled by default). After upgrading:
-1. Go to Settings → WP Loupe → MCP tab and enable the server.
-2. Create a scoped access token (copy it once) for higher search limits or health checks.
-3. (Optional) Adjust rate limits (anonymous vs authenticated) before exposing to external agents.
-This is a developer/automation feature; sites not using MCP can ignore these new settings.
 
 = 0.4.3 =
 * Fixed: Inline JavaScript using `wp_print_inline_script_tag`.

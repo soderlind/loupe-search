@@ -14,15 +14,15 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/soderlind/wp-loupe.git"
+		"url": "git+https://github.com/soderlind/loupe-search.git"
 	},
 	"keywords": [],
 	"author": "Per Søderlind",
 	"license": "GPLv2",
 	"bugs": {
-		"url": "https://github.com/soderlind/wp-loupe/issues"
+		"url": "https://github.com/soderlind/loupe-search/issues"
 	},
-	"homepage": "https://github.com/soderlind/wp-loupe#readme",
+	"homepage": "https://github.com/soderlind/loupe-search#readme",
 	"devDependencies": {
 		"@wordpress/scripts": "^33.0.0",
 		"terser-webpack-plugin": "^5.4.0"
