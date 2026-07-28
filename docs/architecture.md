@@ -16,8 +16,7 @@ below is traceable to a file in `includes/` unless marked `Unknown`.
 - [Invariants](#invariants)
 - [Persistent state](#persistent-state)
 - [Where to make changes](#where-to-make-changes)
-- [Deprecated and unreachable code](#deprecated-and-unreachable-code)
-- [Open questions](#open-questions)
+- [Deprecated code](#deprecated-code)
 
 ## Purpose
 
@@ -68,7 +67,7 @@ Not included:
 | Abilities | Registers `loupe-search/search` and `loupe-search/get-post` (plus deprecated aliases) | [includes/class-wp-loupe-abilities.php](../includes/class-wp-loupe-abilities.php) | search engine |
 | Settings screen | Settings → Loupe Search page, option registration and sanitization, admin assets | [includes/class-wp-loupe-settings.php](../includes/class-wp-loupe-settings.php) | factory, REST controller (via admin JS) |
 | CLI | `wp loupe-search reindex` | [includes/class-wp-loupe-cli.php](../includes/class-wp-loupe-cli.php) | indexer |
-| Utilities | Environment checks, debug logging, transient purging | [includes/class-wp-loupe-utils.php](../includes/class-wp-loupe-utils.php) | — |
+| Utilities | Post-type resolution, environment checks, debug logging, transient purging | [includes/class-wp-loupe-utils.php](../includes/class-wp-loupe-utils.php) | — |
 
 All classes live in the `Soderlind\Plugin\WPLoupe` namespace. Class names and
 the `WP_LOUPE_*` constants retain the historic `WP_Loupe` prefix; see
@@ -108,9 +107,7 @@ flowchart TD
 ## Request routing
 
 `init()` in [loupe-search.php](../loupe-search.php) returns early — so nothing
-is wired at all — for autosaves, heartbeat AJAX, cron, and REST requests whose
-URI does not start with `/wp-json/wp-loupe`. See
-[Open questions](#open-questions) for the caveat on that last condition.
+is wired at all — for autosaves, heartbeat AJAX and cron.
 
 `WP_Loupe_Loader::init_components()` then decides which integrations attach:
 
@@ -123,14 +120,13 @@ URI does not start with `/wp-json/wp-loupe`. See
 | `WP_Loupe_REST` | always |
 | `WP_Loupe_Abilities` | always; it only attaches to `wp_abilities_api_init`, so registration happens only where the WordPress 6.9+ Abilities API is present |
 
-The indexed post-type list is read once, in
-`WP_Loupe_Loader::setup_post_types()`, from
+The indexed post-type list is resolved by
+`WP_Loupe_Utils::get_indexed_post_types()`, which reads
 `get_option( 'wp_loupe_custom_post_types' )['wp_loupe_post_type_field']`,
-defaulting to `[ 'post', 'page' ]`, then passed through
-`loupe_search_post_types`. `WP_Loupe_Indexer`, `WP_Loupe_REST` and
-`WP_Loupe_Abilities` each re-read the same option independently rather than
-receiving the loader's filtered list, so a filter that changes the list affects
-front-end search but not the REST or Abilities surface.
+defaults to `[ 'post', 'page' ]`, then applies `loupe_search_post_types`. The
+loader, indexer, REST controller and abilities all call it, so the filter has
+the same effect on every surface. The settings screen deliberately reads the
+raw option instead, so the checkboxes always show what is stored.
 
 ## Flow: front-end search
 
@@ -347,18 +343,19 @@ Verified for abilities by
 | Data | Location | Owner | Removed on uninstall |
 |---|---|---|---|
 | Search indexes | `wp-content/loupe-search-db/<post_type>/loupe.db` | `WP_Loupe_DB`, `WP_Loupe_Factory` | yes, including the legacy `wp-loupe-db` directory |
-| Indexed post types | option `wp_loupe_custom_post_types` | settings screen | no |
-| Field settings | option `wp_loupe_fields` | settings screen, factory, indexer | no |
-| Search behavior settings | option `wp_loupe_advanced` | settings screen | no |
-| Result caches | transients `wp_loupe_search_*` | search engine, REST controller | no (expire) |
+| Indexed post types | option `wp_loupe_custom_post_types` | settings screen | yes |
+| Field settings | option `wp_loupe_fields` | settings screen, factory, indexer | yes |
+| Search behavior settings | option `wp_loupe_advanced` | settings screen | yes |
+| Result caches | transients `wp_loupe_search_*` | search engine, REST controller | yes |
 
 `WP_Loupe_DB::get_base_path()` defaults to `WP_CONTENT_DIR . '/loupe-search-db'`
 but falls back to the legacy `wp-loupe-db` directory when that exists and the
 new one does not, so upgraded sites keep their indexes. The result is passed
 through `loupe_search_db_path`; an empty or non-string filter return is ignored.
 
-[uninstall.php](../uninstall.php) deletes both directories but does **not**
-delete the three options.
+[uninstall.php](../uninstall.php) deletes both directories, the three options
+and the cached search results. On multisite it repeats the option and transient
+cleanup for every site.
 
 ## Where to make changes
 
@@ -369,6 +366,7 @@ delete the three options.
 | Change Loupe engine configuration (typo tolerance, tokenization, languages) | `WP_Loupe_Factory::build_configuration()` | settings fields in `WPLoupe_Settings_Page::wp_loupe_setup_fields()`, `sanitize_advanced_settings()` |
 | Add a REST route or parameter | `WP_Loupe_REST::register_routes_for_namespace()` and its handler | [docs/search-api.md](search-api.md), `tests/WP_Loupe_REST_*` |
 | Change how front-end search results are ordered or paginated | `WP_Loupe_Search_Hooks::posts_pre_query()` | `tests/WP_Loupe_Search_HooksTest.php` |
+| Change which post types are indexed and searched | `WP_Loupe_Utils::get_indexed_post_types()` | `tests/WP_Loupe_UtilsTest.php` |
 | Change where indexes are stored | `WP_Loupe_DB::get_base_path()` | `uninstall.php`, and the add-on's `WP_Loupe_Admin_Paths` |
 | Add a settings field | `WPLoupe_Settings_Page::wp_loupe_setup_fields()` | matching `sanitize_*` method, `tests/WP_Loupe_SettingsTest.php` |
 | Add an ability | `WP_Loupe_Abilities::register_abilities()` | `tests/WP_Loupe_AbilitiesTest.php` |
@@ -378,40 +376,14 @@ Run `composer test` (PHPUnit, WordPress functions mocked with Brain Monkey) or
 `composer test:pest` after changes. There is no integration suite that exercises
 a real Loupe index.
 
-## Deprecated and unreachable code
+## Deprecated code
 
 - `WP_Loupe_Search` ([includes/class-wp-loupe-search.php](../includes/class-wp-loupe-search.php))
   is deprecated since 0.6.0 and is never instantiated by the plugin. It is
   loaded by the loader and kept only for third-party code that constructs it
   directly.
-- `WP_Loupe_Migration` ([includes/class-wp-loupe-migration.php](../includes/class-wp-loupe-migration.php))
-  is **not** loaded. The loader does not `require` it, and no runtime code
-  references the class name, so its file-level
-  `add_action( 'plugins_loaded', … , 5 )` never executes. Its only mapped entry
-  point is the Composer classmap. Its `post_date` responsibility is covered by
-  `WP_Loupe_Schema_Manager::get_default_schema()` and
-  `WP_Loupe_Indexer::ensure_required_columns()`. Its private
-  `ensure_post_date_column()` additionally references a `WP_Loupe_Index_Service`
-  class that does not exist in this repository.
-- `WP_Loupe_Utils::is_post_indexable()` duplicates
-  `WP_Loupe_Indexer::is_indexable()` and has no caller.
 - `WP_Loupe_REST::format_search_results()` is annotated in-code as retained for
   backward compatibility.
-
-## Open questions
-
-- **REST bootstrap guard.** `init()` skips bootstrapping when `REST_REQUEST` is
-  defined and the request URI does not start with `/wp-json/wp-loupe` — a prefix
-  that predates the primary `loupe-search/v1` namespace. WordPress core defines
-  `REST_REQUEST` in `rest_api_loaded()` on `parse_request`, which runs after
-  `plugins_loaded`, so the branch should be inert for ordinary REST traffic.
-  This has not been verified against a running site, and the prefix would not
-  match `/wp-json/loupe-search/…` if the constant were defined early.
-- **Divergent post-type resolution.** `loupe_search_post_types` is applied only
-  in `WP_Loupe_Loader::setup_post_types()`. Whether the REST, indexer and
-  Abilities components are intended to honor it is `Unknown`.
-- **Orphaned options on uninstall.** Whether leaving `wp_loupe_custom_post_types`,
-  `wp_loupe_fields` and `wp_loupe_advanced` behind is deliberate is `Unknown`.
 
 ## Further reading
 

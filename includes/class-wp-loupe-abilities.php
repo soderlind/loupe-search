@@ -205,10 +205,7 @@ class WP_Loupe_Abilities {
 		$per_page = min( 100, max( 1, (int) ( $input['per_page'] ?? 10 ) ) );
 		$page     = max( 1, (int) ( $input['page'] ?? 1 ) );
 
-		$options          = get_option( 'wp_loupe_custom_post_types', [] );
-		$configured_types = ! empty( $options['wp_loupe_post_type_field'] )
-			? (array) $options['wp_loupe_post_type_field']
-			: [ 'post', 'page' ];
+		$configured_types = WP_Loupe_Utils::get_indexed_post_types();
 
 		$post_types = ! empty( $input['post_types'] )
 			? array_intersect( array_map( 'sanitize_key', (array) $input['post_types'] ), $configured_types )

@@ -53,10 +53,7 @@ class WP_Loupe_Indexer {
 	 */
 	private function set_post_types( $post_types = null ) {
 		if ( $post_types === null ) {
-			$options          = get_option( 'wp_loupe_custom_post_types', [] );
-			$this->post_types = ! empty( $options ) && isset( $options[ 'wp_loupe_post_type_field' ] )
-				? (array) $options[ 'wp_loupe_post_type_field' ]
-				: [ 'post', 'page' ];
+			$this->post_types = WP_Loupe_Utils::get_indexed_post_types();
 		} else {
 			$this->post_types = (array) $post_types;
 		}

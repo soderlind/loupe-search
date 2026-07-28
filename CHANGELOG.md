@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- The `loupe_search_post_types` filter now applies everywhere. It was only applied when resolving the front-end search scope, so the indexer, the REST API and the WordPress Abilities kept using the raw settings value. All four now resolve post types through `WP_Loupe_Utils::get_indexed_post_types()`. The settings screen still shows the stored option.
+- Uninstalling now deletes the `wp_loupe_custom_post_types`, `wp_loupe_fields` and `wp_loupe_advanced` options and the cached search results, on every site of a multisite network. Previously only the index directories were removed.
+- Removed a bootstrap short-circuit that skipped plugin initialization on REST requests whose path did not start with `/wp-json/wp-loupe`. The prefix predated the `loupe-search/v1` namespace and would have suppressed registration of the plugin's own routes.
+
+### Removed
+- `WP_Loupe_Migration`. The class was never loaded — nothing required the file or referenced the class — and part of it called a `WP_Loupe_Index_Service` class that does not exist. Its `post_date` column work is done by `WP_Loupe_Indexer::ensure_required_columns()`.
+- `WP_Loupe_Utils::is_post_indexable()`, an unused duplicate of `WP_Loupe_Indexer::is_indexable()`.
+
 ## [1.2.0] - 2026-07-27
 
 ### Added

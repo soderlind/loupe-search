@@ -11,6 +11,28 @@ class WP_Loupe_Utils {
 	private const REQUIRED_SQLITE_VERSION = '3.35.0';
 
 	/**
+	 * Resolve the post types that are indexed and searched.
+	 *
+	 * Reads the settings screen option, falls back to `post` and `page`, then applies
+	 * the `loupe_search_post_types` filter. Every runtime component must use this so
+	 * the filter has the same effect on indexing, front-end search, REST and abilities.
+	 *
+	 * @since 1.3.0
+	 * @return array<int, string> Post type slugs.
+	 */
+	public static function get_indexed_post_types(): array {
+		$options    = get_option( 'wp_loupe_custom_post_types', [] );
+		$post_types = ( ! empty( $options ) && isset( $options[ 'wp_loupe_post_type_field' ] ) )
+			? (array) $options[ 'wp_loupe_post_type_field' ]
+			: [ 'post', 'page' ];
+
+		$post_types = apply_filters( 'loupe_search_post_types', $post_types );
+		$post_types = apply_filters_deprecated( 'wp_loupe_post_types', array( $post_types ), '1.1.0', 'loupe_search_post_types' );
+
+		return array_values( (array) $post_types );
+	}
+
+	/**
 	 * Debug logger helper.
 	 *
 	 * Logs only when WP_DEBUG is enabled.
@@ -269,28 +291,6 @@ class WP_Loupe_Utils {
 				deactivate_plugins( WP_LOUPE_FILE, false, true );
 			}
 		} );
-	}
-
-	/**
-	 * Check if a post should be indexed
-	 *
-	 * @since 0.0.1
-	 * @param int     $post_id Post ID.
-	 * @param \WP_Post $post    Post object.
-	 * @return boolean True if post should be indexed
-	 */
-	public static function is_post_indexable( $post_id, $post ) {
-		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
-			return false;
-		}
-
-		if ( 'publish' !== $post->post_status ) {
-			return false;
-		}
-
-		$should_index = apply_filters( 'loupe_search_index_protected', empty( $post->post_password ) );
-
-		return (bool) apply_filters_deprecated( 'wp_loupe_index_protected', array( $should_index ), '1.1.0', 'loupe_search_index_protected' );
 	}
 
 	/**

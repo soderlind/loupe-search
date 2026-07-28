@@ -44,11 +44,10 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
  * Initialize plugin
  */
 function init() {
-	// Don't run on autosave, WP CLI, Heartbeat or cron requests, and REST API requests (except our own)
+	// Don't run on autosave, Heartbeat or cron requests.
 	if (
 		( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) ||
 		( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_REQUEST[ 'action' ] ) && 'heartbeat' === $_REQUEST[ 'action' ] ) ||
-		( defined( 'REST_REQUEST' ) && REST_REQUEST && ! str_starts_with( wp_unslash( $_SERVER[ 'REQUEST_URI' ] ?? '' ), '/wp-json/wp-loupe' ) ) ||
 		( defined( 'DOING_CRON' ) && DOING_CRON )
 	) {
 		return;

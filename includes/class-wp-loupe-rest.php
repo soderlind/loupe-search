@@ -76,10 +76,7 @@ class WP_Loupe_REST {
 	 * Set post types from settings
 	 */
 	private function set_post_types() {
-		$options          = get_option( 'wp_loupe_custom_post_types', [] );
-		$this->post_types = ! empty( $options ) && isset( $options[ 'wp_loupe_post_type_field' ] )
-			? (array) $options[ 'wp_loupe_post_type_field' ]
-			: [ 'post', 'page' ];
+		$this->post_types = WP_Loupe_Utils::get_indexed_post_types();
 	}
 
 	/**
