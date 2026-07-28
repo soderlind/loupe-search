@@ -13,3 +13,27 @@ updates:
     schedule:
       # Check for updates to GitHub Actions every week
       interval: "weekly"
+
+  # npm packages are build tooling only. Nothing under node_modules/ ships to
+  # wp.org or the release zip, so these updates are never user-facing. They are
+  # grouped into single PRs to keep the noise down.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      npm-development:
+        applies-to: version-updates
+        dependency-type: "development"
+        patterns:
+          - "*"
+      npm-production:
+        applies-to: version-updates
+        dependency-type: "production"
+        patterns:
+          - "*"

@@ -14,6 +14,7 @@ phpunit.xml.dist
 tests/
 
 # Build / tooling config
+node_modules/
 package.json
 package-lock.json
 # composer.json should be included when vendor dependencies are committed, but excluded when they are not.
