@@ -560,7 +560,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Code style improvements for better maintainability
 
-[0.8.1]: https://github.com/soderlind/wp-loupe/releases/tag/0.8.1\n[0.8.0]: https://github.com/soderlind/wp-loupe/releases/tag/0.8.0
+[1.2.0]: https://github.com/soderlind/loupe-search/releases/tag/1.2.0
+[1.1.1]: https://github.com/soderlind/loupe-search/releases/tag/1.1.1
+[1.1.0]: https://github.com/soderlind/loupe-search/releases/tag/1.1.0
+[0.8.5]: https://github.com/soderlind/wp-loupe/releases/tag/0.8.5
+[0.8.4]: https://github.com/soderlind/wp-loupe/releases/tag/0.8.4
+[0.8.3]: https://github.com/soderlind/wp-loupe/releases/tag/0.8.3
+[0.8.2]: https://github.com/soderlind/wp-loupe/releases/tag/0.8.2
+[0.8.1]: https://github.com/soderlind/wp-loupe/releases/tag/0.8.1
+[0.8.0]: https://github.com/soderlind/wp-loupe/releases/tag/0.8.0
 [0.7.0]: https://github.com/soderlind/wp-loupe/releases/tag/0.7.0
 [0.6.0]: https://github.com/soderlind/wp-loupe/releases/tag/0.6.0
 [0.5.7]: https://github.com/soderlind/wp-loupe/releases/tag/0.5.7
@@ -568,7 +576,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.5.5]: https://github.com/soderlind/wp-loupe/releases/tag/0.5.5
 [0.5.4]: https://github.com/soderlind/wp-loupe/releases/tag/0.5.4
 [0.5.3]: https://github.com/soderlind/wp-loupe/releases/tag/0.5.3
-[0.5.2]: https://github.com/soderlind/wp-loupe/releases/tag/0.5.2[0.8.2]: https://github.com/soderlind/wp-loupe/releases/tag/0.8.2[0.5.1]: https://github.com/soderlind/wp-loupe/releases/tag/0.5.1
+[0.5.2]: https://github.com/soderlind/wp-loupe/releases/tag/0.5.2
+[0.5.1]: https://github.com/soderlind/wp-loupe/releases/tag/0.5.1
 [0.5.0]: https://github.com/soderlind/wp-loupe/releases/tag/0.5.0
 [0.4.3]: https://github.com/soderlind/wp-loupe/releases/tag/0.4.3
 [0.4.2]: https://github.com/soderlind/wp-loupe/releases/tag/0.4.2
@@ -589,6 +598,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.2]: https://github.com/soderlind/wp-loupe/releases/tag/0.1.2
 [0.1.1]: https://github.com/soderlind/wp-loupe/releases/tag/0.1.1
 [0.1.0]: https://github.com/soderlind/wp-loupe/releases/tag/0.1.0
+[0.0.31]: https://github.com/soderlind/wp-loupe/releases/tag/0.0.31
 [0.0.30]: https://github.com/soderlind/wp-loupe/releases/tag/0.0.30
 [0.0.20]: https://github.com/soderlind/wp-loupe/releases/tag/0.0.20
 [0.0.19]: https://github.com/soderlind/wp-loupe/releases/tag/0.0.19
