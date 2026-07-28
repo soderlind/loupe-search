@@ -1,5 +1,5 @@
 {
-	"name": "soderlind/wp-loupe",
+	"name": "soderlind/loupe-search",
 	"type": "wordpress-plugin",
 	"description": "Loupe Search is a powerful search enhancement plugin for WordPress that delivers fast, accurate, and typo-tolerant search results. Loupe Search exposes a developer-friendly API so you can build your own search UI.",
 	"keywords": [
@@ -10,7 +10,7 @@
 		"developer-friendly",
 		"typo-tolerant"
 	],
-	"homepage": "https://github.com/soderlind/wp-loupe",
+	"homepage": "https://github.com/soderlind/loupe-search",
 	"license": "GPL-2.0-or-later",
 	"authors": [
 		{
@@ -32,7 +32,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Soderlind\\\\Plugin\\\\WPLoupe\\\\": "includes/"
+			"Soderlind\\Plugin\\WPLoupe\\": "includes/"
 		},
 		"classmap": [
 			"includes/"
@@ -40,7 +40,7 @@
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"WPLoupeTests\\\\": "tests/"
+			"WPLoupeTests\\": "tests/"
 		}
 	},
 	"config": {

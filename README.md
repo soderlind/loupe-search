@@ -6,7 +6,7 @@ A search enhancement plugin for WordPress that builds a fast, typo-tolerant inde
 
 ## Quick Links
 
-[Installation](#installation) | [REST API](#rest-api) | [AI Agent Integration](#ai-agent-integration-wordpress-abilities-api) | [Building Your Own Search UI](#building-your-own-search-ui) | [Settings](#settings) | [Filters](#filters) | [Changelog](CHANGELOG.md)
+[Requirements](#technical-requirements) | [Installation](#installation) | [REST API](#rest-api) | [AI Agent Integration](#ai-agent-integration-wordpress-abilities-api) | [Building Your Own Search UI](#building-your-own-search-ui) | [Settings](#settings) | [Reindexing](#reindexing) | [Filters](#filters) | [FAQ](#faq) | [Changelog](CHANGELOG.md)
 
 
 ## Overview
@@ -33,7 +33,7 @@ Developer documentation (schema + examples + Gutenberg block example): **[docs/s
 
 ## AI Agent Integration (WordPress Abilities API)
 
-Loupe Search registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra configuration required:
+Loupe Search registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/apis/abilities-api/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra configuration required:
 
 - `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
 - `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
@@ -41,7 +41,7 @@ Loupe Search registers two abilities via the [WordPress Abilities API](https://d
 Both abilities are discoverable through the standard WordPress Abilities registry and exposed via REST (`show_in_rest`).
 
 > The legacy `wp-loupe/*` abilities (category `wp-loupe`) still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
-
+>
 > **Upgrading from the MCP server?** The experimental MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the **[MCP → Abilities API migration guide](docs/migration-mcp-to-abilities.md)**.
 
 ## Features
@@ -49,7 +49,7 @@ Both abilities are discoverable through the standard WordPress Abilities registr
 - Fast index-backed search for configured post types
 - Typo-tolerance (Loupe)
 - Per-field weighting, filterable fields, sortable fields (configured in Settings)
-- Developer-facing REST API for building custom UIs
+- Developer-facing REST API for building custom UIs, with filters, facets, geo search, and result highlighting/snippets
 - Native AI agent integration via the WordPress Abilities API
 
 ## Technical Requirements
@@ -85,7 +85,7 @@ Both abilities are discoverable through the standard WordPress Abilities registr
 4. **Post-Installation**
    - Activate the plugin
    - Go to Settings > Loupe Search
-	- Click "Reindex" to build the initial search index (runs in batches; safe for large sites)
+   - Click "Reindex" to build the initial search index (runs in batches; safe for large sites)
 
 
 
@@ -232,7 +232,9 @@ add_filter( 'loupe_search_db_path', function ( $path ) {
 This filter allows you to modify the array of post types that the Loupe Search plugin works with. By default, it includes 'post' and 'page'.
 
 ```php
-add_filter( 'loupe_search_post_types', [ 'post', 'page', 'book' ] );
+add_filter( 'loupe_search_post_types', function ( array $post_types ): array {
+	return [ 'post', 'page', 'book' ];
+} );
 ```
 
 ### `loupe_search_posts_per_page`
@@ -240,7 +242,9 @@ add_filter( 'loupe_search_post_types', [ 'post', 'page', 'book' ] );
 This filter allows you to modify the number of search results per page. By default it's 10, set in `WPAdmin->Settings->Reading->"Blog pages show at most"`.
 
 ```php
-add_filter( 'loupe_search_posts_per_page', 20 );
+add_filter( 'loupe_search_posts_per_page', function ( int $per_page ): int {
+	return 20;
+} );
 ```
 
 ### `loupe_search_index_protected`
@@ -268,12 +272,12 @@ Modify the search schema for a specific post type. The filter name is dynamicall
 ```php
 // Customize the schema for 'book' post type
 add_filter( 'loupe_search_schema_book', function( $schema ) {
-	$schema['book_isbn'] = [		// Add a new field
-		'weight'     => 2.0,		// Higher weight means higher relevance in search results
-		'filterable' => true,		// Allow filtering by this field
-		'sortable'   => [			// Allow sorting by this field
-			'direction' => 'asc'	// Default sort direction
-		],
+	$schema['book_isbn'] = [           // Add a new field
+		'weight'         => 2.0,       // Higher weight means higher relevance in search results
+		'indexable'      => true,      // Include the field in the index
+		'filterable'     => true,      // Allow filtering by this field
+		'sortable'       => true,      // Allow sorting by this field
+		'sort_direction' => 'asc',     // Default sort direction
 	];
 
 	// Modify existing field settings
@@ -284,9 +288,11 @@ add_filter( 'loupe_search_schema_book', function( $schema ) {
 
 
 	$schema['book_author'] = [
-		'weight'     => 1.5,
-		'filterable' => true,
-		'sortable'   => [ 'direction' => 'asc' ],
+		'weight'         => 1.5,
+		'indexable'      => true,
+		'filterable'     => true,
+		'sortable'       => true,
+		'sort_direction' => 'asc',
 	];
 
 	return $schema;
@@ -296,31 +302,39 @@ add_filter( 'loupe_search_schema_book', function( $schema ) {
 The schema configuration supports the following options for each field:
 
 - `weight` (float): The relevance weight in search results. Default: 1.0
-- `filterable` (bool): Whether the field can be used for filtering. Default: false
-- `sortable` (array): Sorting configuration with `direction` key ('asc' or 'desc'). Default: null
+- `indexable` (bool): Whether the field is added to the index. Default: false
+- `filterable` (bool): Whether the field can be used for filtering and terms facets. Default: false
+- `sortable` (bool): Whether the field can be used for sorting. Default: false
+- `sort_direction` (string): Default sort direction, `'asc'` or `'desc'`. Default: `'desc'`
 
 Default schema fields:
 
 ```php
 [
 	'post_title'   => [
-		'weight'     => 2,
-		'filterable' => true,
-		'sortable'   => [ 'direction' => 'asc' ],
+		'weight'         => 2,
+		'indexable'      => true,
+		'filterable'     => true,
+		'sortable'       => true,
+		'sort_direction' => 'asc',
 	],
-	'post_content' => [ 'weight' => 1.0],
-	'post_excerpt' => [ 'weight' => 1.5 ],
+	'post_content' => [ 'weight' => 1.0, 'indexable' => true ],
+	'post_excerpt' => [ 'weight' => 1.5, 'indexable' => true ],
 	'post_date'    => [
-		'weight'     => 1.0,
-		'filterable' => true,
-		'sortable'   => [ 'direction' => 'desc' ],
+		'weight'         => 1.0,
+		'indexable'      => true,
+		'filterable'     => true,
+		'sortable'       => true,
+		'sort_direction' => 'desc',
 	],
 	'post_author'  => [
-		'weight'     => 1.0,
-		'filterable' => true,
-		'sortable'   => [ 'direction' => 'asc' ],
+		'weight'         => 1.0,
+		'indexable'      => true,
+		'filterable'     => true,
+		'sortable'       => true,
+		'sort_direction' => 'asc',
 	],
-	'permalink'    => [ 'weight' => 1.0 ],
+	'permalink'    => [ 'weight' => 1.0, 'indexable' => true ],
 ]
 ```
 
@@ -336,14 +350,3 @@ Loupe Search is copyright © 2024 [Per Søderlind](http://github.com/soderlind).
 Loupe Search is open-source software; you can redistribute it and/or modify it under the terms of the GNU General Public License, version 2, as published by the Free Software Foundation.
 
 Loupe Search is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for more information.
-
-<!--
-TOC MAINTENANCE
-The Table of Contents near the top of this file is maintained manually (no automated script in build pipeline).
-Update procedure when headings change:
-1. Identify new/renamed/removed headings at levels ## and important ### subsections.
-2. Derive anchors (GitHub algorithm: lowercase, spaces -> dashes, remove most punctuation).
-3. Insert/update list items inside the <!-- TOC BEGIN --> / <!-- TOC END --> block.
-4. Keep indentation with tabs (current style) or convert uniformly if you restyle the list.
-5. Avoid adding very small, single-sentence subsections to keep TOC scannable.
--->

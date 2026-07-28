@@ -4,7 +4,7 @@
 
 In 0.8.5 the experimental **MCP (Model Context Protocol) server**, its
 **token service**, and the **WP-CLI token commands** were removed in favor of
-the native [WordPress Abilities API](https://developer.wordpress.org/)
+the native [WordPress Abilities API](https://developer.wordpress.org/apis/abilities-api/)
 (WordPress 6.9+).
 
 This is a **breaking change** for any integration that talked to the MCP
