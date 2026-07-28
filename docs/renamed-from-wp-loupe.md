@@ -4,6 +4,23 @@ Loupe Search is the successor to the **WP Loupe** plugin. Existing installs
 upgrade seamlessly — nothing breaks on update. The old names below still work
 but are deprecated and will be removed in a future major release.
 
+## Do I need to do anything?
+
+**On upgrade: no.** Every old name is still wired up, and the existing index is
+reused, so sites and integrations keep working untouched.
+
+**Before the next major release: yes.** Update any code that uses the old
+names. The quickest way to find it:
+
+- Set `WP_DEBUG` to `true` and exercise your integration. Deprecated filters
+  raise standard WordPress deprecation notices naming their replacement, and
+  `wp wp-loupe` prints a CLI warning.
+- Grep your own code for the legacy names:
+
+  ```sh
+  grep -rn "wp_loupe_\|wp-loupe/v1\|wp wp-loupe\|wp-loupe-db" .
+  ```
+
 ## Summary of renames
 
 | Area | Legacy (deprecated) | Current | Deprecated since |
@@ -19,9 +36,14 @@ but are deprecated and will be removed in a future major release.
 
 ### Index folder
 
-The legacy `wp-content/wp-loupe-db` index folder is reused automatically if it
-is present, so no reindex is required after upgrading. New installs create
-`wp-content/loupe-search-db`.
+New installs create `wp-content/loupe-search-db`.
+
+On upgrade, the legacy `wp-content/wp-loupe-db` folder keeps being used **only
+while the new folder does not exist** — so no reindex is required. If both
+folders exist, `loupe-search-db` wins. To move over deliberately, delete or
+rename the legacy folder and run `wp loupe-search reindex`.
+
+The path is filterable via `loupe_search_db_path` (legacy: `wp_loupe_db_path`).
 
 ### Developer filters
 
@@ -48,3 +70,14 @@ under the `loupe-search` category. The legacy `wp-loupe/search` and
 deprecated aliases sharing the same callbacks.
 
 See the [Changelog](../CHANGELOG.md) for the full history.
+
+## What was *not* renamed
+
+Some identifiers deliberately keep the `wp_loupe_` prefix. These are not
+oversights, and there is nothing to migrate:
+
+| Identifier | Why it stayed |
+| --- | --- |
+| Options `wp_loupe_custom_post_types`, `wp_loupe_fields`, `wp_loupe_advanced` | Renaming would orphan existing settings on every install |
+| REST error codes, e.g. `wp_loupe_missing_query`, `wp_loupe_unallowlisted_field` | A REST error `code` is a single string; changing it would break clients that branch on it |
+| PHP namespace `Soderlind\Plugin\WPLoupe` and `WP_Loupe_*` class names | Internal API, not part of the public contract |
