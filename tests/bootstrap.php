@@ -26,6 +26,10 @@ $wp_loupe_test_transients = [];
 global $wp_loupe_test_posts, $wp_loupe_test_post_meta;
 $wp_loupe_test_posts     = []; // [ post_id => [ 'post_type' => 'post' ] ]
 $wp_loupe_test_post_meta = []; // [ post_id => [ meta_key => meta_value ] ]
+
+// Opt-in filter callbacks, keyed by hook name. Empty unless a test registers one.
+global $wp_loupe_test_filters;
+$wp_loupe_test_filters = [];
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( $name, $default = false ) {
 		global $wp_loupe_test_options;
@@ -48,6 +52,10 @@ if ( ! function_exists( 'delete_option' ) ) {
 }
 if ( ! function_exists( 'apply_filters' ) ) {
 	function apply_filters( $tag, $value ) {
+		global $wp_loupe_test_filters;
+		if ( isset( $wp_loupe_test_filters[ $tag ] ) ) {
+			return call_user_func( $wp_loupe_test_filters[ $tag ], $value );
+		}
 		return $value;
 	}
 }

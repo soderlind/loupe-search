@@ -1,15 +1,16 @@
-# WP Loupe
+# Loupe Search
 
-WP Loupe is a WordPress plugin that maintains a dedicated, typo-tolerant search
-index (backed by Loupe/SQLite) and powers WordPress search, a REST API, and
-WordPress Abilities. This context covers the plugin's **admin UI**.
+Loupe Search is a WordPress plugin that maintains a dedicated, typo-tolerant
+search index (backed by Loupe/SQLite) and powers WordPress search, a REST API,
+and WordPress Abilities. This context covers the plugin's **admin UI**; for the
+system structure see [docs/architecture.md](docs/architecture.md).
 
 ## Language
 
 ### Admin UI
 
 **Settings screen**:
-The single admin page under Settings → WP Loupe, organized into three tabs —
+The single admin page under Settings → Loupe Search, organized into three tabs —
 Dashboard, Fields, and Search Behavior. Hosts both the Dashboard and the
 configuration tabs.
 _Avoid_: options page, admin page

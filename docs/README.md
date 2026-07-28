@@ -3,6 +3,12 @@
 Developer documentation for [Loupe Search](../README.md). For installation and
 settings, start with the [main README](../README.md).
 
+## Understand the plugin
+
+- **[Architecture](architecture.md)** — What each class is responsible for, how
+  a search request and an indexing write flow through the system, the trust and
+  persistence boundaries, and where to make common changes.
+
 ## Build a search UI
 
 - **[Search API](search-api.md)** — The REST API behind your own search UI:

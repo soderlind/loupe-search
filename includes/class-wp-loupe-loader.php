@@ -54,16 +54,7 @@ class WP_Loupe_Loader {
 	 * @return void
 	 */
 	private function setup_post_types() {
-		$options = get_option( 'wp_loupe_custom_post_types', [] );
-
-		if ( ! empty( $options ) && isset( $options[ 'wp_loupe_post_type_field' ] ) ) {
-			$this->post_types = (array) $options[ 'wp_loupe_post_type_field' ];
-		} else {
-			$this->post_types = [ 'post', 'page' ];
-		}
-
-		$this->post_types = apply_filters( 'loupe_search_post_types', $this->post_types );
-		$this->post_types = apply_filters_deprecated( 'wp_loupe_post_types', array( $this->post_types ), '1.1.0', 'loupe_search_post_types' );
+		$this->post_types = WP_Loupe_Utils::get_indexed_post_types();
 	}
 
 	/**
