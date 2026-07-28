@@ -1,6 +1,6 @@
 # Loupe Search - Enhanced WordPress Search
 
-A search enhancement plugin for WordPress that builds a fast, typo-tolerant index and exposes a [developer-friendly API](docs/README.md#loupe-search-documentation) so you can build your own search UI. **Loupe Search works out of the box with WordPress’s standard search.**
+A search enhancement plugin for WordPress that builds a fast, typo-tolerant index and exposes a [developer-friendly API](docs/search-api.md) so you can build your own search UI. **Loupe Search works out of the box with WordPress’s standard search.**
 
 > **Renamed from WP Loupe.** Loupe Search is the successor to the **WP Loupe** plugin. Existing installs upgrade seamlessly, and the legacy filters, REST namespace, CLI command, and index folder still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)** for details.
 
