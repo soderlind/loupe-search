@@ -1,7 +1,7 @@
 # Architecture
 
 Current state of Loupe Search as implemented in this repository. Every claim
-below is traceable to a file in `includes/` unless marked `Unknown`.
+below is traceable to a named symbol in `includes/`.
 
 ## Contents
 
@@ -56,7 +56,7 @@ Not included:
 | Component | Responsibility | Implementation | Depends on |
 |---|---|---|---|
 | Bootstrap | Defines `WP_LOUPE_*` constants, gates unwanted request types, boots the loader on `plugins_loaded` | [loupe-search.php](../loupe-search.php) | `WP_Loupe_Loader`, `WP_Loupe_Utils` |
-| Loader | Resolves the indexed post-type list and wires every runtime component | [includes/class-wp-loupe-loader.php](../includes/class-wp-loupe-loader.php) | all components below |
+| Loader | Requires every class file and wires the runtime components | [includes/class-wp-loupe-loader.php](../includes/class-wp-loupe-loader.php) | all components below |
 | Path resolver | Resolves the index base directory and per-post-type directory; deletes the index tree | [includes/class-wp-loupe-db.php](../includes/class-wp-loupe-db.php) | `loupe_search_db_path` filter |
 | Engine factory | Builds and caches a configured `Loupe\Loupe\Loupe` per post type, and decides which fields may be sortable | [includes/class-wp-loupe-factory.php](../includes/class-wp-loupe-factory.php) | `loupe/loupe`, `wp_loupe_fields`, `wp_loupe_advanced` |
 | Schema manager | Turns saved field settings into indexable / filterable / sortable field lists, with per-request caching | [includes/class-wp-loupe-schema-manager.php](../includes/class-wp-loupe-schema-manager.php) | `wp_loupe_fields` |
@@ -93,6 +93,10 @@ flowchart TD
     RESTC --> ENG
     RESTC --> IDX
     ABIL --> ENG
+
+    IDX --> UTIL["WP_Loupe_Utils::get_indexed_post_types()"]
+    RESTC --> UTIL
+    ABIL --> UTIL
 
     ENG --> FACT[WP_Loupe_Factory]
     IDX --> FACT
@@ -281,11 +285,14 @@ either unprotected or admitted by `loupe_search_index_protected`.
 
 Enforced by `WP_Loupe_Indexer::is_indexable()` on write,
 `post_status => 'publish'` in `reindex_all()` and
-`get_published_post_ids_after()`, and `trash_post()` on removal. Read paths
-double-check: `WP_Loupe_REST::format_search_results()` and
-`WP_Loupe_Abilities::execute_search()` both skip hits whose post is missing or
-not published, so a stale index degrades to missing results rather than leaking
-drafts.
+`get_published_post_ids_after()`, and `trash_post()` on removal.
+
+Every read path re-checks the status of each hit, so a stale index degrades to
+missing results rather than leaking drafts:
+`WP_Loupe_REST::handle_search_request_post()` and `perform_search()`,
+`WP_Loupe_Abilities::execute_search()` and `execute_get_post()`, and
+`WP_Loupe_Search_Hooks::create_post_objects()`, which hydrates hits with
+`get_posts()` and therefore inherits its `publish`-only default.
 
 ### The document primary key is the post ID
 
@@ -323,6 +330,20 @@ column and its index if missing.
 Verified by
 [tests/SchemaManagerTest.php](../tests/SchemaManagerTest.php) and
 [tests/WP_Loupe_Schema_ManagerTest.php](../tests/WP_Loupe_Schema_ManagerTest.php).
+
+### Every surface resolves the same post-type list
+
+Rule: the indexer, the REST controller, the abilities and the front-end query
+integration all operate on one list, so `loupe_search_post_types` cannot make a
+post type searchable without also making it indexed.
+
+Enforced by `WP_Loupe_Utils::get_indexed_post_types()`, the single reader of
+`wp_loupe_custom_post_types` outside the settings screen. `WPLoupe_Settings_Page`
+is the deliberate exception: it reads the raw option so the checkboxes show what
+is stored rather than what the filter produced.
+
+Verified by
+[tests/WP_Loupe_UtilsTest.php](../tests/WP_Loupe_UtilsTest.php).
 
 ### Renamed hooks, routes, commands and abilities keep working
 

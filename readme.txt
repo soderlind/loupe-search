@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -166,6 +166,15 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.2.1 =
+* Fixed: The `loupe_search_post_types` filter now applies everywhere. It was only applied when resolving the front-end search scope, so the indexer, the REST API and the WordPress Abilities kept using the raw settings value. The settings screen still shows the stored option.
+* Fixed: Uninstalling now deletes the plugin's options and cached search results, on every site of a multisite network. Previously only the index directories were removed.
+* Fixed: Removed a bootstrap short-circuit that skipped plugin initialization on REST requests whose path did not start with `/wp-json/wp-loupe`.
+* Fixed: The Composer package is now `soderlind/loupe-search`, and its PSR-4 prefix is no longer over-escaped.
+* I18n: Regenerated `loupe-search.pot`. It now includes the ability and highlighting strings added in 1.2.0, and the plugin URI no longer points at the old repository.
+* Removed: The unused `WP_Loupe_Migration` class and `WP_Loupe_Utils::is_post_indexable()`.
+* Documentation: Added an architecture guide and a docs index, and corrected the filter, rename and migration guides.
 
 = 1.2.0 =
 * Added: REST search now supports opt-in highlighting and cropping. Send `attributesToHighlight` and/or `attributesToCrop` (field names or `["*"]`) to the POST `/search` endpoint; each hit then includes a `_formatted` object with matched terms wrapped in tags and/or cropped snippets. Tag/marker and length are configurable via `highlightStartTag`, `highlightEndTag`, `cropLength`, and `cropMarker`. Highlight tags are sanitized to a safe allowlist.

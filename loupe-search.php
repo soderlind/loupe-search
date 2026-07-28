@@ -10,7 +10,7 @@
  * Plugin Name:       Loupe Search
  * Plugin URI:        https://github.com/soderlind/loupe-search
  * Description:       Enhance the search functionality of your WordPress site with Loupe Search.
- * Version:           1.2.0
+ * Version:           1.2.1
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
  * License:           GPL-2.0+

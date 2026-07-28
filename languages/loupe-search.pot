@@ -2,27 +2,27 @@
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: Loupe Search 1.0.0\n"
+"Project-Id-Version: Loupe Search 1.2.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/loupe-search\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-23T16:31:08+00:00\n"
+"POT-Creation-Date: 2026-07-28T13:58:46+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: loupe-search\n"
 
 #. Plugin Name of the plugin
 #: loupe-search.php
-#: includes/class-wp-loupe-abilities.php:28
+#: includes/class-wp-loupe-abilities.php:36
 msgid "Loupe Search"
 msgstr ""
 
 #. Plugin URI of the plugin
 #: loupe-search.php
-msgid "https://github.com/soderlind/wp-loupe"
+msgid "https://github.com/soderlind/loupe-search"
 msgstr ""
 
 #. Description of the plugin
@@ -40,292 +40,316 @@ msgstr ""
 msgid "https://soderlind.no"
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:29
+#: includes/class-wp-loupe-abilities.php:37
 msgid "Search abilities provided by the Loupe Search plugin."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:49
-msgid "Search Posts"
+#: includes/class-wp-loupe-abilities.php:45
+msgid "Loupe Search (deprecated)"
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:50
+#: includes/class-wp-loupe-abilities.php:46
+msgid "Deprecated alias of the \"loupe-search\" category. Use \"loupe-search\" instead."
+msgstr ""
+
+#: includes/class-wp-loupe-abilities.php:75
 msgid "Search WordPress content using Loupe Search's typo-tolerant full-text search engine. Supports phrase matching with quotes, exclusion with -, and OR searches."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:58
-msgid "The search query. Supports phrases (\"hello world\"), exclusions (-term), and OR searches."
+#: includes/class-wp-loupe-abilities.php:77
+msgid "Deprecated alias of \"loupe-search/search\". Use \"loupe-search/search\" instead. "
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:63
-msgid "Post types to search. Defaults to all indexed post types."
-msgstr ""
-
-#: includes/class-wp-loupe-abilities.php:67
-msgid "Number of results to return. Default: 10. Max: 100."
-msgstr ""
-
-#: includes/class-wp-loupe-abilities.php:74
-msgid "Page of results to return. Default: 1."
-msgstr ""
-
-#: includes/class-wp-loupe-abilities.php:85
-msgid "Array of matching posts."
-msgstr ""
-
-#: includes/class-wp-loupe-abilities.php:89
-#: includes/class-wp-loupe-abilities.php:143
-msgid "Post ID."
+#: includes/class-wp-loupe-abilities.php:81
+msgid "Search Posts"
 msgstr ""
 
 #: includes/class-wp-loupe-abilities.php:90
-#: includes/class-wp-loupe-abilities.php:144
+msgid "The search query. Supports phrases (\"hello world\"), exclusions (-term), and OR searches."
+msgstr ""
+
+#: includes/class-wp-loupe-abilities.php:95
+msgid "Post types to search. Defaults to all indexed post types."
+msgstr ""
+
+#: includes/class-wp-loupe-abilities.php:99
+msgid "Number of results to return. Default: 10. Max: 100."
+msgstr ""
+
+#: includes/class-wp-loupe-abilities.php:106
+msgid "Page of results to return. Default: 1."
+msgstr ""
+
+#: includes/class-wp-loupe-abilities.php:117
+msgid "Array of matching posts."
+msgstr ""
+
+#: includes/class-wp-loupe-abilities.php:121
+#: includes/class-wp-loupe-abilities.php:181
+msgid "Post ID."
+msgstr ""
+
+#: includes/class-wp-loupe-abilities.php:122
+#: includes/class-wp-loupe-abilities.php:182
 msgid "Post title."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:91
-#: includes/class-wp-loupe-abilities.php:147
+#: includes/class-wp-loupe-abilities.php:123
+#: includes/class-wp-loupe-abilities.php:185
 msgid "Post permalink."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:92
-#: includes/class-wp-loupe-abilities.php:146
+#: includes/class-wp-loupe-abilities.php:124
+#: includes/class-wp-loupe-abilities.php:184
 msgid "Post excerpt."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:93
-#: includes/class-wp-loupe-abilities.php:148
+#: includes/class-wp-loupe-abilities.php:125
+#: includes/class-wp-loupe-abilities.php:186
 msgid "Post type slug."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:94
-#: includes/class-wp-loupe-abilities.php:149
+#: includes/class-wp-loupe-abilities.php:126
+#: includes/class-wp-loupe-abilities.php:187
 msgid "Publication date (ISO 8601)."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:100
+#: includes/class-wp-loupe-abilities.php:132
 msgid "Total number of matching posts."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:104
+#: includes/class-wp-loupe-abilities.php:136
 msgid "Current page number."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:108
+#: includes/class-wp-loupe-abilities.php:140
 msgid "Total number of pages."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:126
-msgid "Get Post"
-msgstr ""
-
-#: includes/class-wp-loupe-abilities.php:127
+#: includes/class-wp-loupe-abilities.php:158
 msgid "Retrieve a single published post by its ID, including title, content, excerpt, URL, author, and publication date."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:135
+#: includes/class-wp-loupe-abilities.php:160
+msgid "Deprecated alias of \"loupe-search/get-post\". Use \"loupe-search/get-post\" instead. "
+msgstr ""
+
+#: includes/class-wp-loupe-abilities.php:164
+msgid "Get Post"
+msgstr ""
+
+#: includes/class-wp-loupe-abilities.php:173
 msgid "The post ID to retrieve."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:145
+#: includes/class-wp-loupe-abilities.php:183
 msgid "Post content (HTML stripped)."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:150
+#: includes/class-wp-loupe-abilities.php:188
 msgid "Display name of the post author."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:231
+#: includes/class-wp-loupe-abilities.php:265
 msgid "A valid post ID is required."
 msgstr ""
 
-#: includes/class-wp-loupe-abilities.php:236
-#: includes/class-wp-loupe-abilities.php:241
+#: includes/class-wp-loupe-abilities.php:270
+#: includes/class-wp-loupe-abilities.php:275
 msgid "Post not found or not publicly accessible."
 msgstr ""
 
-#: includes/class-wp-loupe-indexer.php:208
+#: includes/class-wp-loupe-indexer.php:205
 msgid "Reindexing completed successfully!"
 msgstr ""
 
 #. translators: %s: list of post types and reasons
-#: includes/class-wp-loupe-indexer.php:506
+#: includes/class-wp-loupe-indexer.php:503
 #, php-format
 msgid "Loupe Search debug: index rebuild triggered for %s."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:370
+#: includes/class-wp-loupe-rest.php:380
 msgid "Invalid JSON body."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:376
+#: includes/class-wp-loupe-rest.php:386
 msgid "Missing or empty query parameter \"q\"."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:391
+#: includes/class-wp-loupe-rest.php:401
 msgid "Invalid page.size. Must be between 1 and 100."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:398
+#: includes/class-wp-loupe-rest.php:408
 msgid "Requested page is too deep. Reduce page.number/page.size."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:416
+#: includes/class-wp-loupe-rest.php:426
 msgid "No indexed post types are available for search."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:423
+#: includes/class-wp-loupe-rest.php:433
 msgid "postTypes must be \"all\" or a non-empty array of post type slugs."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:428
+#: includes/class-wp-loupe-rest.php:438
 msgid "Invalid post type in postTypes."
 msgstr ""
 
 #. translators: %s: post type name
-#: includes/class-wp-loupe-rest.php:437
+#: includes/class-wp-loupe-rest.php:447
 #, php-format
 msgid "Search index schema is out of date for post type \"%s\". Rebuild required."
 msgstr ""
 
 #. translators: %s: post type name
-#: includes/class-wp-loupe-rest.php:440
+#: includes/class-wp-loupe-rest.php:450
 #, php-format
 msgid "Search index not found for post type \"%s\"."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:445
+#: includes/class-wp-loupe-rest.php:455
 msgid "postTypes must be \"all\" or an array of post type slugs."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:459
+#: includes/class-wp-loupe-rest.php:469
 msgid "facets must be an array."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:463
+#: includes/class-wp-loupe-rest.php:473
 msgid "Only terms facets are supported."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:467
+#: includes/class-wp-loupe-rest.php:477
 msgid "Invalid facet field name."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:470
+#: includes/class-wp-loupe-rest.php:480
 msgid "Facet field is not allowlisted as filterable for the requested post types."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:492
+#: includes/class-wp-loupe-rest.php:502
 msgid "geo must be an object."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:496
+#: includes/class-wp-loupe-rest.php:506
 msgid "Invalid geo field name."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:500
+#: includes/class-wp-loupe-rest.php:510
 msgid "Geo field must be allowlisted as filterable for the requested post types."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:503
+#: includes/class-wp-loupe-rest.php:513
 msgid "geo.near is required and must be an object."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:508
+#: includes/class-wp-loupe-rest.php:518
 msgid "Invalid geo.near coordinates."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:513
+#: includes/class-wp-loupe-rest.php:523
 msgid "geo.radiusMeters must be > 0."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:518
+#: includes/class-wp-loupe-rest.php:528
 msgid "geo.sort must be an object."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:522
+#: includes/class-wp-loupe-rest.php:532
 msgid "geo.sort.order must be asc or desc."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:526
+#: includes/class-wp-loupe-rest.php:536
 msgid "Geo field must be allowlisted as sortable to sort by distance."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:553
+#: includes/class-wp-loupe-rest.php:563
 msgid "sort must be an array."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:557
+#: includes/class-wp-loupe-rest.php:567
 msgid "Invalid sort spec."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:562
+#: includes/class-wp-loupe-rest.php:572
 msgid "Invalid sort order."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:569
+#: includes/class-wp-loupe-rest.php:579
 msgid "Invalid sort field name."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:572
+#: includes/class-wp-loupe-rest.php:582
 msgid "Sort field is not allowlisted as sortable for the requested post types."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:772
+#: includes/class-wp-loupe-rest.php:608
+msgid "attributesToHighlight must be an array."
+msgstr ""
+
+#: includes/class-wp-loupe-rest.php:611
+msgid "attributesToCrop must be an array."
+msgstr ""
+
+#: includes/class-wp-loupe-rest.php:918
 msgid "Invalid filter node."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:777
+#: includes/class-wp-loupe-rest.php:923
 msgid "Filter group items must be a non-empty array."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:792
+#: includes/class-wp-loupe-rest.php:938
 msgid "not filter node requires item."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:801
+#: includes/class-wp-loupe-rest.php:947
 msgid "Unknown filter node type."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:807
+#: includes/class-wp-loupe-rest.php:953
 msgid "Invalid filter field name."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:810
+#: includes/class-wp-loupe-rest.php:956
 msgid "Filter field is not allowlisted as filterable for the requested post types."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:815
+#: includes/class-wp-loupe-rest.php:961
 msgid "Invalid filter operator."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:821
+#: includes/class-wp-loupe-rest.php:967
 msgid "exists operator requires boolean value."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:827
+#: includes/class-wp-loupe-rest.php:973
 msgid "Predicate filter requires value."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:833
+#: includes/class-wp-loupe-rest.php:979
 msgid "in/nin operators require a non-empty array value."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:854
+#: includes/class-wp-loupe-rest.php:1000
 msgid "between operator requires [min,max] or {min,max}."
 msgstr ""
 
-#: includes/class-wp-loupe-rest.php:1007
-#: includes/class-wp-loupe-rest.php:1102
+#: includes/class-wp-loupe-rest.php:1153
+#: includes/class-wp-loupe-rest.php:1248
 msgid "Invalid post type."
 msgstr ""
 
 #. translators: %s: post type name
-#: includes/class-wp-loupe-rest.php:1134
+#: includes/class-wp-loupe-rest.php:1280
 #, php-format
 msgid "Database structure ready for %s."
 msgstr ""
 
 #. translators: %s: post type name
-#: includes/class-wp-loupe-rest.php:1174
+#: includes/class-wp-loupe-rest.php:1320
 #, php-format
 msgid "Database removed for %s."
 msgstr ""
@@ -549,7 +573,7 @@ msgid "Typo tolerance customization"
 msgstr ""
 
 #: includes/class-wp-loupe-settings.php:790
-#: lib/js/admin.js:784
+#: lib/js/admin.js:789
 msgid "Weight"
 msgstr ""
 
@@ -574,7 +598,7 @@ msgid "Lower weight (e.g., 0.5) makes matches less important but still searchabl
 msgstr ""
 
 #: includes/class-wp-loupe-settings.php:803
-#: lib/js/admin.js:785
+#: lib/js/admin.js:790
 msgid "Filterable"
 msgstr ""
 
@@ -603,7 +627,7 @@ msgid "Note: Fields with highly variable or unique values (like content) make po
 msgstr ""
 
 #: includes/class-wp-loupe-settings.php:817
-#: lib/js/admin.js:786
+#: lib/js/admin.js:791
 msgid "Sortable"
 msgstr ""
 
@@ -711,75 +735,75 @@ msgstr ""
 msgid "Allows typos in prefix searches. Not recommended for large sites as it can significantly impact performance."
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:45
-#: includes/class-wp-loupe-utils.php:63
+#: includes/class-wp-loupe-utils.php:67
+#: includes/class-wp-loupe-utils.php:85
 msgid "SQLite PDO driver not available"
 msgstr ""
 
 #. translators: %s: required sqlite version
-#: includes/class-wp-loupe-utils.php:48
-#: includes/class-wp-loupe-utils.php:66
+#: includes/class-wp-loupe-utils.php:70
+#: includes/class-wp-loupe-utils.php:88
 #, php-format
 msgid "Loupe Search requires the pdo_sqlite extension and SQLite version %s or newer."
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:76
+#: includes/class-wp-loupe-utils.php:98
 msgid "Unable to detect SQLite version"
 msgstr ""
 
 #. translators: %s: required sqlite version
-#: includes/class-wp-loupe-utils.php:79
-#: includes/class-wp-loupe-utils.php:91
+#: includes/class-wp-loupe-utils.php:101
+#: includes/class-wp-loupe-utils.php:113
 #, php-format
 msgid "Loupe Search requires SQLite version %s or newer."
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:88
+#: includes/class-wp-loupe-utils.php:110
 msgid "SQLite version too old"
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:138
+#: includes/class-wp-loupe-utils.php:160
 msgid "Installed"
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:139
+#: includes/class-wp-loupe-utils.php:161
 msgid "Missing"
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:144
+#: includes/class-wp-loupe-utils.php:166
 msgid "PDO SQLite extension"
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:147
-#: includes/class-wp-loupe-utils.php:162
 #: includes/class-wp-loupe-utils.php:169
+#: includes/class-wp-loupe-utils.php:184
+#: includes/class-wp-loupe-utils.php:191
 msgid "Required"
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:151
+#: includes/class-wp-loupe-utils.php:173
 msgid "SQLite version"
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:153
+#: includes/class-wp-loupe-utils.php:175
 msgid "Unknown"
 msgstr ""
 
 #. translators: %s: required SQLite version
-#: includes/class-wp-loupe-utils.php:155
+#: includes/class-wp-loupe-utils.php:177
 #, php-format
 msgid ">= %s"
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:159
+#: includes/class-wp-loupe-utils.php:181
 msgid "intl extension"
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:166
+#: includes/class-wp-loupe-utils.php:188
 msgid "mbstring extension"
 msgstr ""
 
 #. translators: 1: pdo_sqlite yes/no, 2: sqlite version or ?, 3: required sqlite version, 4: ok/missing, 5: intl yes/no, 6: mbstring yes/no
-#: includes/class-wp-loupe-utils.php:207
+#: includes/class-wp-loupe-utils.php:229
 #, php-format
 msgid "Requirements: pdo_sqlite=%1$s; SQLite=%2$s (>= %3$s): %4$s; intl=%5$s; mbstring=%6$s"
 msgstr ""
@@ -792,136 +816,136 @@ msgstr ""
 msgid "No post types selected for indexing."
 msgstr ""
 
-#: lib/js/admin.js:120
+#: lib/js/admin.js:123
 msgid "Starting…"
 msgstr ""
 
-#: lib/js/admin.js:125
+#: lib/js/admin.js:128
 msgid "Starting batched reindex. Keep this tab open…"
 msgstr ""
 
-#: lib/js/admin.js:141
+#: lib/js/admin.js:143
 msgid "Reindex cancelled."
 msgstr ""
 
-#: lib/js/admin.js:159
+#: lib/js/admin.js:163
 msgid "Complete"
 msgstr ""
 
-#: lib/js/admin.js:161
+#: lib/js/admin.js:166
 msgid "Reindex completed successfully!"
 msgstr ""
 
-#: lib/js/admin.js:188
 #: lib/js/admin.js:193
+#: lib/js/admin.js:198
 msgid "Reindexing"
 msgstr ""
 
-#: lib/js/admin.js:215
+#: lib/js/admin.js:220
 msgid "Reindex stalled: missing cursor. Try again or check server logs."
 msgstr ""
 
-#: lib/js/admin.js:224
+#: lib/js/admin.js:229
 msgid "Reindex failed"
 msgstr ""
 
-#: lib/js/admin.js:292
+#: lib/js/admin.js:297
 msgid "Unable to load index status"
 msgstr ""
 
-#: lib/js/admin.js:313
+#: lib/js/admin.js:318
 msgid "No post types are configured for indexing yet. Add one on the Fields tab."
 msgstr ""
 
-#: lib/js/admin.js:322
+#: lib/js/admin.js:327
 msgid "Not indexed"
 msgstr ""
 
-#: lib/js/admin.js:323
-#: lib/js/admin.js:359
+#: lib/js/admin.js:328
+#: lib/js/admin.js:364
 msgid "Needs reindex"
 msgstr ""
 
-#: lib/js/admin.js:324
+#: lib/js/admin.js:329
 msgid "Index unreadable"
 msgstr ""
 
-#: lib/js/admin.js:325
+#: lib/js/admin.js:330
 msgid "Unknown post type"
 msgstr ""
 
-#: lib/js/admin.js:326
+#: lib/js/admin.js:331
 msgid "Invalid post type"
 msgstr ""
 
-#: lib/js/admin.js:332
+#: lib/js/admin.js:337
 msgid "Post type"
 msgstr ""
 
-#: lib/js/admin.js:335
+#: lib/js/admin.js:340
 msgid "Status"
 msgstr ""
 
-#: lib/js/admin.js:335
+#: lib/js/admin.js:340
 msgid "Published"
 msgstr ""
 
-#: lib/js/admin.js:354
+#: lib/js/admin.js:359
 msgid "Ready"
 msgstr ""
 
-#: lib/js/admin.js:472
+#: lib/js/admin.js:477
 msgid "Deleting database structure for"
 msgstr ""
 
-#: lib/js/admin.js:499
+#: lib/js/admin.js:504
 msgid "Error deleting database for"
 msgstr ""
 
-#: lib/js/admin.js:516
+#: lib/js/admin.js:521
 msgid "Creating database structure for"
 msgstr ""
 
-#: lib/js/admin.js:534
+#: lib/js/admin.js:539
 msgid "Please configure fields below and click Reindex to complete setup."
 msgstr ""
 
-#: lib/js/admin.js:551
+#: lib/js/admin.js:556
 msgid "Error creating database for"
 msgstr ""
 
-#: lib/js/admin.js:634
+#: lib/js/admin.js:639
 msgid "Error loading fields for"
 msgstr ""
 
-#: lib/js/admin.js:782
+#: lib/js/admin.js:787
 msgid "Field"
 msgstr ""
 
-#: lib/js/admin.js:783
+#: lib/js/admin.js:788
 msgid "Indexable"
 msgstr ""
 
-#: lib/js/admin.js:787
+#: lib/js/admin.js:792
 msgid "Sort Direction"
 msgstr ""
 
-#: lib/js/admin.js:1019
+#: lib/js/admin.js:1024
 msgid "Ascending"
 msgstr ""
 
-#: lib/js/admin.js:1024
+#: lib/js/admin.js:1029
 msgid "Descending"
 msgstr ""
 
-#: lib/js/admin.js:1110
+#: lib/js/admin.js:1115
 msgid "Saving settings…"
 msgstr ""
 
-#: lib/js/admin.js:1160
+#: lib/js/admin.js:1165
 msgid "Copied"
 msgstr ""
 
-#: lib/js/admin.js:1161
+#: lib/js/admin.js:1166
 msgid "Copy failed"
 msgstr ""
