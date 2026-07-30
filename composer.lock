@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ddcd471b5e5c394262335cb18a7bc4c7",
+    "content-hash": "ca6254cae388f4667b5131c36f0dbf6d",
     "packages": [
         {
             "name": "doctrine/dbal",
-            "version": "4.4.3",
+            "version": "4.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "61e730f1658814821a85f2402c945f3883407dec"
+                "reference": "fb9e0ffe15e1590e24dc61c0c0a23f9a33ee42ce"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/61e730f1658814821a85f2402c945f3883407dec",
-                "reference": "61e730f1658814821a85f2402c945f3883407dec",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/fb9e0ffe15e1590e24dc61c0c0a23f9a33ee42ce",
+                "reference": "fb9e0ffe15e1590e24dc61c0c0a23f9a33ee42ce",
                 "shasum": ""
             },
             "require": {
@@ -94,7 +94,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/dbal/issues",
-                "source": "https://github.com/doctrine/dbal/tree/4.4.3"
+                "source": "https://github.com/doctrine/dbal/tree/4.4.4"
             },
             "funding": [
                 {
@@ -110,7 +110,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-03-20T08:52:12+00:00"
+            "time": "2026-07-21T14:34:40+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -293,41 +293,41 @@
         },
         {
             "name": "loupe/loupe",
-            "version": "0.13.13",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/loupe-php/loupe.git",
-                "reference": "2f51f84dd998c7bbfec20259bd97de7d9182710a"
+                "reference": "06872e08eac9ddebcb99161482c64a32546a6311"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/loupe-php/loupe/zipball/2f51f84dd998c7bbfec20259bd97de7d9182710a",
-                "reference": "2f51f84dd998c7bbfec20259bd97de7d9182710a",
+                "url": "https://api.github.com/repos/loupe-php/loupe/zipball/06872e08eac9ddebcb99161482c64a32546a6311",
+                "reference": "06872e08eac9ddebcb99161482c64a32546a6311",
                 "shasum": ""
             },
             "require": {
                 "doctrine/dbal": "^3.10.2 || ^4.0",
                 "doctrine/lexer": "^2.0 || ^3.0",
-                "ext-intl": "*",
                 "ext-mbstring": "*",
+                "ext-pdo": "*",
                 "ext-pdo_sqlite": "*",
                 "lib-pdo_sqlite-sqlite": ">= 3.35.0",
-                "loupe/matcher": "^0.2.2",
+                "loupe/matcher": "^0.3.2",
                 "mjaschen/phpgeo": "^5.0 || ^6.0",
                 "nitotm/efficient-language-detector": "^3.1",
                 "php": "^8.1",
+                "psr/cache": "^2.0 || ^3.0",
                 "psr/log": "^2.0 || ^3.0",
-                "toflar/state-set-index": "^3.0",
+                "toflar/state-set-index": "^3.3",
                 "wamania/php-stemmer": "^4.0"
             },
             "require-dev": {
-                "phpstan/phpstan": "^2.1.31",
+                "phpbench/phpbench": "^1.2",
                 "phpunit/phpunit": "^10.5.58",
-                "symfony/filesystem": "^7.3.2",
-                "symfony/finder": "^7.3.5",
-                "symfony/process": "^7.3.4",
-                "symfony/var-dumper": "^7.3.5",
-                "symplify/easy-coding-standard": "^12.6.2"
+                "symfony/console": "^7.4",
+                "symfony/filesystem": "^7.4",
+                "symfony/process": "^7.4",
+                "terminal42/code-quality-tools": "dev-main"
             },
             "type": "library",
             "autoload": {
@@ -348,7 +348,7 @@
             "description": "A full text search engine with tokenization, stemming, typo tolerance, filters and geo support based on only PHP and SQLite",
             "support": {
                 "issues": "https://github.com/loupe-php/loupe/issues",
-                "source": "https://github.com/loupe-php/loupe/tree/0.13.13"
+                "source": "https://github.com/loupe-php/loupe/tree/1.0.1"
             },
             "funding": [
                 {
@@ -356,32 +356,36 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-15T12:34:09+00:00"
+            "time": "2026-07-30T09:33:17+00:00"
         },
         {
             "name": "loupe/matcher",
-            "version": "0.2.2",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/loupe-php/matcher.git",
-                "reference": "70a1aaf38618b0eb669e93888f86c146c0e88735"
+                "reference": "8fe4aa1c30088ff053d37498fcca28840e19c6f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/loupe-php/matcher/zipball/70a1aaf38618b0eb669e93888f86c146c0e88735",
-                "reference": "70a1aaf38618b0eb669e93888f86c146c0e88735",
+                "url": "https://api.github.com/repos/loupe-php/matcher/zipball/8fe4aa1c30088ff053d37498fcca28840e19c6f3",
+                "reference": "8fe4aa1c30088ff053d37498fcca28840e19c6f3",
                 "shasum": ""
             },
             "require": {
                 "ext-intl": "*",
                 "ext-mbstring": "*",
-                "php": "^8.1"
+                "php": "^8.1",
+                "toflar/fast-set": "^1.0"
             },
             "require-dev": {
-                "phpstan/phpstan": "^2.0",
-                "phpunit/phpunit": "^10.5",
-                "symfony/finder": "^6.2",
-                "symplify/easy-coding-standard": "^12.5"
+                "ext-zlib": "*",
+                "phpbench/phpbench": "^1.2",
+                "phpunit/phpunit": "^10.5 || ^11.5.46",
+                "symfony/console": "^6.4 || ^7.4 || ^8.0",
+                "symfony/filesystem": "^6.4 || ^7.4 || ^8.0",
+                "symfony/http-client": "^6.4 || ^7.4 || ^8.0",
+                "terminal42/code-quality-tools": "dev-main"
             },
             "type": "library",
             "autoload": {
@@ -403,10 +407,20 @@
                     "email": "daun@daun.ltd"
                 }
             ],
-            "description": "Highlight and crop around search terms",
+            "description": "Tokenize, decompose, highlight and crop around text and search terms",
+            "keywords": [
+                "crop",
+                "decompose",
+                "decomposition",
+                "dictionary",
+                "highlight",
+                "search",
+                "tokenize",
+                "tokenizer"
+            ],
             "support": {
                 "issues": "https://github.com/loupe-php/matcher/issues",
-                "source": "https://github.com/loupe-php/matcher/tree/0.2.2"
+                "source": "https://github.com/loupe-php/matcher/tree/0.3.2"
             },
             "funding": [
                 {
@@ -414,7 +428,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-15T11:58:45+00:00"
+            "time": "2026-07-30T08:14:15+00:00"
         },
         {
             "name": "mjaschen/phpgeo",
@@ -501,16 +515,16 @@
         },
         {
             "name": "nitotm/efficient-language-detector",
-            "version": "v3.1.1",
+            "version": "v3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nitotm/efficient-language-detector.git",
-                "reference": "f20a5aa1773586744b47e00c53a56e39b0c33ab4"
+                "reference": "3fbf88632dfa090960f73259305a6d104d649ddc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nitotm/efficient-language-detector/zipball/f20a5aa1773586744b47e00c53a56e39b0c33ab4",
-                "reference": "f20a5aa1773586744b47e00c53a56e39b0c33ab4",
+                "url": "https://api.github.com/repos/nitotm/efficient-language-detector/zipball/3fbf88632dfa090960f73259305a6d104d649ddc",
+                "reference": "3fbf88632dfa090960f73259305a6d104d649ddc",
                 "shasum": ""
             },
             "require": {
@@ -551,7 +565,7 @@
             ],
             "support": {
                 "issues": "https://github.com/nitotm/efficient-language-detector/issues",
-                "source": "https://github.com/nitotm/efficient-language-detector/tree/v3.1.1"
+                "source": "https://github.com/nitotm/efficient-language-detector/tree/v3.2.0"
             },
             "funding": [
                 {
@@ -567,7 +581,7 @@
                     "type": "ko_fi"
                 }
             ],
-            "time": "2026-01-12T10:51:25+00:00"
+            "time": "2026-03-20T21:53:25+00:00"
         },
         {
             "name": "psr/cache",
@@ -670,16 +684,16 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.6.0",
+            "version": "v3.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62"
+                "reference": "f3202fa1b5097b0af062dc978b32ecf63404e31d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/63afe740e99a13ba87ec199bb07bbdee937a5b62",
-                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/f3202fa1b5097b0af062dc978b32ecf63404e31d",
+                "reference": "f3202fa1b5097b0af062dc978b32ecf63404e31d",
                 "shasum": ""
             },
             "require": {
@@ -692,7 +706,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.6-dev"
+                    "dev-main": "3.7-dev"
                 }
             },
             "autoload": {
@@ -717,7 +731,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.6.0"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.7.1"
             },
             "funding": [
                 {
@@ -729,24 +743,28 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-25T14:21:43+00:00"
+            "time": "2026-06-05T06:23:12+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.36.0",
+            "version": "v1.38.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "6a21eb99c6973357967f6ce3708cd55a6bec6315"
+                "reference": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/6a21eb99c6973357967f6ce3708cd55a6bec6315",
-                "reference": "6a21eb99c6973357967f6ce3708cd55a6bec6315",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6",
+                "reference": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6",
                 "shasum": ""
             },
             "require": {
@@ -798,7 +816,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.36.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.38.2"
             },
             "funding": [
                 {
@@ -818,20 +836,73 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-10T17:25:58+00:00"
+            "time": "2026-05-27T06:59:30+00:00"
         },
         {
-            "name": "toflar/state-set-index",
-            "version": "3.2.0",
+            "name": "toflar/fast-set",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/Toflar/state-set-index.git",
-                "reference": "29df429b827676c9cf64cb79b5e8411dd9e0bd7e"
+                "url": "https://github.com/Toflar/FastSet.git",
+                "reference": "e869a114f277ada274f9a8971eb05020e5ee94d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Toflar/state-set-index/zipball/29df429b827676c9cf64cb79b5e8411dd9e0bd7e",
-                "reference": "29df429b827676c9cf64cb79b5e8411dd9e0bd7e",
+                "url": "https://api.github.com/repos/Toflar/FastSet/zipball/e869a114f277ada274f9a8971eb05020e5ee94d8",
+                "reference": "e869a114f277ada274f9a8971eb05020e5ee94d8",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^10.5 || ^11.0 || ^12.5",
+                "terminal42/contao-build-tools": "@dev"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Toflar\\FastSet\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Yanick Witschi",
+                    "email": "yanick.witschi@terminal42.ch"
+                }
+            ],
+            "description": "Provides the means to create memory-efficient precompiled sets with very fast fingerprint lookups",
+            "keywords": [
+                "Fingerprint",
+                "binary",
+                "dictionary",
+                "hash",
+                "lookup",
+                "memory",
+                "set"
+            ],
+            "support": {
+                "issues": "https://github.com/Toflar/FastSet/issues",
+                "source": "https://github.com/Toflar/FastSet/tree/1.0.1"
+            },
+            "time": "2026-06-02T13:14:21+00:00"
+        },
+        {
+            "name": "toflar/state-set-index",
+            "version": "3.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Toflar/state-set-index.git",
+                "reference": "8e388e4422d61251221dd4731c319b990e8ecc51"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Toflar/state-set-index/zipball/8e388e4422d61251221dd4731c319b990e8ecc51",
+                "reference": "8e388e4422d61251221dd4731c319b990e8ecc51",
                 "shasum": ""
             },
             "require": {
@@ -842,7 +913,7 @@
                 "fakerphp/faker": "^1.24",
                 "phpbench/phpbench": "^1.4",
                 "phpunit/phpunit": "^10.2",
-                "symplify/easy-coding-standard": "^11.3"
+                "symplify/easy-coding-standard": "^13.1"
             },
             "type": "library",
             "autoload": {
@@ -863,9 +934,9 @@
             "description": "Implementation of the State Set Index Algorithm",
             "support": {
                 "issues": "https://github.com/Toflar/state-set-index/issues",
-                "source": "https://github.com/Toflar/state-set-index/tree/3.2.0"
+                "source": "https://github.com/Toflar/state-set-index/tree/3.3.0"
             },
-            "time": "2026-03-31T12:30:08+00:00"
+            "time": "2026-05-21T15:10:54+00:00"
         },
         {
             "name": "wamania/php-stemmer",
@@ -915,56 +986,6 @@
                 "source": "https://github.com/wamania/php-stemmer/tree/v4.0.0"
             },
             "time": "2024-12-22T08:54:03+00:00"
-        },
-        {
-            "name": "yahnis-elsts/plugin-update-checker",
-            "version": "v5.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/YahnisElsts/plugin-update-checker.git",
-                "reference": "a2db6871deec989a74e1f90fafc6d58ae526a879"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/YahnisElsts/plugin-update-checker/zipball/a2db6871deec989a74e1f90fafc6d58ae526a879",
-                "reference": "a2db6871deec989a74e1f90fafc6d58ae526a879",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "php": ">=5.6.20"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "load-v5p6.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Yahnis Elsts",
-                    "email": "whiteshadow@w-shadow.com",
-                    "homepage": "https://w-shadow.com/",
-                    "role": "Developer"
-                }
-            ],
-            "description": "A custom update checker for WordPress plugins and themes. Useful if you can't host your plugin in the official WP repository but still want it to support automatic updates.",
-            "homepage": "https://github.com/YahnisElsts/plugin-update-checker/",
-            "keywords": [
-                "automatic updates",
-                "plugin updates",
-                "theme updates",
-                "wordpress"
-            ],
-            "support": {
-                "issues": "https://github.com/YahnisElsts/plugin-update-checker/issues",
-                "source": "https://github.com/YahnisElsts/plugin-update-checker/tree/v5.6"
-            },
-            "time": "2025-05-20T12:29:01+00:00"
         }
     ],
     "packages-dev": [

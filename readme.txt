@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -62,7 +62,7 @@ Loupe Search registers two abilities via the WordPress Abilities API (WordPress 
 
 These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration. As of 1.2.0 the ability namespace is `loupe-search`; the legacy `wp-loupe/search` and `wp-loupe/get-post` abilities still work but are deprecated aliases.
 
-Upgrading from the experimental MCP server? The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. See the [MCP to Abilities API migration guide](https://github.com/soderlind/loupe-search/blob/main/docs/migration-mcp-to-abilities.md).
+Upgrading from the experimental MCP server? The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. Use the Abilities API endpoints described above instead; no configuration migration is required.
 
 = Filters =
 
@@ -161,12 +161,20 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 = What are the technical requirements? =
 
 * PHP 8.1 or higher
-* SQLite 3.35+ (required by Loupe 0.13.x)
+* SQLite 3.35+ (required by Loupe)
 * PHP extensions: pdo_sqlite, intl, mbstring
 * WordPress 6.9+
 
 
 == Changelog ==
+
+= 1.2.2 =
+* Security: Public REST search endpoints and the search abilities now only return results from public post types.
+* Security: Field settings now sanitize the nested post-type and field-name keys.
+* Changed: Updated the bundled Loupe search engine to 1.0.1 (compound-word decomposition, improved excerpt cropping).
+* Removed: The bundled plugin update checker library; updates are served by WordPress.org.
+* Fixed: Admin help-tab styles are now enqueued instead of printed in an inline style tag.
+* Fixed: Removed a broken documentation link and excluded development/test folders from the release package.
 
 = 1.2.1 =
 * Fixed: The `loupe_search_post_types` filter now applies everywhere. It was only applied when resolving the front-end search scope, so the indexer, the REST API and the WordPress Abilities kept using the raw settings value. The settings screen still shows the stored option.

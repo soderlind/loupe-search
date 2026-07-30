@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-07-30
+
+### Security
+- Public REST search endpoints (`GET`/`POST /search`) and the `loupe-search/search` and `wp-loupe/search` abilities now only return results from public post types, so a configured non-public post type can no longer be exposed through them.
+- `sanitize_fields_settings()` now sanitizes the nested post-type keys (via `sanitize_key()` and `post_type_exists()`) and constrains field-name keys to a safe character set.
+
+### Changed
+- Updated the bundled Loupe search engine from 0.13.x to 1.0.1: compound-word decomposition for English and German, improved excerpt cropping, and more accurate query-language detection.
+
+### Removed
+- The bundled `yahnis-elsts/plugin-update-checker` library. Updates for the WordPress.org copy are served by WordPress.org.
+
+### Fixed
+- Admin help-tab CSS is now enqueued via `wp_add_inline_style()` instead of being printed in an inline `<style>` tag.
+- Removed a broken documentation link from `readme.txt` and excluded development/test folders (vendor test suites, the update checker) from the release package via `.distignore`.
+
 ## [1.2.1] - 2026-07-28
 
 ### Fixed

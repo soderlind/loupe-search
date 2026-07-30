@@ -7,7 +7,7 @@
 
 // If uninstall.php is not called by WordPress, abort.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-	return;
+	exit;
 }
 
 // Include the base filesystem class from WordPress core.
