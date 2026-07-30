@@ -60,3 +60,14 @@ vendor/wamania/php-stemmer/test/
 
 # wp.org assets live in .wordpress-org/ (mapped to SVN assets/ by the action)
 .wordpress-org/
+
+# GitHub-only update checker library. Updates on wp.org are served by WordPress.org,
+# so this library must never ship in the wp.org payload.
+vendor/yahnis-elsts/
+
+# Test suites and fixtures bundled inside third-party runtime packages.
+vendor/doctrine/deprecations/src/PHPUnit/
+vendor/**/tests/
+vendor/**/Tests/
+vendor/**/test/
+vendor/**/Test/

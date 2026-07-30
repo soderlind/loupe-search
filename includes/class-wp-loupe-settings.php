@@ -598,7 +598,19 @@ class WPLoupe_Settings_Page {
 			if ( ! is_array( $fields ) )
 				continue;
 
+			// Validate the post type key: must be a sanitized, registered post type.
+			$post_type = sanitize_key( $post_type );
+			if ( '' === $post_type || ! post_type_exists( $post_type ) ) {
+				continue;
+			}
+
 			foreach ( $fields as $field_key => $settings ) {
+				// Constrain the field key to a safe field-name character set.
+				$field_key = preg_replace( '/[^A-Za-z0-9_\-]/', '', (string) $field_key );
+				if ( '' === $field_key ) {
+					continue;
+				}
+
 				// Only include the field if it's explicitly marked as indexable
 				if ( ! empty( $settings[ 'indexable' ] ) ) {
 					$sanitized[ $post_type ][ $field_key ] = [
@@ -688,6 +700,27 @@ class WPLoupe_Settings_Page {
 			}
 			.nav-tab-wrapper {
 				margin-bottom: 20px;
+			}
+			.wp-loupe-help-sections {
+				display: flex;
+				gap: 20px;
+				margin-top: 15px;
+			}
+			.wp-loupe-help-section {
+				flex: 1;
+				padding: 15px;
+				border-radius: 5px;
+			}
+			.wp-loupe-help-section.basic {
+				background-color: #e7f5fa;
+				border-left: 4px solid #2271b1;
+			}
+			.wp-loupe-help-section.advanced {
+				background-color: #faf5e7;
+				border-left: 4px solid #b17a22;
+			}
+			.wp-loupe-help-section h3 {
+				margin-top: 0;
 			}
 		' );
 
@@ -884,33 +917,5 @@ class WPLoupe_Settings_Page {
 			),
 		] );
 
-		// Add some custom styling to the help tabs
-		$screen->add_help_tab( [
-			'id'      => 'wp_loupe_help_styles',
-			'title'   => '',
-			'content' => '<style>
-				.wp-loupe-help-sections {
-					display: flex;
-					gap: 20px;
-					margin-top: 15px;
-				}
-				.wp-loupe-help-section {
-					flex: 1;
-					padding: 15px;
-					border-radius: 5px;
-				}
-				.wp-loupe-help-section.basic {
-					background-color: #e7f5fa;
-					border-left: 4px solid #2271b1;
-				}
-				.wp-loupe-help-section.advanced {
-					background-color: #faf5e7;
-					border-left: 4px solid #b17a22;
-				}
-				.wp-loupe-help-section h3 {
-					margin-top: 0;
-				}
-			</style>',
-		] );
 	}
 }

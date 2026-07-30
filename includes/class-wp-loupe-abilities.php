@@ -232,6 +232,10 @@ class WP_Loupe_Abilities {
 			if ( ! $post || 'publish' !== $post->post_status ) {
 				continue;
 			}
+			$post_type_obj = get_post_type_object( $post->post_type );
+			if ( ! $post_type_obj || ! $post_type_obj->public ) {
+				continue; // Public ability: never expose non-public post types.
+			}
 			$hits[] = [
 				'id'        => $post_id,
 				'title'     => get_the_title( $post ),
