@@ -24,7 +24,7 @@
 	},
 	"homepage": "https://github.com/soderlind/loupe-search#readme",
 	"devDependencies": {
-		"@wordpress/scripts": "^33.0.0",
+		"@wordpress/scripts": "^34.0.0",
 		"terser-webpack-plugin": "^5.4.0"
 	},
 	"dependencies": {
