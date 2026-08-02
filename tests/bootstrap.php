@@ -10,12 +10,6 @@ require_once __DIR__ . '/../vendor/antecedent/patchwork/Patchwork.php';
 
 require_once __DIR__ . '/wp-shims-hooks.php';
 
-// Explicitly require new classes added in this branch.
-// Composer's classmap autoloader in vendor/ is not regenerated automatically here.
-require_once __DIR__ . '/../includes/class-wp-loupe-search-engine.php';
-require_once __DIR__ . '/../includes/class-wp-loupe-search-hooks.php';
-require_once __DIR__ . '/../includes/class-wp-loupe-abilities.php';
-
 // Basic WP function shims (only those actually touched by tested units). If a test needs more, add here.
 // Simple in-memory option store shared across calls.
 global $wp_loupe_test_options, $wp_loupe_test_transients;
@@ -262,7 +256,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Minimal $wpdb shim for REST meta key discovery queries.
 if ( ! isset( $GLOBALS[ 'wpdb' ] ) ) {
 	class WP_Loupe_Test_WPDB {
+		// Recorded so tests can assert on query parameters; get_col() results are test-injectable.
+		public $last_prepare_args = [];
+		public $col_results       = [];
+
 		public function prepare( $query, ...$args ) {
+			$this->last_prepare_args = $args;
 			// Naive sequential replacement for %s / %d placeholders.
 			foreach ( $args as $arg ) {
 				$replacement = is_int( $arg ) ? (string) $arg : "'" . addslashes( (string) $arg ) . "'";
@@ -274,8 +273,7 @@ if ( ! isset( $GLOBALS[ 'wpdb' ] ) ) {
 			return addcslashes( (string) $text, '_%\\' );
 		}
 		public function get_col( $sql ) {
-			// Return empty list; tests only assert structure, not specific meta keys.
-			return [];
+			return $this->col_results;
 		}
 		public $postmeta = 'wp_postmeta';
 		public $posts = 'wp_posts';
@@ -385,7 +383,8 @@ if ( ! function_exists( 'get_object_taxonomies' ) ) {
 }
 if ( ! function_exists( 'taxonomy_exists' ) ) {
 	function taxonomy_exists( $tax ) {
-		return false;
+		global $wp_loupe_test_taxonomies;
+		return in_array( $tax, (array) $wp_loupe_test_taxonomies, true );
 	}
 }
 if ( ! function_exists( 'wp_register_ability' ) ) {
@@ -399,6 +398,97 @@ if ( ! function_exists( 'wp_register_ability_category' ) ) {
 		$GLOBALS[ '__wp_loupe_registered_ability_categories' ][ $slug ] = $args;
 		return true;
 	}
+}
+
+// Indexer shims. The revision/autosave/term stores are empty by default, so a post
+// looks like an ordinary published post unless a test says otherwise.
+global $wp_loupe_test_revisions, $wp_loupe_test_autosaves, $wp_loupe_test_terms, $wp_loupe_test_taxonomies;
+$wp_loupe_test_revisions  = []; // [ post_id => true ]
+$wp_loupe_test_autosaves  = []; // [ post_id => true ]
+$wp_loupe_test_terms      = []; // [ post_id => [ taxonomy => [ term names ] ] ]
+$wp_loupe_test_taxonomies = []; // registered taxonomy slugs
+
+if ( ! function_exists( 'wp_is_post_revision' ) ) {
+	function wp_is_post_revision( $post_id ) {
+		global $wp_loupe_test_revisions;
+		return $wp_loupe_test_revisions[ $post_id ] ?? false;
+	}
+}
+if ( ! function_exists( 'wp_is_post_autosave' ) ) {
+	function wp_is_post_autosave( $post_id ) {
+		global $wp_loupe_test_autosaves;
+		return $wp_loupe_test_autosaves[ $post_id ] ?? false;
+	}
+}
+if ( ! function_exists( 'wp_get_post_terms' ) ) {
+	function wp_get_post_terms( $post_id, $taxonomy, $args = [] ) {
+		global $wp_loupe_test_terms;
+		return $wp_loupe_test_terms[ $post_id ][ $taxonomy ] ?? [];
+	}
+}
+if ( ! class_exists( 'WP_Post' ) ) {
+	class WP_Post {
+		public $ID            = 0;
+		public $post_type     = 'post';
+		public $post_status   = 'publish';
+		public $post_password = '';
+		public $post_title    = '';
+		public $post_content  = '';
+		public $post_excerpt  = '';
+		public $post_date     = '2026-01-01 00:00:00';
+
+		public function __construct( array $props = [] ) {
+			foreach ( $props as $key => $value ) {
+				$this->{$key} = $value;
+			}
+		}
+	}
+}
+
+// Request-context shims. Tests run as an anonymous front-end request by default.
+global $wp_loupe_test_is_admin, $wp_loupe_test_doing_ajax, $wp_loupe_test_deprecated, $wp_loupe_test_textdomains;
+$wp_loupe_test_is_admin    = false;
+$wp_loupe_test_doing_ajax  = false;
+$wp_loupe_test_deprecated  = []; // [ [ function, version, replacement ], … ]
+$wp_loupe_test_textdomains = []; // [ [ domain, false, path ], … ]
+
+if ( ! function_exists( 'is_admin' ) ) {
+	function is_admin() {
+		global $wp_loupe_test_is_admin;
+		return (bool) $wp_loupe_test_is_admin;
+	}
+}
+if ( ! function_exists( 'wp_doing_ajax' ) ) {
+	function wp_doing_ajax() {
+		global $wp_loupe_test_doing_ajax;
+		return (bool) $wp_loupe_test_doing_ajax;
+	}
+}
+if ( ! function_exists( '_deprecated_function' ) ) {
+	function _deprecated_function( $function, $version, $replacement = '' ) {
+		global $wp_loupe_test_deprecated;
+		$wp_loupe_test_deprecated[] = [ $function, $version, $replacement ];
+	}
+}
+if ( ! function_exists( 'plugin_basename' ) ) {
+	function plugin_basename( $file ) {
+		return 'loupe-search/' . basename( $file );
+	}
+}
+if ( ! function_exists( 'load_plugin_textdomain' ) ) {
+	function load_plugin_textdomain( $domain, $abs_rel_path = false, $plugin_rel_path = '' ) {
+		global $wp_loupe_test_textdomains;
+		$wp_loupe_test_textdomains[] = [ $domain, $abs_rel_path, $plugin_rel_path ];
+		return true;
+	}
+}
+
+// The loader resolves its own source files against these.
+if ( ! defined( 'WP_LOUPE_PATH' ) ) {
+	define( 'WP_LOUPE_PATH', dirname( __DIR__ ) . '/' );
+}
+if ( ! defined( 'WP_LOUPE_FILE' ) ) {
+	define( 'WP_LOUPE_FILE', dirname( __DIR__ ) . '/loupe-search.php' );
 }
 
 // Shut down Monkey after suite.

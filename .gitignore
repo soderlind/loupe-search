@@ -2,3 +2,9 @@ node_modules/
 vendor/
 
 .phpunit.cache/
+
+# Loupe index artifacts. Tests and mutation runs write one directory per post type
+# into the plugin root, so ignore the files rather than enumerating post type names.
+loupe.db
+tickets.db
+state_set.bin

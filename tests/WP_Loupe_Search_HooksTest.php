@@ -23,15 +23,16 @@ class WP_Loupe_Search_HooksTest extends TestCase {
 			->getMock();
 		$engine->method( 'get_post_types' )->willReturn( [ 'post', 'page' ] );
 
+		$hooks = new WP_Loupe_Search_Hooks( $engine );
+
 		Functions\expect( 'add_filter' )
 			->once()
-			->with( 'posts_pre_query', \Mockery::type( 'array' ), 10, 2 );
+			->with( 'posts_pre_query', [ $hooks, 'posts_pre_query' ], 10, 2 );
 
 		Functions\expect( 'add_action' )
 			->once()
-			->with( 'wp_footer', \Mockery::type( 'array' ), 999 );
+			->with( 'wp_footer', [ $hooks, 'action_wp_footer' ], 999 );
 
-		$hooks = new WP_Loupe_Search_Hooks( $engine );
 		$hooks->register();
 		$this->assertTrue( true );
 	}

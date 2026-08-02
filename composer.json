@@ -50,6 +50,10 @@
 	},
 	"scripts": {
 		"test": "phpunit",
-		"test:pest": "pest -c phpunit.xml.dist"
+		"test:pest": "pest -c phpunit.xml.dist",
+		"test:mutate": [
+			"@putenv COMPOSER_PROCESS_TIMEOUT=0",
+			"@php -d memory_limit=1G -d pcov.directory=includes vendor/bin/pest --mutate --path=includes --covered-only --min=40"
+		]
 	}
 }

@@ -69,4 +69,27 @@ class WP_Loupe_AbilitiesTest extends TestCase {
 			$abilities[ 'wp-loupe/get-post' ][ 'execute_callback' ]
 		);
 	}
+
+	/**
+	 * Both abilities are documented as publicly accessible and REST-exposed.
+	 *
+	 * @see docs/architecture.md, docs/migration-mcp-to-abilities.md, README.md
+	 */
+	public function test_abilities_are_public_and_rest_exposed() {
+		$GLOBALS[ '__wp_loupe_registered_abilities' ]          = [];
+		$GLOBALS[ '__wp_loupe_registered_ability_categories' ] = [];
+
+		WP_Loupe_Abilities::register_category();
+		WP_Loupe_Abilities::register_abilities();
+
+		$abilities = $GLOBALS[ '__wp_loupe_registered_abilities' ];
+
+		foreach ( [ 'loupe-search/search', 'loupe-search/get-post', 'wp-loupe/search', 'wp-loupe/get-post' ] as $name ) {
+			$this->assertArrayHasKey( 'permission_callback', $abilities[ $name ], "{$name} must declare a permission callback" );
+			$this->assertSame( '__return_true', $abilities[ $name ][ 'permission_callback' ], "{$name} is documented as unauthenticated" );
+
+			$this->assertArrayHasKey( 'meta', $abilities[ $name ], "{$name} must declare meta" );
+			$this->assertSame( [ 'show_in_rest' => true ], $abilities[ $name ][ 'meta' ], "{$name} is documented as exposed via REST" );
+		}
+	}
 }
