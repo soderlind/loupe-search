@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -122,9 +122,9 @@ For signatures, defaults, and usage examples, see the [filter documentation](htt
 
 == Screenshots ==
 
-1. Loupe Search Settings page with tabs for Dashboard, Fields, and Search Behavior.
-2. Field configuration interface for each post type, allowing selection of indexable, filterable, and sortable fields.
-3. Search Behavior tab with options for typo tolerance, stemming, and stop words.
+1. Dashboard tab showing index health per post type, batched reindexing, and the system status for the required PHP extensions.
+2. Fields tab for selecting which post types are indexed and configuring each field as indexable, filterable or sortable, with weight and sort direction.
+3. Search Behavior tab with tokenization, prefix search and typo tolerance settings.
 4. Contextual help tabs explaining field configuration options and search behavior settings.
 
 == Frequently Asked Questions ==
@@ -167,6 +167,10 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.2.3 =
+* Changed: Updated the plugin screenshots to reflect the current settings UI.
+* Changed: Corrected the screenshot descriptions to match the current Search Behavior tab.
 
 = 1.2.2 =
 * Security: Public REST search endpoints and the search abilities now only return results from public post types.
