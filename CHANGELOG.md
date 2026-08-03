@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-08-03
+
+### Security
+- The unauthenticated `POST /search` route and the `loupe-search/search` ability now scope the Loupe query itself to public post types. Previously the hit total and the facet counts were derived from all indexed matches and only the returned rows were filtered, which could reveal how much non-public content is indexed.
+
+### Changed
+- Stored data moved off the `wp_` prefix, which is reserved for WordPress core. Options `wp_loupe_custom_post_types`, `wp_loupe_fields` and `wp_loupe_advanced` are now `loupe_search_custom_post_types`, `loupe_search_fields` and `loupe_search_advanced`, and the nested `wp_loupe_post_type_field` key is now `loupe_search_post_type_field`. Existing settings are migrated automatically on first load; no action is required.
+- Constants `WP_LOUPE_FILE`, `WP_LOUPE_NAME`, `WP_LOUPE_PATH` and `WP_LOUPE_URL` are now `LOUPE_SEARCH_FILE`, `LOUPE_SEARCH_NAME`, `LOUPE_SEARCH_PATH` and `LOUPE_SEARCH_URL`.
+- The settings screen slug changed from `wp-loupe` to `loupe-search`, so the settings URL is now `options-general.php?page=loupe-search`. The settings groups, section and field IDs, the admin asset handles and the localized `wpLoupeAdmin` object (now `loupeSearchAdmin`) were renamed to match.
+- Search result transients are now prefixed `loupe_search_cache_` instead of `wp_loupe_search_`. Stale caches from earlier versions are removed during the migration.
+
+### Removed
+- The 12-hour transient cache in front of `GET /search`. Caching every query and pagination combination from an unauthenticated route could grow the options table without bound; the underlying Loupe query is already cached by `WP_Loupe_Search_Engine`.
+- Third-party CLI entry points and build config from the distributed archive (`nitotm/efficient-language-detector/bin/`, `symfony/console/Resources/bin/`, `*.neon`, `*.yml`, `Makefile` and similar), which are not permitted in a WordPress.org payload.
+
+### Fixed
+- The indexer hooked its own deprecated `wp_loupe_field_post_content` filter to strip tags from post content. It now uses `loupe_search_field_post_content`.
+
+### Added
+- `WP_Loupe_Utils::get_public_indexed_post_types()`, the single source of truth for what unauthenticated endpoints are allowed to search.
+- `loupe_search_max_cacheable_query_length` filter (default 128). Queries longer than this are executed but not cached.
+
 ## [1.2.3] - 2026-08-02
 
 ### Changed

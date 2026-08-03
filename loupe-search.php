@@ -10,7 +10,7 @@
  * Plugin Name:       Loupe Search
  * Plugin URI:        https://github.com/soderlind/loupe-search
  * Description:       Enhance the search functionality of your WordPress site with Loupe Search.
- * Version:           1.2.3
+ * Version:           1.2.4
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
  * License:           GPL-2.0+
@@ -29,15 +29,15 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-define( 'WP_LOUPE_FILE', __FILE__ );
-define( 'WP_LOUPE_NAME', plugin_basename( WP_LOUPE_FILE ) );
-define( 'WP_LOUPE_PATH', plugin_dir_path( WP_LOUPE_FILE ) );
-define( 'WP_LOUPE_URL', plugin_dir_url( WP_LOUPE_FILE ) );
+define( 'LOUPE_SEARCH_FILE', __FILE__ );
+define( 'LOUPE_SEARCH_NAME', plugin_basename( LOUPE_SEARCH_FILE ) );
+define( 'LOUPE_SEARCH_PATH', plugin_dir_path( LOUPE_SEARCH_FILE ) );
+define( 'LOUPE_SEARCH_URL', plugin_dir_url( LOUPE_SEARCH_FILE ) );
 
-require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-loader.php';
+require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-loader.php';
 // Load CLI commands if in WP-CLI context
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
-	require_once WP_LOUPE_PATH . 'includes/class-wp-loupe-cli.php';
+	require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-cli.php';
 }
 
 /**
@@ -58,7 +58,7 @@ function init() {
 		return;
 	}
 
-	// new WP_Loupe_Updater( WP_LOUPE_FILE );
+	// new WP_Loupe_Updater( LOUPE_SEARCH_FILE );
 }
 add_action( 'plugins_loaded', __NAMESPACE__ . '\\init' );
 
@@ -87,7 +87,7 @@ function deactivate() {
 	flush_rewrite_rules();
 }
 
-register_activation_hook( WP_LOUPE_FILE, __NAMESPACE__ . '\\activate' );
+register_activation_hook( LOUPE_SEARCH_FILE, __NAMESPACE__ . '\\activate' );
 
 // Ensure new subsites get rewrite rules for .well-known endpoints.
 function on_new_blog( $blog_id ) {
@@ -101,4 +101,4 @@ function on_new_blog( $blog_id ) {
 	restore_current_blog();
 }
 add_action( 'wpmu_new_blog', __NAMESPACE__ . '\\on_new_blog', 20 );
-register_deactivation_hook( WP_LOUPE_FILE, __NAMESPACE__ . '\\deactivate' );
+register_deactivation_hook( LOUPE_SEARCH_FILE, __NAMESPACE__ . '\\deactivate' );

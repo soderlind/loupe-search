@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -167,6 +167,15 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.2.4 =
+* Security: The public search REST route and search ability now scope the query itself to public post types, so hit totals and facet counts can no longer reveal indexed non-public content.
+* Changed: The plugin's options moved off the `wp_` prefix, which is reserved for WordPress core. Existing settings are migrated automatically on first load.
+* Changed: The settings screen moved to `options-general.php?page=loupe-search`.
+* Removed: The 12-hour cache in front of the public search route. Caching every query from an unauthenticated route could grow the options table without bound.
+* Removed: Third-party command line entry points and build config from the release package.
+* Fixed: The indexer stripped tags using a deprecated filter name.
+* Added: The `loupe_search_max_cacheable_query_length` filter (default 128) bounds which queries are written to the result cache.
 
 = 1.2.3 =
 * Changed: Updated the plugin screenshots to reflect the current settings UI.

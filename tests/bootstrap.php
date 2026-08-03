@@ -168,6 +168,11 @@ if ( ! function_exists( 'delete_transient' ) ) {
 		return true;
 	}
 }
+if ( ! function_exists( 'wp_parse_args' ) ) {
+	function wp_parse_args( $args, $defaults = [] ) {
+		return array_merge( (array) $defaults, (array) $args );
+	}
+}
 if ( ! function_exists( 'wp_salt' ) ) {
 	function wp_salt( $scheme = 'auth' ) {
 		return 'testsalt';
@@ -275,6 +280,12 @@ if ( ! isset( $GLOBALS[ 'wpdb' ] ) ) {
 		public function get_col( $sql ) {
 			return $this->col_results;
 		}
+		// Transient lookups during the reserved-prefix migration.
+		public $row_results = [];
+		public function get_results( $sql ) {
+			return $this->row_results;
+		}
+		public $options = 'wp_options';
 		public $postmeta = 'wp_postmeta';
 		public $posts = 'wp_posts';
 	}
@@ -312,9 +323,10 @@ if ( ! function_exists( 'get_post' ) ) {
 }
 if ( ! function_exists( 'get_post_type_object' ) ) {
 	function get_post_type_object( $pt ) {
+		$non_public = $GLOBALS[ 'wp_loupe_test_non_public_post_types' ] ?? [];
 		return (object) [
 			'labels' => (object) [ 'singular_name' => ucfirst( $pt ) ],
-			'public' => true,
+			'public' => ! in_array( $pt, (array) $non_public, true ),
 		];
 	}
 }
@@ -484,11 +496,11 @@ if ( ! function_exists( 'load_plugin_textdomain' ) ) {
 }
 
 // The loader resolves its own source files against these.
-if ( ! defined( 'WP_LOUPE_PATH' ) ) {
-	define( 'WP_LOUPE_PATH', dirname( __DIR__ ) . '/' );
+if ( ! defined( 'LOUPE_SEARCH_PATH' ) ) {
+	define( 'LOUPE_SEARCH_PATH', dirname( __DIR__ ) . '/' );
 }
-if ( ! defined( 'WP_LOUPE_FILE' ) ) {
-	define( 'WP_LOUPE_FILE', dirname( __DIR__ ) . '/loupe-search.php' );
+if ( ! defined( 'LOUPE_SEARCH_FILE' ) ) {
+	define( 'LOUPE_SEARCH_FILE', dirname( __DIR__ ) . '/loupe-search.php' );
 }
 
 // Shut down Monkey after suite.

@@ -1,6 +1,6 @@
 # Filters
 
-Loupe Search exposes eight filters for changing what gets indexed, how it is
+Loupe Search exposes nine filters for changing what gets indexed, how it is
 weighted, and how results are returned.
 
 > Filters use the `loupe_search_*` prefix. The old `wp_loupe_*` names still work
@@ -23,6 +23,7 @@ weighted, and how results are returned.
    - [`loupe_search_is_safely_sortable_meta_{$post_type}`](#loupe_search_is_safely_sortable_meta_post_type)
 7. [Results](#results)
    - [`loupe_search_posts_per_page`](#loupe_search_posts_per_page)
+   - [`loupe_search_max_cacheable_query_length`](#loupe_search_max_cacheable_query_length)
 8. [Recipes](#recipes)
 9. [After changing a filter](#after-changing-a-filter)
 
@@ -49,6 +50,7 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_is_safely_sortable_{$post_type}` | `bool $sortable`, `string $field_name` | Force a core field to be sortable |
 | `loupe_search_is_safely_sortable_meta_{$post_type}` | `bool $sortable`, `string $field_name` | Correct meta-field sortability detection |
 | `loupe_search_posts_per_page` | `int $per_page` | Change results per page |
+| `loupe_search_max_cacheable_query_length` | `int $max_length` | Change which queries are written to the result cache |
 
 ## Indexing scope
 
@@ -249,6 +251,23 @@ add_filter( 'loupe_search_posts_per_page', function ( int $per_page ): int {
 
 This affects the WordPress search loop only. The REST API takes its page size
 from the request — see [Search API](search-api.md).
+
+### `loupe_search_max_cacheable_query_length`
+
+Maximum query length, in bytes, that is written to the result cache. Defaults
+to **128**. Longer queries still run, they are just not cached.
+
+Search is reachable without authentication, so every distinct query would
+otherwise be able to create a transient. The bound keeps a visitor from filling
+the options table with long throwaway queries.
+
+```php
+add_filter( 'loupe_search_max_cacheable_query_length', function ( int $max_length ): int {
+	return 256;
+} );
+```
+
+Return `0` to disable result caching entirely.
 
 ## Recipes
 

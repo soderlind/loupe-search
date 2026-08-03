@@ -30,12 +30,12 @@ class WPLoupe_Settings_Page {
 	 * WPLoupe_Settings_Page constructor.
 	 */
 	public function __construct() {
-		add_action( 'admin_menu', [ $this, 'wp_loupe_create_settings' ] );
+		add_action( 'admin_menu', [ $this, 'loupe_search_create_settings' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
-		add_action( 'admin_init', [ $this, 'wp_loupe_setup_sections' ] );
-		add_action( 'admin_init', [ $this, 'wp_loupe_setup_fields' ] );
+		add_action( 'admin_init', [ $this, 'loupe_search_setup_sections' ] );
+		add_action( 'admin_init', [ $this, 'loupe_search_setup_fields' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
-		add_action( 'load-settings_page_wp-loupe', [ $this, 'add_help_tabs' ] );
+		add_action( 'load-settings_page_loupe-search', [ $this, 'add_help_tabs' ] );
 	}
 
 	// (Removed corrupted meta key handling.)
@@ -158,8 +158,8 @@ class WPLoupe_Settings_Page {
 	 *
 	 * @return void
 	 */
-	public function wp_loupe_create_settings() {
-		add_options_page( 'Loupe Search', 'Loupe Search', 'manage_options', 'wp-loupe', [ $this, 'plugin_settings_page_content' ] );
+	public function loupe_search_create_settings() {
+		add_options_page( 'Loupe Search', 'Loupe Search', 'manage_options', 'loupe-search', [ $this, 'plugin_settings_page_content' ] );
 	}
 
 	/**
@@ -167,18 +167,18 @@ class WPLoupe_Settings_Page {
 	 *
 	 * @return void
 	 */
-	public function wp_loupe_setup_sections() {
+	public function loupe_search_setup_sections() {
 		// Fields tab sections
-		add_settings_section( 'wp_loupe_section', __( 'Post Types', 'loupe-search' ), [ $this, 'general_section_callback' ], 'wp-loupe' );
-		add_settings_section( 'wp_loupe_fields_section', __( 'Field Settings', 'loupe-search' ), [ $this, 'fields_section_callback' ], 'wp-loupe' );
+		add_settings_section( 'loupe_search_section', __( 'Post Types', 'loupe-search' ), [ $this, 'general_section_callback' ], 'loupe-search' );
+		add_settings_section( 'loupe_search_fields_section', __( 'Field Settings', 'loupe-search' ), [ $this, 'fields_section_callback' ], 'loupe-search' );
 
 		// Search Behavior tab sections
-		add_settings_section( 'wp_loupe_tokenization_section', __( 'Tokenization', 'loupe-search' ),
-			[ $this, 'tokenization_section_callback' ], 'wp-loupe-advanced' );
-		add_settings_section( 'wp_loupe_prefix_section', __( 'Prefix Search', 'loupe-search' ),
-			[ $this, 'prefix_section_callback' ], 'wp-loupe-advanced' );
-		add_settings_section( 'wp_loupe_typo_section', __( 'Typo Tolerance', 'loupe-search' ),
-			[ $this, 'typo_section_callback' ], 'wp-loupe-advanced' );
+		add_settings_section( 'loupe_search_tokenization_section', __( 'Tokenization', 'loupe-search' ),
+			[ $this, 'tokenization_section_callback' ], 'loupe-search-advanced' );
+		add_settings_section( 'loupe_search_prefix_section', __( 'Prefix Search', 'loupe-search' ),
+			[ $this, 'prefix_section_callback' ], 'loupe-search-advanced' );
+		add_settings_section( 'loupe_search_typo_section', __( 'Typo Tolerance', 'loupe-search' ),
+			[ $this, 'typo_section_callback' ], 'loupe-search-advanced' );
 	}
 
 	/**
@@ -226,7 +226,7 @@ class WPLoupe_Settings_Page {
 	 *
 	 * @return void
 	 */
-	public function wp_loupe_setup_fields() {
+	public function loupe_search_setup_fields() {
 		$this->cpt = array_diff( get_post_types(
 			[
 				'public' => true,
@@ -236,22 +236,22 @@ class WPLoupe_Settings_Page {
 		), [ 'attachment' ] );
 
 		add_settings_field(
-			'wp_loupe_post_type_field',
+			'loupe_search_post_type_field',
 			__( 'Select Post Types', 'loupe-search' ),
-			[ $this, 'wp_loupe_post_type_field_callback' ],
-			'wp-loupe',
-			'wp_loupe_section'
+			[ $this, 'loupe_search_post_type_field_callback' ],
+			'loupe-search',
+			'loupe_search_section'
 		);
 
 		// Advanced tab fields (tokenization)
 		add_settings_field(
-			'wp_loupe_max_query_tokens',
+			'loupe_search_max_query_tokens',
 			__( 'Max Query Tokens', 'loupe-search' ),
 			[ $this, 'number_field_callback' ],
-			'wp-loupe-advanced',
-			'wp_loupe_tokenization_section',
+			'loupe-search-advanced',
+			'loupe_search_tokenization_section',
 			[
-				'name'        => 'wp_loupe_advanced[max_query_tokens]',
+				'name'        => 'loupe_search_advanced[max_query_tokens]',
 				'value'       => $this->get_advanced_option( 'max_query_tokens', 12 ),
 				'description' => __( 'Maximum number of tokens processed in a search query.', 'loupe-search' ),
 			]
@@ -259,13 +259,13 @@ class WPLoupe_Settings_Page {
 
 		// Prefix search settings
 		add_settings_field(
-			'wp_loupe_min_prefix_length',
+			'loupe_search_min_prefix_length',
 			__( 'Minimum Prefix Length', 'loupe-search' ),
 			[ $this, 'number_field_callback' ],
-			'wp-loupe-advanced',
-			'wp_loupe_prefix_section',
+			'loupe-search-advanced',
+			'loupe_search_prefix_section',
 			[
-				'name'        => 'wp_loupe_advanced[min_prefix_length]',
+				'name'        => 'loupe_search_advanced[min_prefix_length]',
 				'value'       => $this->get_advanced_option( 'min_prefix_length', 3 ),
 				'description' => __( 'Minimum characters before prefix search activates.', 'loupe-search' ),
 			]
@@ -273,65 +273,65 @@ class WPLoupe_Settings_Page {
 
 		// Typo tolerance settings
 		add_settings_field(
-			'wp_loupe_typo_enabled',
+			'loupe_search_typo_enabled',
 			__( 'Enable Typo Tolerance', 'loupe-search' ),
 			[ $this, 'checkbox_field_callback' ],
-			'wp-loupe-advanced',
-			'wp_loupe_typo_section',
+			'loupe-search-advanced',
+			'loupe_search_typo_section',
 			[
-				'name'        => 'wp_loupe_advanced[typo_enabled]',
+				'name'        => 'loupe_search_advanced[typo_enabled]',
 				'value'       => $this->get_advanced_option( 'typo_enabled', true ),
 				'description' => __( 'Allow search to return results with minor spelling mistakes.', 'loupe-search' ),
 			]
 		);
 
 		add_settings_field(
-			'wp_loupe_alphabet_size',
+			'loupe_search_alphabet_size',
 			__( 'Alphabet Size', 'loupe-search' ),
 			[ $this, 'number_field_callback' ],
-			'wp-loupe-advanced',
-			'wp_loupe_typo_section',
+			'loupe-search-advanced',
+			'loupe_search_typo_section',
 			[
-				'name'        => 'wp_loupe_advanced[alphabet_size]',
+				'name'        => 'loupe_search_advanced[alphabet_size]',
 				'value'       => $this->get_advanced_option( 'alphabet_size', 4 ),
 				'description' => __( 'Size of internal alphabet used for typo tolerance.', 'loupe-search' ),
 			]
 		);
 
 		add_settings_field(
-			'wp_loupe_index_length',
+			'loupe_search_index_length',
 			__( 'Index Length', 'loupe-search' ),
 			[ $this, 'number_field_callback' ],
-			'wp-loupe-advanced',
-			'wp_loupe_typo_section',
+			'loupe-search-advanced',
+			'loupe_search_typo_section',
 			[
-				'name'        => 'wp_loupe_advanced[index_length]',
+				'name'        => 'loupe_search_advanced[index_length]',
 				'value'       => $this->get_advanced_option( 'index_length', 14 ),
 				'description' => __( 'Internal index length; affects accuracy vs. size.', 'loupe-search' ),
 			]
 		);
 
 		add_settings_field(
-			'wp_loupe_typo_prefix_search',
+			'loupe_search_typo_prefix_search',
 			__( 'Typo Tolerance for Prefix Search', 'loupe-search' ),
 			[ $this, 'checkbox_field_callback' ],
-			'wp-loupe-advanced',
-			'wp_loupe_typo_section',
+			'loupe-search-advanced',
+			'loupe_search_typo_section',
 			[
-				'name'        => 'wp_loupe_advanced[typo_prefix_search]',
+				'name'        => 'loupe_search_advanced[typo_prefix_search]',
 				'value'       => $this->get_advanced_option( 'typo_prefix_search', false ),
 				'description' => __( 'Allow typos when matching prefix (can slow searches).', 'loupe-search' ),
 			]
 		);
 
 		add_settings_field(
-			'wp_loupe_first_char_typo_double',
+			'loupe_search_first_char_typo_double',
 			__( 'Double Count First Character Typo', 'loupe-search' ),
 			[ $this, 'checkbox_field_callback' ],
-			'wp-loupe-advanced',
-			'wp_loupe_typo_section',
+			'loupe-search-advanced',
+			'loupe_search_typo_section',
 			[
-				'name'        => 'wp_loupe_advanced[first_char_typo_double]',
+				'name'        => 'loupe_search_advanced[first_char_typo_double]',
 				'value'       => $this->get_advanced_option( 'first_char_typo_double', true ),
 				'description' => __( 'Treat a typo at the start of a word as two mistakes.', 'loupe-search' ),
 			]
@@ -342,7 +342,7 @@ class WPLoupe_Settings_Page {
 	 * Get advanced option with default
 	 */
 	private function get_advanced_option( $key, $default ) {
-		$options = get_option( 'wp_loupe_advanced', [] );
+		$options = get_option( 'loupe_search_advanced', [] );
 		return isset( $options[ $key ] ) ? $options[ $key ] : $default;
 	}
 
@@ -404,19 +404,19 @@ class WPLoupe_Settings_Page {
 	 *
 	 * @return void
 	 */
-	public function wp_loupe_post_type_field_callback() {
-		$options      = get_option( 'wp_loupe_custom_post_types', [] );
-		$selected_ids = ! empty( $options ) && isset( $options[ 'wp_loupe_post_type_field' ] )
-			? (array) $options[ 'wp_loupe_post_type_field' ]
+	public function loupe_search_post_type_field_callback() {
+		$options      = get_option( 'loupe_search_custom_post_types', [] );
+		$selected_ids = ! empty( $options ) && isset( $options[ 'loupe_search_post_type_field' ] )
+			? (array) $options[ 'loupe_search_post_type_field' ]
 			: [ 'post', 'page' ]; // Default selection
 
-		echo '<fieldset id="wp_loupe_custom_post_types" class="wp-loupe-post-types">';
+		echo '<fieldset id="loupe_search_custom_post_types" class="wp-loupe-post-types">';
 		echo '<legend class="screen-reader-text">' . esc_html__( 'Select Post Types', 'loupe-search' ) . '</legend>';
 		foreach ( $this->cpt as $post_type ) {
 			$obj   = get_post_type_object( $post_type );
 			$label = ( is_object( $obj ) && isset( $obj->labels->name ) ) ? $obj->labels->name : $post_type;
 			echo sprintf(
-				'<label class="wp-loupe-post-type-option"><input type="checkbox" class="wp-loupe-post-type-checkbox" name="wp_loupe_custom_post_types[wp_loupe_post_type_field][]" value="%1$s" %2$s> %3$s <code>%1$s</code></label>',
+				'<label class="wp-loupe-post-type-option"><input type="checkbox" class="wp-loupe-post-type-checkbox" name="loupe_search_custom_post_types[loupe_search_post_type_field][]" value="%1$s" %2$s> %3$s <code>%1$s</code></label>',
 				esc_attr( $post_type ),
 				checked( in_array( $post_type, $selected_ids, true ), true, false ),
 				esc_html( $label )
@@ -448,15 +448,15 @@ class WPLoupe_Settings_Page {
 			<h2><?php echo esc_html( get_admin_page_title() ); ?></h2>
 
 			<nav class="nav-tab-wrapper">
-				<a href="?page=wp-loupe&tab=dashboard"
+				<a href="?page=loupe-search&tab=dashboard"
 					class="nav-tab <?php echo $current_tab === 'dashboard' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Dashboard', 'loupe-search' ); ?>
 				</a>
-				<a href="?page=wp-loupe&tab=fields"
+				<a href="?page=loupe-search&tab=fields"
 					class="nav-tab <?php echo $current_tab === 'fields' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Fields', 'loupe-search' ); ?>
 				</a>
-				<a href="?page=wp-loupe&tab=search-behavior"
+				<a href="?page=loupe-search&tab=search-behavior"
 					class="nav-tab <?php echo $current_tab === 'search-behavior' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Search Behavior', 'loupe-search' ); ?>
 				</a>
@@ -469,14 +469,14 @@ class WPLoupe_Settings_Page {
 				?>
 				<form action="options.php" method="POST">
 					<?php
-					wp_nonce_field( 'wp_loupe_nonce_action', 'wp_loupe_nonce_field' );
+					wp_nonce_field( 'loupe_search_nonce_action', 'loupe_search_nonce_field' );
 
 					if ( 'search-behavior' === $current_tab ) {
-						settings_fields( 'wp-loupe-advanced' );
-						do_settings_sections( 'wp-loupe-advanced' );
+						settings_fields( 'loupe-search-advanced' );
+						do_settings_sections( 'loupe-search-advanced' );
 					} else {
-						settings_fields( 'wp-loupe' );
-						do_settings_sections( 'wp-loupe' );
+						settings_fields( 'loupe-search' );
+						do_settings_sections( 'loupe-search' );
 					}
 
 					submit_button( __( 'Save Settings', 'loupe-search' ) );
@@ -565,17 +565,17 @@ class WPLoupe_Settings_Page {
 	 */
 	public function register_settings() {
 		// General settings group
-		register_setting( 'wp-loupe', 'wp_loupe_custom_post_types', [
+		register_setting( 'loupe-search', 'loupe_search_custom_post_types', [
 			'sanitize_callback' => [ $this, 'sanitize_post_types_setting' ],
 		] );
-		register_setting( 'wp-loupe', 'wp_loupe_fields', [
+		register_setting( 'loupe-search', 'loupe_search_fields', [
 			'type'              => 'array',
 			'description'       => 'Field configuration for each post type',
 			'sanitize_callback' => [ $this, 'sanitize_fields_settings' ],
 		] );
 
 		// Advanced settings group
-		register_setting( 'wp-loupe-advanced', 'wp_loupe_advanced', [
+		register_setting( 'loupe-search-advanced', 'loupe_search_advanced', [
 			'type'              => 'array',
 			'description'       => 'Advanced search configuration options',
 			'sanitize_callback' => [ $this, 'sanitize_advanced_settings' ],
@@ -645,9 +645,9 @@ class WPLoupe_Settings_Page {
 			return [];
 		}
 		$sanitized = [];
-		if ( isset( $value['wp_loupe_post_type_field'] ) && is_array( $value['wp_loupe_post_type_field'] ) ) {
-			$sanitized['wp_loupe_post_type_field'] = array_values(
-				array_filter( array_map( 'sanitize_key', $value['wp_loupe_post_type_field'] ) )
+		if ( isset( $value['loupe_search_post_type_field'] ) && is_array( $value['loupe_search_post_type_field'] ) ) {
+			$sanitized['loupe_search_post_type_field'] = array_values(
+				array_filter( array_map( 'sanitize_key', $value['loupe_search_post_type_field'] ) )
 			);
 		}
 		return $sanitized;
@@ -661,7 +661,7 @@ class WPLoupe_Settings_Page {
 	 */
 	public function enqueue_admin_assets( $hook ) {
 		// Check if we're on the WP Loupe settings page
-		if ( ! in_array( $hook, [ 'settings_page_wp-loupe', 'tools_page_wp-loupe' ] ) ) {
+		if ( ! in_array( $hook, [ 'settings_page_loupe-search', 'tools_page_loupe-search' ] ) ) {
 			return;
 		}
 
@@ -669,26 +669,26 @@ class WPLoupe_Settings_Page {
 
 		// Register and enqueue admin assets
 		wp_register_style(
-			'wp-loupe-admin',
-			WP_LOUPE_URL . 'lib/css/admin.css',
+			'loupe-search-admin',
+			LOUPE_SEARCH_URL . 'lib/css/admin.css',
 			[],
 			$version
 		);
 
 		wp_register_script(
-			'wp-loupe-admin',
-			WP_LOUPE_URL . 'lib/js/admin.js',
+			'loupe-search-admin',
+			LOUPE_SEARCH_URL . 'lib/js/admin.js',
 			[ 'wp-api-fetch', 'wp-i18n' ],
 			$version,
 			true
 		);
 
 		// Enqueue all assets
-		wp_enqueue_style( 'wp-loupe-admin' );
-		wp_enqueue_script( 'wp-loupe-admin' );
+		wp_enqueue_style( 'loupe-search-admin' );
+		wp_enqueue_script( 'loupe-search-admin' );
 
 		// Add some custom styles for the typo thresholds
-		wp_add_inline_style( 'wp-loupe-admin', '
+		wp_add_inline_style( 'loupe-search-admin', '
 			.wp-loupe-typo-thresholds {
 				margin-bottom: 10px;
 			}
@@ -725,7 +725,7 @@ class WPLoupe_Settings_Page {
 		' );
 
 		// Localize script with enhanced field data
-		wp_localize_script( 'wp-loupe-admin', 'wpLoupeAdmin', [
+		wp_localize_script( 'loupe-search-admin', 'loupeSearchAdmin', [
 			'restUrl'             => rest_url( 'loupe-search/v1' ),
 			'nonce'               => wp_create_nonce( 'wp_rest' ),
 			'savedFields'         => $this->prepare_fields_for_js(),
@@ -740,9 +740,9 @@ class WPLoupe_Settings_Page {
 	 * @return array
 	 */
 	private function get_configured_post_types() {
-		$options = get_option( 'wp_loupe_custom_post_types', [] );
-		if ( ! empty( $options ) && isset( $options[ 'wp_loupe_post_type_field' ] ) && is_array( $options[ 'wp_loupe_post_type_field' ] ) ) {
-			return array_values( array_map( 'sanitize_key', $options[ 'wp_loupe_post_type_field' ] ) );
+		$options = get_option( 'loupe_search_custom_post_types', [] );
+		if ( ! empty( $options ) && isset( $options[ 'loupe_search_post_type_field' ] ) && is_array( $options[ 'loupe_search_post_type_field' ] ) ) {
+			return array_values( array_map( 'sanitize_key', $options[ 'loupe_search_post_type_field' ] ) );
 		}
 		return [ 'post', 'page' ];
 	}
@@ -753,7 +753,7 @@ class WPLoupe_Settings_Page {
 	 * @return array
 	 */
 	private function prepare_fields_for_js() {
-		$saved_fields    = get_option( 'wp_loupe_fields', [] );
+		$saved_fields    = get_option( 'loupe_search_fields', [] );
 		$enhanced_fields = [];
 
 		foreach ( $saved_fields as $post_type => $fields ) {
@@ -797,7 +797,7 @@ class WPLoupe_Settings_Page {
 
 		// Add overview help tab that explains the structure
 		$screen->add_help_tab( [
-			'id'      => 'wp_loupe_help_overview',
+			'id'      => 'loupe_search_help_overview',
 			'title'   => __( 'Overview', 'loupe-search' ),
 			'content' => sprintf(
 				'<h2>%s</h2><p>%s</p><p>%s</p><div class="wp-loupe-help-sections"><div class="wp-loupe-help-section basic"><h3>%s</h3><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul></div><div class="wp-loupe-help-section advanced"><h3>%s</h3><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul></div></div>',
@@ -819,7 +819,7 @@ class WPLoupe_Settings_Page {
 
 		// Basic settings help tabs - remove "BASIC:" prefix
 		$screen->add_help_tab( [
-			'id'      => 'wp_loupe_weight',
+			'id'      => 'loupe_search_weight',
 			'title'   => __( 'Weight', 'loupe-search' ),
 			'content' => sprintf(
 				'<h2>%s</h2><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul>',
@@ -832,7 +832,7 @@ class WPLoupe_Settings_Page {
 		] );
 
 		$screen->add_help_tab( [
-			'id'      => 'wp_loupe_filterable',
+			'id'      => 'loupe_search_filterable',
 			'title'   => __( 'Filterable', 'loupe-search' ),
 			'content' => sprintf(
 				'<h2>%s</h2><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul><p>%s</p>',
@@ -846,7 +846,7 @@ class WPLoupe_Settings_Page {
 		] );
 
 		$screen->add_help_tab( [
-			'id'      => 'wp_loupe_sortable',
+			'id'      => 'loupe_search_sortable',
 			'title'   => __( 'Sortable', 'loupe-search' ),
 			'content' => sprintf(
 				'<h2>%s</h2><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul><h3>%s</h3><p>%s</p><ul><li>%s</li><li>%s</li></ul>',
@@ -864,7 +864,7 @@ class WPLoupe_Settings_Page {
 
 		// Advanced settings help tabs - remove "ADVANCED:" prefix
 		$screen->add_help_tab( [
-			'id'      => 'wp_loupe_tokenization',
+			'id'      => 'loupe_search_tokenization',
 			'title'   => __( 'Tokenization', 'loupe-search' ),
 			'content' => sprintf(
 				'<h2>%s</h2><p>%s</p><h3>%s</h3><p>%s</p>',
@@ -876,7 +876,7 @@ class WPLoupe_Settings_Page {
 		] );
 
 		$screen->add_help_tab( [
-			'id'      => 'wp_loupe_prefix_search',
+			'id'      => 'loupe_search_prefix_search',
 			'title'   => __( 'Prefix Search', 'loupe-search' ),
 			'content' => sprintf(
 				'<h2>%s</h2><p>%s</p><p>%s</p><h3>%s</h3><p>%s</p><p>%s</p>',
@@ -890,7 +890,7 @@ class WPLoupe_Settings_Page {
 		] );
 
 		$screen->add_help_tab( [
-			'id'      => 'wp_loupe_typo_tolerance',
+			'id'      => 'loupe_search_typo_tolerance',
 			'title'   => __( 'Typo Tolerance', 'loupe-search' ),
 			'content' => sprintf(
 				'<h2>%s</h2><p>%s</p><p>%s</p><h3>%s</h3><p>%s</p>',
@@ -903,7 +903,7 @@ class WPLoupe_Settings_Page {
 		] );
 
 		$screen->add_help_tab( [
-			'id'      => 'wp_loupe_typo_advanced',
+			'id'      => 'loupe_search_typo_advanced',
 			'title'   => __( 'Typo Details', 'loupe-search' ),
 			'content' => sprintf(
 				'<h2>%s</h2><h3>%s</h3><p>%s</p><h3>%s</h3><p>%s</p><h3>%s</h3><p>%s</p>',

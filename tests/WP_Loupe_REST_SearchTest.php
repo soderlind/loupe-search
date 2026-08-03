@@ -49,7 +49,7 @@ class WP_Loupe_REST_SearchTest extends TestCase {
 
 	public function test_search_endpoint_sorts_and_paginates() {
 		// Reset custom post type option so REST defaults to ['post','page'].
-		update_option( 'wp_loupe_custom_post_types', [] );
+		update_option( 'loupe_search_custom_post_types', [] );
 		// Prepare predictable unsorted hits with varying scores.
 		$dummyHits = [
 			[ 'id' => 10, 'post_type' => 'post', '_score' => 2.5 ],
@@ -101,7 +101,7 @@ class WP_Loupe_REST_SearchTest extends TestCase {
 
 	public function test_search_endpoint_single_post_type_filter() {
 		// Reset custom post type option so REST defaults to ['post','page'].
-		update_option( 'wp_loupe_custom_post_types', [] );
+		update_option( 'loupe_search_custom_post_types', [] );
 		// Test filtering by requesting 'all' but having mixed hits - verify only requested type appears.
 		$dummyHits = [
 			[ 'id' => 21, 'post_type' => 'post', '_score' => 1.0 ],

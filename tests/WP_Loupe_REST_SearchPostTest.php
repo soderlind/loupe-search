@@ -12,7 +12,7 @@ class WP_Loupe_REST_SearchPostTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		// Ensure REST defaults to ['post','page'] regardless of other tests.
-		update_option( 'wp_loupe_custom_post_types', [] );
+		update_option( 'loupe_search_custom_post_types', [] );
 	}
 
 	private function seedIndex( string $post_type, array $docs ): void {

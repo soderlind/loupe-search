@@ -52,6 +52,8 @@ use Loupe\Loupe\SearchParameters;
 class WP_Loupe_REST {
 
 	private $post_types;
+	/** @var array<int, string> Indexed post types that are publicly viewable. Scope for the unauthenticated search routes. */
+	private $public_post_types = [];
 	private $loupe = [];
 	/** @var object|null Search service with a search($query) method (engine or test stub). */
 	private $search_service = null;
@@ -70,8 +72,8 @@ class WP_Loupe_REST {
 
 		$this->set_post_types();
 		$this->init_loupe_instances();
-		// Side-effect free engine for REST usage.
-		$this->search_service = new WP_Loupe_Search_Engine( $this->post_types, $this->db );
+		// Side-effect free engine for the public search routes.
+		$this->search_service = new WP_Loupe_Search_Engine( $this->public_post_types, $this->db );
 		$this->register_rest_routes();
 	}
 
@@ -79,7 +81,8 @@ class WP_Loupe_REST {
 	 * Set post types from settings
 	 */
 	private function set_post_types() {
-		$this->post_types = WP_Loupe_Utils::get_indexed_post_types();
+		$this->post_types        = WP_Loupe_Utils::get_indexed_post_types();
+		$this->public_post_types = WP_Loupe_Utils::get_public_indexed_post_types();
 	}
 
 	/**
@@ -414,12 +417,14 @@ class WP_Loupe_REST {
 		$post_types_raw       = $payload[ 'postTypes' ] ?? 'all';
 		$post_types_to_search = [];
 
-		// Resolve and validate post types against configured ones and index readiness.
+		// Resolve and validate post types against the public ones and index readiness.
+		// This endpoint is unauthenticated, so non-public post types are never in scope:
+		// keeping them out of the query means totals and facet counts cannot leak them.
 		// Do not rely on an injected search service (tests may stub it).
-		$base_engine = new WP_Loupe_Search_Engine( $this->post_types, $this->db );
+		$base_engine = new WP_Loupe_Search_Engine( $this->public_post_types, $this->db );
 
 		if ( 'all' === $post_types_raw ) {
-			foreach ( $this->post_types as $pt ) {
+			foreach ( $this->public_post_types as $pt ) {
 				$status = $base_engine->is_index_ready( $pt );
 				if ( ! empty( $status[ 'ready' ] ) ) {
 					$post_types_to_search[] = $pt;
@@ -436,7 +441,7 @@ class WP_Loupe_REST {
 				return new \WP_Error( 'wp_loupe_invalid_post_types', __( 'postTypes must be "all" or a non-empty array of post type slugs.', 'loupe-search' ), [ 'status' => 400 ] );
 			}
 
-			$unknown = array_values( array_diff( $post_types_raw, $this->post_types ) );
+			$unknown = array_values( array_diff( $post_types_raw, $this->public_post_types ) );
 			if ( ! empty( $unknown ) ) {
 				return new \WP_Error( 'wp_loupe_invalid_post_type', __( 'Invalid post type in postTypes.', 'loupe-search' ), [ 'status' => 400, 'details' => [ 'unknown' => $unknown ] ] );
 			}
@@ -661,7 +666,7 @@ class WP_Loupe_REST {
 		}
 		$attrs_to_retrieve = array_values( array_unique( $attrs_to_retrieve ) );
 
-		$engine = ( count( $post_types_to_search ) === count( $this->post_types ) )
+		$engine = ( count( $post_types_to_search ) === count( $this->public_post_types ) )
 			? $this->search_service
 			: new WP_Loupe_Search_Engine( $post_types_to_search, $this->db );
 
@@ -1255,13 +1260,13 @@ class WP_Loupe_REST {
 		}
 
 		// Update option list if not already present.
-		$options = get_option( 'wp_loupe_custom_post_types', [] );
-		if ( ! isset( $options[ 'wp_loupe_post_type_field' ] ) || ! is_array( $options[ 'wp_loupe_post_type_field' ] ) ) {
-			$options[ 'wp_loupe_post_type_field' ] = [];
+		$options = get_option( 'loupe_search_custom_post_types', [] );
+		if ( ! isset( $options[ 'loupe_search_post_type_field' ] ) || ! is_array( $options[ 'loupe_search_post_type_field' ] ) ) {
+			$options[ 'loupe_search_post_type_field' ] = [];
 		}
-		if ( ! in_array( $post_type, $options[ 'wp_loupe_post_type_field' ], true ) ) {
-			$options[ 'wp_loupe_post_type_field' ][] = $post_type;
-			update_option( 'wp_loupe_custom_post_types', $options );
+		if ( ! in_array( $post_type, $options[ 'loupe_search_post_type_field' ], true ) ) {
+			$options[ 'loupe_search_post_type_field' ][] = $post_type;
+			update_option( 'loupe_search_custom_post_types', $options );
 		}
 
 		// Ensure directory exists.
@@ -1296,13 +1301,13 @@ class WP_Loupe_REST {
 	 */
 	public function handle_delete_database_request( $request ) {
 		$post_type = $request->get_param( 'post_type' );
-		$options   = get_option( 'wp_loupe_custom_post_types', [] );
+		$options   = get_option( 'loupe_search_custom_post_types', [] );
 
-		if ( isset( $options[ 'wp_loupe_post_type_field' ] ) && is_array( $options[ 'wp_loupe_post_type_field' ] ) ) {
-			$options[ 'wp_loupe_post_type_field' ] = array_values( array_filter( $options[ 'wp_loupe_post_type_field' ], function ( $pt ) use ( $post_type ) {
+		if ( isset( $options[ 'loupe_search_post_type_field' ] ) && is_array( $options[ 'loupe_search_post_type_field' ] ) ) {
+			$options[ 'loupe_search_post_type_field' ] = array_values( array_filter( $options[ 'loupe_search_post_type_field' ], function ( $pt ) use ( $post_type ) {
 				return $pt !== $post_type;
 			} ) );
-			update_option( 'wp_loupe_custom_post_types', $options );
+			update_option( 'loupe_search_custom_post_types', $options );
 		}
 
 		$db      = WP_Loupe_DB::get_instance();
@@ -1372,22 +1377,10 @@ class WP_Loupe_REST {
 		$per_page  = $request->get_param( 'per_page' );
 		$page      = $request->get_param( 'page' );
 
-		// Generate a cache key based on the search parameters unless a custom injected search service (tests) is detected.
-		$cache_key      = 'wp_loupe_search_' . md5( $query . $post_type . $per_page . $page );
-		$use_cache      = is_object( $this->search_service ) && ( $this->search_service instanceof WP_Loupe_Search_Engine );
-		$cached_results = $use_cache ? get_transient( $cache_key ) : false;
-		if ( $use_cache && false !== $cached_results ) {
-			return rest_ensure_response( $cached_results );
-		}
-
-		$search_results = $this->perform_search( $query, $post_type, $per_page, $page );
-
-		// Cache the results for 12 hours if using the real search service.
-		if ( $use_cache ) {
-			set_transient( $cache_key, $search_results, 12 * HOUR_IN_SECONDS );
-		}
-
-		return rest_ensure_response( $search_results );
+		// No caching layer here on purpose. This route is unauthenticated, so caching every
+		// query/parameter combination would let visitors grow the options table without bound.
+		// The expensive part (the Loupe query) is already cached inside WP_Loupe_Search_Engine.
+		return rest_ensure_response( $this->perform_search( $query, $post_type, $per_page, $page ) );
 	}
 
 	/**
@@ -1400,11 +1393,26 @@ class WP_Loupe_REST {
 	 * @return array Search results
 	 */
 	private function perform_search( $query, $post_type, $per_page, $page ) {
-		// Determine scope.
-		$post_types_to_search = ( 'all' === $post_type ) ? $this->post_types : [ $post_type ];
+		// Determine scope. This endpoint is unauthenticated, so only public post types are
+		// ever queried — the hit total is therefore derived from public content alone.
+		$post_types_to_search = ( 'all' === $post_type )
+			? $this->public_post_types
+			: array_values( array_intersect( [ $post_type ], $this->public_post_types ) );
+
+		if ( empty( $post_types_to_search ) ) {
+			return [
+				'hits'       => [],
+				'pagination' => [
+					'total'        => 0,
+					'per_page'     => $per_page,
+					'current_page' => $page,
+					'total_pages'  => 0,
+				],
+			];
+		}
 
 		// Instantiate a narrowed search service if filtering to a single type (saves internal loops).
-		$service = ( count( $post_types_to_search ) === count( $this->post_types ) )
+		$service = ( count( $post_types_to_search ) === count( $this->public_post_types ) )
 			? $this->search_service
 			: new WP_Loupe_Search_Engine( $post_types_to_search, $this->db );
 

@@ -83,7 +83,7 @@ class WP_Loupe_Indexer {
 		}
 		add_action( 'wp_trash_post', array( $this, 'trash_post' ), 10, 2 );
 		add_action( 'admin_init', array( $this, 'handle_reindex' ) );
-		add_filter( 'wp_loupe_field_post_content', 'wp_strip_all_tags' );
+		add_filter( 'loupe_search_field_post_content', 'wp_strip_all_tags' );
 	}
 
 	/**
@@ -99,7 +99,7 @@ class WP_Loupe_Indexer {
 			return;
 		}
 
-		WP_Loupe_Utils::remove_transient( 'wp_loupe_search_' );
+		WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
 
 		$document = $this->prepare_document( $post );
 		$loupe    = $this->loupe[ $post->post_type ];
@@ -117,7 +117,7 @@ class WP_Loupe_Indexer {
 		if ( ! 'publish' === $previous_status ) {
 			return;
 		}
-		WP_Loupe_Utils::remove_transient( 'wp_loupe_search_' );
+		WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
 		// Verify if is trashing multiple posts.
 		if ( isset( $_GET[ 'post' ] ) && is_array( $_GET[ 'post' ] ) ) {
 			\check_admin_referer( 'bulk-posts' );
@@ -196,13 +196,13 @@ class WP_Loupe_Indexer {
 	public function handle_reindex() {
 
 		if (
-			isset( $_POST[ 'action' ], $_POST[ 'wp_loupe_nonce_field' ], $_POST[ 'wp_loupe_reindex' ] ) &&
-			'update' === $_POST[ 'action' ] && 'on' === $_POST[ 'wp_loupe_reindex' ] &&
-			wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ 'wp_loupe_nonce_field' ] ) ), 'wp_loupe_nonce_action' )
+			isset( $_POST[ 'action' ], $_POST[ 'loupe_search_nonce_field' ], $_POST[ 'loupe_search_reindex' ] ) &&
+			'update' === $_POST[ 'action' ] && 'on' === $_POST[ 'loupe_search_reindex' ] &&
+			wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ 'loupe_search_nonce_field' ] ) ), 'loupe_search_nonce_action' )
 		) {
 			$this->reindex_all();
 			$this->maybe_add_reindex_rebuild_notice();
-			add_settings_error( 'wp-loupe', 'wp-loupe-reindex', __( 'Reindexing completed successfully!', 'loupe-search' ), 'updated' );
+			add_settings_error( 'loupe-search', 'loupe-search-reindex', __( 'Reindexing completed successfully!', 'loupe-search' ), 'updated' );
 
 		}
 	}
@@ -217,7 +217,7 @@ class WP_Loupe_Indexer {
 		// Ensure required core columns exist (migration for post_date)
 		$this->ensure_required_columns();
 		// First, clear the search cache
-		WP_Loupe_Utils::remove_transient( 'wp_loupe_search_' );
+		WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
 
 		// Save settings before starting the indexing process
 		$this->save_settings();
@@ -308,7 +308,7 @@ class WP_Loupe_Indexer {
 		// Ensure required core columns exist (migration for post_date)
 		$this->ensure_required_columns();
 		// Clear the search cache
-		WP_Loupe_Utils::remove_transient( 'wp_loupe_search_' );
+		WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
 		// Ensure settings are sane (defaults exist)
 		$this->save_settings();
 		// Clear instance cache to ensure we're using the latest configuration
@@ -359,7 +359,7 @@ class WP_Loupe_Indexer {
 		// Keep internals in sync with state.
 		$this->set_post_types( $post_types );
 		// Clear the search cache on each step (cheap and keeps results consistent).
-		WP_Loupe_Utils::remove_transient( 'wp_loupe_search_' );
+		WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
 
 		$post_type = (string) $post_types[ $idx ];
 		if ( '' === $post_type ) {
@@ -504,7 +504,7 @@ class WP_Loupe_Indexer {
 			esc_html( implode( ', ', $parts ) )
 		);
 
-		add_settings_error( 'wp-loupe', 'wp-loupe-reindex-rebuild', $message, 'warning' );
+		add_settings_error( 'loupe-search', 'loupe-search-reindex-rebuild', $message, 'warning' );
 	}
 
 	/**
@@ -622,20 +622,20 @@ class WP_Loupe_Indexer {
 	 * @return void
 	 */
 	private function save_settings() {
-		// Ensure the wp_loupe_fields option is properly saved before indexing
-		$saved_fields = get_option( 'wp_loupe_fields', [] );
+		// Ensure the loupe_search_fields option is properly saved before indexing
+		$saved_fields = get_option( 'loupe_search_fields', [] );
 
 		if ( empty( $saved_fields ) ) {
 			// No fields configured - create and save defaults
 			$default_fields = $this->create_default_fields_configuration();
-			update_option( 'wp_loupe_fields', $default_fields );
+			update_option( 'loupe_search_fields', $default_fields );
 		} else {
 			// Ensure all post types have configurations
 			$updated_fields = $this->ensure_post_types_have_configurations( $saved_fields );
 
 			// Only update if changes were made
 			if ( $updated_fields !== $saved_fields ) {
-				update_option( 'wp_loupe_fields', $updated_fields );
+				update_option( 'loupe_search_fields', $updated_fields );
 			}
 		}
 
@@ -831,7 +831,7 @@ class WP_Loupe_Indexer {
 	public function prepare_document( \WP_Post $post ): array {
 		$schema           = $this->schema_manager->get_schema_for_post_type( $post->post_type );
 		$indexable_fields = $this->schema_manager->get_indexable_fields( $schema );
-		$saved_fields     = get_option( 'wp_loupe_fields', [] );
+		$saved_fields     = get_option( 'loupe_search_fields', [] );
 
 		$document = [ 'id' => $post->ID, 'post_type' => $post->post_type ];
 

@@ -131,7 +131,7 @@ class WP_Loupe_Search_Hooks {
 			return [];
 		}
 
-		$saved_fields = get_option( 'wp_loupe_fields', [] );
+		$saved_fields = get_option( 'loupe_search_fields', [] );
 		$hits_by_type = [];
 		foreach ( $hits as $hit ) {
 			if ( ! is_array( $hit ) || empty( $hit[ 'post_type' ] ) ) {
