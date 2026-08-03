@@ -31,6 +31,9 @@ names. The quickest way to find it:
 | WP-CLI command | `wp wp-loupe` | `wp loupe-search` | 1.1.0 |
 | Abilities | `wp-loupe/search`, `wp-loupe/get-post` | `loupe-search/search`, `loupe-search/get-post` | 1.2.0 |
 | Ability category | `wp-loupe` | `loupe-search` | 1.2.0 |
+| Options | `wp_loupe_custom_post_types`, `wp_loupe_fields`, `wp_loupe_advanced` | `loupe_search_custom_post_types`, `loupe_search_fields`, `loupe_search_advanced` | 1.2.4 (removed) |
+| Constants | `WP_LOUPE_FILE`, `WP_LOUPE_NAME`, `WP_LOUPE_PATH`, `WP_LOUPE_URL` | `LOUPE_SEARCH_FILE`, `LOUPE_SEARCH_NAME`, `LOUPE_SEARCH_PATH`, `LOUPE_SEARCH_URL` | 1.2.4 (removed) |
+| Settings page slug | `wp-loupe` | `loupe-search` | 1.2.4 (removed) |
 
 ## Details
 
@@ -69,6 +72,21 @@ under the `loupe-search` category. The legacy `wp-loupe/search` and
 `wp-loupe/get-post` abilities (category `wp-loupe`) remain registered as
 deprecated aliases sharing the same callbacks.
 
+### Options, constants and the settings URL
+
+`wp_` is reserved for WordPress core, so in 1.2.4 the stored options moved to
+the `loupe_search_` prefix, along with the nested `wp_loupe_post_type_field`
+key (now `loupe_search_post_type_field`) and the `WP_LOUPE_*` constants. Unlike
+the renames above these are **not** aliased — the old names are gone.
+
+Stored settings are migrated automatically the first time the plugin loads
+after the update, and the legacy rows are deleted. Search result caches are
+keyed by a hash of the query so they cannot be renamed; they are dropped and
+rebuilt on the next search.
+
+The settings screen moved from `options-general.php?page=wp-loupe` to
+`options-general.php?page=loupe-search`. Update any bookmarks or links.
+
 See the [Changelog](../CHANGELOG.md) for the full history.
 
 ## What was *not* renamed
@@ -78,6 +96,6 @@ oversights, and there is nothing to migrate:
 
 | Identifier | Why it stayed |
 | --- | --- |
-| Options `wp_loupe_custom_post_types`, `wp_loupe_fields`, `wp_loupe_advanced` | Renaming would orphan existing settings on every install |
 | REST error codes, e.g. `wp_loupe_missing_query`, `wp_loupe_unallowlisted_field` | A REST error `code` is a single string; changing it would break clients that branch on it |
 | PHP namespace `Soderlind\Plugin\WPLoupe` and `WP_Loupe_*` class names | Internal API, not part of the public contract |
+| Admin CSS classes and DOM ids, e.g. `wp-loupe-card` | Presentation only, scoped to the plugin's own settings screen |

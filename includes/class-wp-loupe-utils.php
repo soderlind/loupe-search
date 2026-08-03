@@ -21,15 +21,36 @@ class WP_Loupe_Utils {
 	 * @return array<int, string> Post type slugs.
 	 */
 	public static function get_indexed_post_types(): array {
-		$options    = get_option( 'wp_loupe_custom_post_types', [] );
-		$post_types = ( ! empty( $options ) && isset( $options[ 'wp_loupe_post_type_field' ] ) )
-			? (array) $options[ 'wp_loupe_post_type_field' ]
+		$options    = get_option( 'loupe_search_custom_post_types', [] );
+		$post_types = ( ! empty( $options ) && isset( $options[ 'loupe_search_post_type_field' ] ) )
+			? (array) $options[ 'loupe_search_post_type_field' ]
 			: [ 'post', 'page' ];
 
 		$post_types = apply_filters( 'loupe_search_post_types', $post_types );
 		$post_types = apply_filters_deprecated( 'wp_loupe_post_types', array( $post_types ), '1.1.0', 'loupe_search_post_types' );
 
 		return array_values( (array) $post_types );
+	}
+
+	/**
+	 * Indexed post types narrowed to publicly viewable ones.
+	 *
+	 * Unauthenticated endpoints must scope the search itself to these post types,
+	 * so hit totals and facet counts can never reveal non-public indexed content.
+	 *
+	 * @since 1.2.4
+	 * @return array<int, string> Post type slugs.
+	 */
+	public static function get_public_indexed_post_types(): array {
+		$public = array_filter(
+			self::get_indexed_post_types(),
+			static function ( $post_type ) {
+				$post_type_object = get_post_type_object( $post_type );
+				return $post_type_object && ! empty( $post_type_object->public );
+			}
+		);
+
+		return array_values( $public );
 	}
 
 	/**
@@ -286,9 +307,9 @@ class WP_Loupe_Utils {
 				esc_html( $error_title ),
 				esc_html( $error_message )
 			);
-			deactivate_plugins( WP_LOUPE_FILE );
+			deactivate_plugins( LOUPE_SEARCH_FILE );
 			if ( is_multisite() ) {
-				deactivate_plugins( WP_LOUPE_FILE, false, true );
+				deactivate_plugins( LOUPE_SEARCH_FILE, false, true );
 			}
 		} );
 	}
@@ -318,7 +339,7 @@ class WP_Loupe_Utils {
 	 * @return string Version number
 	 */
 	public static function get_version_number() {
-		$plugin_data = get_plugin_data( WP_LOUPE_FILE );
+		$plugin_data = get_plugin_data( LOUPE_SEARCH_FILE );
 		$version     = $plugin_data[ 'Version' ];
 		return $version;
 	}

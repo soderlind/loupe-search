@@ -205,7 +205,10 @@ class WP_Loupe_Abilities {
 		$per_page = min( 100, max( 1, (int) ( $input['per_page'] ?? 10 ) ) );
 		$page     = max( 1, (int) ( $input['page'] ?? 1 ) );
 
-		$configured_types = WP_Loupe_Utils::get_indexed_post_types();
+		// This ability is unauthenticated, so only public post types are ever queried.
+		// Scoping the engine (rather than filtering its output) keeps total_hits from
+		// revealing how much non-public content is indexed.
+		$configured_types = WP_Loupe_Utils::get_public_indexed_post_types();
 
 		$post_types = ! empty( $input['post_types'] )
 			? array_intersect( array_map( 'sanitize_key', (array) $input['post_types'] ), $configured_types )
@@ -213,6 +216,15 @@ class WP_Loupe_Abilities {
 
 		if ( empty( $post_types ) ) {
 			$post_types = $configured_types;
+		}
+
+		if ( empty( $post_types ) ) {
+			return [
+				'hits'        => [],
+				'total_hits'  => 0,
+				'page'        => $page,
+				'total_pages' => 0,
+			];
 		}
 
 		$db     = WP_Loupe_DB::get_instance();

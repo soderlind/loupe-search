@@ -15,6 +15,7 @@ class WP_Loupe_Search_Engine {
 	private $db;
 	private $saved_fields;
 	private const CACHE_TTL                 = 3600; // 1 hour
+	private const MAX_CACHEABLE_QUERY_LENGTH = 128;
 	private const LOUPE_DB_FILENAME         = 'loupe.db';
 	private const LOUPE_ATTRIBUTE_NAME_RGXP = '/^[a-zA-Z\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/';
 
@@ -25,7 +26,7 @@ class WP_Loupe_Search_Engine {
 	public function __construct( $post_types, $db = null ) {
 		$this->post_types   = (array) $post_types;
 		$this->db           = $db ?: WP_Loupe_DB::get_instance();
-		$this->saved_fields = get_option( 'wp_loupe_fields', [] );
+		$this->saved_fields = get_option( 'loupe_search_fields', [] );
 
 		$iso6391_lang = ( '' === get_locale() ) ? 'en' : strtolower( substr( get_locale(), 0, 2 ) );
 		foreach ( $this->post_types as $post_type ) {
@@ -41,15 +42,38 @@ class WP_Loupe_Search_Engine {
 	}
 
 	/**
+	 * Whether a query is short enough to be worth caching.
+	 *
+	 * Searches are reachable by unauthenticated visitors, so caching every distinct query
+	 * would add transient rows to the options table without bound. Long queries are almost
+	 * always bot noise with no cache hit rate, so they are executed without being stored.
+	 *
+	 * @param string $query Search query.
+	 * @return bool
+	 */
+	private function is_cacheable_query( $query ) {
+		/**
+		 * Filters the maximum query length that is written to the search result cache.
+		 *
+		 * @since 1.2.4
+		 * @param int $max_length Maximum number of bytes. Default 128.
+		 */
+		$max_length = (int) apply_filters( 'loupe_search_max_cacheable_query_length', self::MAX_CACHEABLE_QUERY_LENGTH );
+
+		return $max_length > 0 && strlen( (string) $query ) <= $max_length;
+	}
+
+	/**
 	 * Execute a search.
 	 *
 	 * @param string $query
 	 * @return array Raw hit arrays with at least id, _score, post_type.
 	 */
 	public function search( $query ) {
+		$cacheable     = $this->is_cacheable_query( $query );
 		$cache_key     = md5( (string) $query . serialize( $this->post_types ) );
-		$transient_key = "wp_loupe_search_{$cache_key}";
-		$cached_result = get_transient( $transient_key );
+		$transient_key = "loupe_search_cache_{$cache_key}";
+		$cached_result = $cacheable ? get_transient( $transient_key ) : false;
 		if ( false !== $cached_result ) {
 			$this->log = sprintf( 'WP Loupe cache hit: %s ms', 0 );
 			return $cached_result;
@@ -136,7 +160,9 @@ class WP_Loupe_Search_Engine {
 		}
 
 		$this->log = sprintf( 'WP Loupe processing time: %s ms', (string) $processing_time_sum );
-		set_transient( $transient_key, $hits, self::CACHE_TTL );
+		if ( $cacheable ) {
+			set_transient( $transient_key, $hits, self::CACHE_TTL );
+		}
 		return $hits;
 	}
 
@@ -243,8 +269,9 @@ class WP_Loupe_Search_Engine {
 			'crop_len'   => $crop_length,
 			'crop_mark'  => $crop_marker,
 		] ) );
-		$transient_key = "wp_loupe_search_adv_{$cache_key}";
-		$cached        = get_transient( $transient_key );
+		$transient_key = "loupe_search_cache_adv_{$cache_key}";
+		$cacheable     = $this->is_cacheable_query( $query );
+		$cached        = $cacheable ? get_transient( $transient_key ) : false;
 		if ( false !== $cached && is_array( $cached ) ) {
 			return $cached;
 		}
@@ -326,10 +353,11 @@ class WP_Loupe_Search_Engine {
 			'processingTimeMs'  => $processing_time_sum,
 			'facetDistribution' => $facet_distribution,
 		];
-		set_transient( $transient_key, $out, self::CACHE_TTL );
+		if ( $cacheable ) {
+			set_transient( $transient_key, $out, self::CACHE_TTL );
+		}
 		return $out;
 	}
-
 	/**
 	 * Helper: validate that a field name is a Loupe-compatible attribute name.
 	 *

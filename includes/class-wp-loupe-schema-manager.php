@@ -33,7 +33,7 @@ class WP_Loupe_Schema_Manager {
 	public function get_schema_for_post_type( string $post_type ): array {
 		if ( ! isset( $this->schema_cache[ $post_type ] ) ) {
 			$schema       = $this->get_default_schema();
-			$saved_fields = get_option( 'wp_loupe_fields', [] );
+			$saved_fields = get_option( 'loupe_search_fields', [] );
 
 			// Override or add post type specific settings, but only for fields marked as indexable
 			if ( isset( $saved_fields[ $post_type ] ) ) {

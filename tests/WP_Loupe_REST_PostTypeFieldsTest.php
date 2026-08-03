@@ -26,7 +26,7 @@ class WP_Loupe_REST_PostTypeFieldsTest extends TestCase {
 
 	public function test_post_type_fields_valid_core_type() {
 		// Ensure option empty so REST class sets defaults.
-		update_option( 'wp_loupe_custom_post_types', [] );
+		update_option( 'loupe_search_custom_post_types', [] );
 		$rest     = new WP_Loupe_REST();
 		$req      = $this->make_request( [ 'post_type' => 'post' ] );
 		$response = $rest->handle_post_type_fields_request( $req );
@@ -57,7 +57,7 @@ class WP_Loupe_REST_PostTypeFieldsTest extends TestCase {
 	 */
 	public function test_post_type_fields_excludes_protected_meta_keys() {
 		global $wpdb;
-		update_option( 'wp_loupe_custom_post_types', [] );
+		update_option( 'loupe_search_custom_post_types', [] );
 		$wpdb->col_results = [ 'rating', 'runtime' ];
 
 		$rest     = new WP_Loupe_REST();
@@ -75,7 +75,7 @@ class WP_Loupe_REST_PostTypeFieldsTest extends TestCase {
 
 	public function test_post_type_fields_custom_cpt_hlz_movie() {
 		// Simulate settings option including hlz_movie so REST picks it up.
-		update_option( 'wp_loupe_custom_post_types', [ 'wp_loupe_post_type_field' => [ 'hlz_movie' ] ] );
+		update_option( 'loupe_search_custom_post_types', [ 'loupe_search_post_type_field' => [ 'hlz_movie' ] ] );
 		$rest     = new WP_Loupe_REST();
 		$req      = $this->make_request( [ 'post_type' => 'hlz_movie' ] );
 		$response = $rest->handle_post_type_fields_request( $req );

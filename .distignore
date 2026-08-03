@@ -55,6 +55,32 @@ vendor/nitotm/efficient-language-detector/resources/ngrams/medium.php
 vendor/nitotm/efficient-language-detector/resources/ngrams/small.php
 vendor/nitotm/efficient-language-detector/resources/ngrams/blob/
 
+# Third-party CLI entry points. Not permitted in a wp.org payload: these are
+# extension-less executables, and Loupe calls the libraries directly in PHP.
+vendor/nitotm/efficient-language-detector/bin/
+vendor/symfony/console/Resources/bin/
+vendor/symfony/console/Resources/completion.bash
+vendor/symfony/console/Resources/completion.fish
+vendor/symfony/console/Resources/completion.zsh
+
+# Composer download leftovers.
+vendor/composer/tmp-*.zip~
+
+# Third-party build / CI / lint config with no runtime role.
+*.neon
+*.dist
+*.yml
+*.yaml
+*.exe
+*.rst
+*.rst.inc
+Makefile
+conf.py
+.travis.yml
+.scrutinizer.yml
+.mailmap
+.gitkeep
+
 # php-stemmer test fixtures (language corpora, not loaded at runtime).
 vendor/wamania/php-stemmer/test/
 

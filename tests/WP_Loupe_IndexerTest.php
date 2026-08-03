@@ -19,7 +19,7 @@ class WP_Loupe_IndexerTest extends TestCase {
 		$GLOBALS[ 'wp_loupe_test_taxonomies' ] = [];
 		$GLOBALS[ 'wp_loupe_test_post_meta' ]  = [];
 		$GLOBALS[ 'wp_loupe_test_filters' ]    = [];
-		update_option( 'wp_loupe_fields', [] );
+		update_option( 'loupe_search_fields', [] );
 	}
 
 	protected function tearDown(): void {
@@ -105,7 +105,7 @@ class WP_Loupe_IndexerTest extends TestCase {
 	}
 
 	public function test_prepare_document_collects_core_meta_and_taxonomy_fields() {
-		update_option( 'wp_loupe_fields', [
+		update_option( 'loupe_search_fields', [
 			'post' => [
 				'post_title'     => [ 'indexable' => true ],
 				'rating'         => [ 'indexable' => true ],
@@ -130,7 +130,7 @@ class WP_Loupe_IndexerTest extends TestCase {
 	}
 
 	public function test_prepare_document_skips_fields_configured_as_not_indexable() {
-		update_option( 'wp_loupe_fields', [ 'post' => [ 'post_date' => [ 'indexable' => false ] ] ] );
+		update_option( 'loupe_search_fields', [ 'post' => [ 'post_date' => [ 'indexable' => false ] ] ] );
 
 		$indexer  = $this->make_indexer();
 		$document = $indexer->prepare_document( new \WP_Post( [ 'ID' => 12 ] ) );
@@ -142,7 +142,7 @@ class WP_Loupe_IndexerTest extends TestCase {
 	 * A sortable field must exist on every document, otherwise Loupe cannot sort by it.
 	 */
 	public function test_prepare_document_adds_an_empty_placeholder_for_a_valueless_sortable_field() {
-		update_option( 'wp_loupe_fields', [
+		update_option( 'loupe_search_fields', [
 			'post' => [ 'shelf_order' => [ 'indexable' => false, 'sortable' => true ] ],
 		] );
 
@@ -154,7 +154,7 @@ class WP_Loupe_IndexerTest extends TestCase {
 	}
 
 	public function test_prepare_document_uses_the_meta_value_of_a_sortable_field_when_present() {
-		update_option( 'wp_loupe_fields', [
+		update_option( 'loupe_search_fields', [
 			'post' => [ 'shelf_order' => [ 'indexable' => false, 'sortable' => true ] ],
 		] );
 		$GLOBALS[ 'wp_loupe_test_post_meta' ][ 14 ][ 'shelf_order' ] = '  A7  ';

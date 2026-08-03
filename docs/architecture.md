@@ -58,8 +58,8 @@ Not included:
 | Bootstrap | Defines `WP_LOUPE_*` constants, gates unwanted request types, boots the loader on `plugins_loaded` | [loupe-search.php](../loupe-search.php) | `WP_Loupe_Loader`, `WP_Loupe_Utils` |
 | Loader | Requires every class file and wires the runtime components | [includes/class-wp-loupe-loader.php](../includes/class-wp-loupe-loader.php) | all components below |
 | Path resolver | Resolves the index base directory and per-post-type directory; deletes the index tree | [includes/class-wp-loupe-db.php](../includes/class-wp-loupe-db.php) | `loupe_search_db_path` filter |
-| Engine factory | Builds and caches a configured `Loupe\Loupe\Loupe` per post type, and decides which fields may be sortable | [includes/class-wp-loupe-factory.php](../includes/class-wp-loupe-factory.php) | `loupe/loupe`, `wp_loupe_fields`, `wp_loupe_advanced` |
-| Schema manager | Turns saved field settings into indexable / filterable / sortable field lists, with per-request caching | [includes/class-wp-loupe-schema-manager.php](../includes/class-wp-loupe-schema-manager.php) | `wp_loupe_fields` |
+| Engine factory | Builds and caches a configured `Loupe\Loupe\Loupe` per post type, and decides which fields may be sortable | [includes/class-wp-loupe-factory.php](../includes/class-wp-loupe-factory.php) | `loupe/loupe`, `loupe_search_fields`, `loupe_search_advanced` |
+| Schema manager | Turns saved field settings into indexable / filterable / sortable field lists, with per-request caching | [includes/class-wp-loupe-schema-manager.php](../includes/class-wp-loupe-schema-manager.php) | `loupe_search_fields` |
 | Indexer | Document preparation, incremental add/delete, full and batched reindex, on-disk column repair | [includes/class-wp-loupe-indexer.php](../includes/class-wp-loupe-indexer.php) | factory, path resolver, schema manager |
 | Search engine | Side-effect-free querying, result caching, index-readiness probing | [includes/class-wp-loupe-search-engine.php](../includes/class-wp-loupe-search-engine.php) | factory, path resolver |
 | Search hooks | Front-end `WP_Query` interception and footer timing comment | [includes/class-wp-loupe-search-hooks.php](../includes/class-wp-loupe-search-hooks.php) | search engine |
@@ -126,7 +126,7 @@ is wired at all — for autosaves, heartbeat AJAX and cron.
 
 The indexed post-type list is resolved by
 `WP_Loupe_Utils::get_indexed_post_types()`, which reads
-`get_option( 'wp_loupe_custom_post_types' )['wp_loupe_post_type_field']`,
+`get_option( 'loupe_search_custom_post_types' )['loupe_search_post_type_field']`,
 defaults to `[ 'post', 'page' ]`, then applies `loupe_search_post_types`. The
 loader, indexer, REST controller and abilities all call it, so the filter has
 the same effect on every surface. The settings screen deliberately reads the
@@ -143,11 +143,13 @@ Trigger: a front-end `WP_Query` search.
    them is not indexed, it bails so WordPress can answer the query itself.
 3. `prepare_search_term()` joins `search_terms`, wrapping multi-word terms in
    quotes for phrase matching.
-4. `WP_Loupe_Search_Engine::search()` checks the `wp_loupe_search_<md5>`
+4. `WP_Loupe_Search_Engine::search()` checks the `loupe_search_cache_<md5>`
    transient, then queries every configured post type's Loupe instance and
    merges the hits. Loupe's `_rankingScore` is copied to `_score`, and
    `post_type` is stamped on each hit. Results are cached for one hour
-   (`CACHE_TTL`).
+   (`CACHE_TTL`), but only when the query is at most 128 bytes
+   (`loupe_search_max_cacheable_query_length`) — search is reachable
+   unauthenticated, so the cache must not be growable at will.
 5. `create_post_objects()` loads the matching `WP_Post` objects with
    `orderby => post__in` to preserve relevance order, and attaches every
    filterable or sortable field as a dynamic property.
@@ -176,7 +178,7 @@ Trigger: `save_post_{$post_type}` for each configured post type.
 1. `WP_Loupe_Indexer::add()` calls `is_indexable()`, which rejects revisions,
    autosaves, unconfigured post types, non-`publish` statuses, and
    password-protected posts unless `loupe_search_index_protected` says otherwise.
-2. All `wp_loupe_search_*` transients are deleted via
+2. All `loupe_search_cache_*` transients are deleted via
    `WP_Loupe_Utils::remove_transient()`, invalidating both the simple and
    advanced search caches.
 3. `prepare_document()` builds the document: `id` (the post ID) and `post_type`,
@@ -228,7 +230,7 @@ reindex panel, or `wp loupe-search reindex`.
 
 `reindex_all()` performs the same work synchronously in one request and is used
 by the legacy `admin_init` form handler (`handle_reindex()`, guarded by the
-`wp_loupe_nonce_action` nonce).
+`loupe_search_nonce_action` nonce).
 
 Failure behavior:
 
@@ -254,7 +256,11 @@ Failure behavior:
   spans MySQL and the index.
 - **Trust boundary — public REST.** `GET /search` and `POST /search` use
   `permission_callback => '__return_true'` and are unauthenticated. All other
-  routes require `manage_options`. Untrusted input becomes trusted in
+  routes require `manage_options`. Both public routes, and
+  `WP_Loupe_Abilities::execute_search()`, scope the Loupe query itself to
+  `WP_Loupe_Utils::get_public_indexed_post_types()` rather than filtering
+  results afterwards, so hit totals and facet counts are derived from public
+  content alone. Untrusted input becomes trusted in
   `handle_search_request_post()`, which:
   - rejects post types not in the configured list and not index-ready;
   - validates every attribute name against
@@ -269,9 +275,14 @@ Failure behavior:
 - **Pagination ceiling.** `POST /search` rejects requests where
   `offset + size > 1000`, and `WP_Loupe_Search_Engine::search()` caps Loupe at
   `withLimit( 1000 )`. Deep pagination is not supported.
-- **Cache coherence.** Every index write purges the `wp_loupe_search_` transient
-  prefix. Because the advanced cache key is `wp_loupe_search_adv_<md5>`, the
+- **Cache coherence.** Every index write purges the `loupe_search_cache_` transient
+  prefix. Because the advanced cache key is `loupe_search_cache_adv_<md5>`, the
   prefix purge covers it too.
+- **Bounded cache growth.** Only the search engine writes result transients, and
+  only for queries within `loupe_search_max_cacheable_query_length` (128 bytes).
+  The REST controller deliberately holds no cache of its own: caching every
+  query and pagination combination from an unauthenticated route would let a
+  visitor grow the options table without bound.
 - **No cross-post-type ranking in the query path.** See
   [Flow: front-end search](#flow-front-end-search).
 
@@ -310,7 +321,7 @@ field, or a meta field whose sampled values are scalar or a valid
 
 Enforced by `WP_Loupe_Factory::is_safely_sortable()` and
 `check_meta_field_sortability()`, which samples five posts.
-`validate_sortable_fields()` rewrites and re-saves `wp_loupe_fields` when a
+`validate_sortable_fields()` rewrites and re-saves `loupe_search_fields` when a
 setting violates this. Overridable per site through
 `loupe_search_is_safely_sortable_{$post_type}` and
 `loupe_search_is_safely_sortable_meta_{$post_type}`.
@@ -338,7 +349,7 @@ integration all operate on one list, so `loupe_search_post_types` cannot make a
 post type searchable without also making it indexed.
 
 Enforced by `WP_Loupe_Utils::get_indexed_post_types()`, the single reader of
-`wp_loupe_custom_post_types` outside the settings screen. `WPLoupe_Settings_Page`
+`loupe_search_custom_post_types` outside the settings screen. `WPLoupe_Settings_Page`
 is the deliberate exception: it reads the raw option so the checkboxes show what
 is stored rather than what the filter produced.
 
@@ -364,10 +375,10 @@ Verified for abilities by
 | Data | Location | Owner | Removed on uninstall |
 |---|---|---|---|
 | Search indexes | `wp-content/loupe-search-db/<post_type>/loupe.db` | `WP_Loupe_DB`, `WP_Loupe_Factory` | yes, including the legacy `wp-loupe-db` directory |
-| Indexed post types | option `wp_loupe_custom_post_types` | settings screen | yes |
-| Field settings | option `wp_loupe_fields` | settings screen, factory, indexer | yes |
-| Search behavior settings | option `wp_loupe_advanced` | settings screen | yes |
-| Result caches | transients `wp_loupe_search_*` | search engine, REST controller | yes |
+| Indexed post types | option `loupe_search_custom_post_types` | settings screen | yes |
+| Field settings | option `loupe_search_fields` | settings screen, factory, indexer | yes |
+| Search behavior settings | option `loupe_search_advanced` | settings screen | yes |
+| Result caches | transients `loupe_search_cache_*` | search engine | yes |
 
 `WP_Loupe_DB::get_base_path()` defaults to `WP_CONTENT_DIR . '/loupe-search-db'`
 but falls back to the legacy `wp-loupe-db` directory when that exists and the

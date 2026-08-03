@@ -86,7 +86,7 @@ class WP_Loupe_Factory {
 	 */
 	private static function get_field_configuration( string $post_type ): array {
 		// Get all saved fields
-		$all_saved_fields = get_option( 'wp_loupe_fields', [] );
+		$all_saved_fields = get_option( 'loupe_search_fields', [] );
 		$needs_save       = false;
 
 		// If settings don't exist for this post type, create defaults
@@ -128,7 +128,7 @@ class WP_Loupe_Factory {
 
 		// Save if needed
 		if ( $needs_save ) {
-			update_option( 'wp_loupe_fields', $all_saved_fields );
+			update_option( 'loupe_search_fields', $all_saved_fields );
 		}
 
 		return $all_saved_fields[ $post_type ] ?? [];
@@ -191,7 +191,7 @@ class WP_Loupe_Factory {
 	 * @return Configuration Loupe configuration object
 	 */
 	private static function build_configuration( array $attributes ): Configuration {
-		$advanced_settings = get_option( 'wp_loupe_advanced', [] );
+		$advanced_settings = get_option( 'loupe_search_advanced', [] );
 
 		// Create the configuration
 		$configuration = Configuration::create()
@@ -397,7 +397,7 @@ class WP_Loupe_Factory {
 
 		// Save the corrected settings if needed
 		if ( $updated ) {
-			update_option( 'wp_loupe_fields', $fields );
+			update_option( 'loupe_search_fields', $fields );
 		}
 
 		return $fields;
