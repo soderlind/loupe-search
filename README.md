@@ -29,7 +29,7 @@ Loupe Search replaces WordPress core search:
 
 ## Technical Requirements
 
-- PHP 8.1 or higher
+- PHP 8.3 or higher
 - SQLite 3.35+ (required by Loupe 0.13.x)
 - PHP extensions: `pdo_sqlite`, `intl`, `mbstring`
 - WordPress 6.9+

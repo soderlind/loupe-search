@@ -17,6 +17,8 @@
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       loupe-search
  * Domain Path:       /languages
+ * Requires at least: 6.9
+ * Requires PHP:      8.3
  */
 
 declare(strict_types=1);

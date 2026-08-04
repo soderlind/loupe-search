@@ -3,7 +3,7 @@ Contributors: PerS
 Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.0
-Requires PHP: 8.1
+Requires PHP: 8.3
 Stable tag: 1.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -160,7 +160,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 = What are the technical requirements? =
 
-* PHP 8.1 or higher
+* PHP 8.3 or higher
 * SQLite 3.35+ (required by Loupe)
 * PHP extensions: pdo_sqlite, intl, mbstring
 * WordPress 6.9+
@@ -169,6 +169,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 == Changelog ==
 
 = 1.2.4 =
+* Changed: The minimum PHP version is now 8.3. The plugin's dependencies already required PHP 8.2/8.3, so the previously advertised 8.1 requirement was not accurate.
 * Security: The public search REST route and search ability now scope the query itself to public post types, so hit totals and facet counts can no longer reveal indexed non-public content.
 * Changed: The plugin's options moved off the `wp_` prefix, which is reserved for WordPress core. Existing settings are migrated automatically on first load.
 * Changed: The settings screen moved to `options-general.php?page=loupe-search`.

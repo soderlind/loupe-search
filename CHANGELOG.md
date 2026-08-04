@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The unauthenticated `POST /search` route and the `loupe-search/search` ability now scope the Loupe query itself to public post types. Previously the hit total and the facet counts were derived from all indexed matches and only the returned rows were filtered, which could reveal how much non-public content is indexed.
 
 ### Changed
+- The minimum PHP version is now 8.3. The plugin's dependencies (`joomla/string`, `doctrine/dbal`, `mjaschen/phpgeo`) already required PHP 8.2/8.3, so the previously advertised 8.1 requirement was not accurate.
 - Stored data moved off the `wp_` prefix, which is reserved for WordPress core. Options `wp_loupe_custom_post_types`, `wp_loupe_fields` and `wp_loupe_advanced` are now `loupe_search_custom_post_types`, `loupe_search_fields` and `loupe_search_advanced`, and the nested `wp_loupe_post_type_field` key is now `loupe_search_post_type_field`. Existing settings are migrated automatically on first load; no action is required.
 - Constants `WP_LOUPE_FILE`, `WP_LOUPE_NAME`, `WP_LOUPE_PATH` and `WP_LOUPE_URL` are now `LOUPE_SEARCH_FILE`, `LOUPE_SEARCH_NAME`, `LOUPE_SEARCH_PATH` and `LOUPE_SEARCH_URL`.
 - The settings screen slug changed from `wp-loupe` to `loupe-search`, so the settings URL is now `options-general.php?page=loupe-search`. The settings groups, section and field IDs, the admin asset handles and the localized `wpLoupeAdmin` object (now `loupeSearchAdmin`) were renamed to match.

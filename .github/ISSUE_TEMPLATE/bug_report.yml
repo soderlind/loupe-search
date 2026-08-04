@@ -55,7 +55,7 @@ body:
     id: php-version
     attributes:
       label: PHP version
-      description: The plugin requires PHP 8.1 or later.
+      description: The plugin requires PHP 8.3 or later.
       placeholder: "8.3"
     validations:
       required: true

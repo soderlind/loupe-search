@@ -19,6 +19,7 @@
 		}
 	],
 	"require": {
+		"php": ">=8.3",
 		"ext-PDO": "*",
 		"ext-pdo_sqlite": "*",
 		"ext-intl": "*",
@@ -44,6 +45,9 @@
 		}
 	},
 	"config": {
+		"platform": {
+			"php": "8.3.0"
+		},
 		"allow-plugins": {
 			"pestphp/pest-plugin": true
 		}
