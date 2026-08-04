@@ -175,6 +175,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 * Changed: The settings screen moved to `options-general.php?page=loupe-search`.
 * Removed: The 12-hour cache in front of the public search route. Caching every query from an unauthenticated route could grow the options table without bound.
 * Removed: Third-party command line entry points and build config from the release package.
+* Removed: The unused language-detection n-gram databases from the release package, which drops it from 197 MB to 25 MB.
 * Fixed: The indexer stripped tags using a deprecated filter name.
 * Added: The `loupe_search_max_cacheable_query_length` filter (default 128) bounds which queries are written to the result cache.
 

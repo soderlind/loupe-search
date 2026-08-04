@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - The 12-hour transient cache in front of `GET /search`. Caching every query and pagination combination from an unauthenticated route could grow the options table without bound; the underlying Loupe query is already cached by `WP_Loupe_Search_Engine`.
 - Third-party CLI entry points and build config from the distributed archive (`nitotm/efficient-language-detector/bin/`, `symfony/console/Resources/bin/`, `*.neon`, `*.yml`, `Makefile` and similar), which are not permitted in a WordPress.org payload.
+- The unused n-gram databases from the distributed archive. Loupe reads only `resources/ngrams/blob/large.*`, so the release package drops from 197 MB to 25 MB. The 28 MB `large.php` also exceeded the memory limit of the WordPress.org pre-commit linter, which blocked the release.
 
 ### Fixed
 - The indexer hooked its own deprecated `wp_loupe_field_post_content` filter to strip tags from post content. It now uses `loupe_search_field_post_content`.
