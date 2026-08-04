@@ -19,3 +19,7 @@ jobs:
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SLUG: loupe-search
+          # Only readme.txt and assets belong in this workflow. Without this the
+          # action rsyncs the workspace over trunk/ with --delete, and since this
+          # job never runs `composer install` that wipes trunk/vendor.
+          IGNORE_OTHER_FILES: true
