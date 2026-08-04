@@ -62,7 +62,7 @@ Loupe Search registers two abilities via the WordPress Abilities API (WordPress 
 
 These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration. As of 1.2.0 the ability namespace is `loupe-search`; the legacy `wp-loupe/search` and `wp-loupe/get-post` abilities still work but are deprecated aliases.
 
-Upgrading from the experimental MCP server? The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. Use the Abilities API endpoints described above instead; no configuration migration is required.
+[Upgrading from the experimental MCP server?](https://github.com/soderlind/loupe-search/blob/main/docs/migration-mcp-to-abilities.md) The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. Use the Abilities API endpoints described above instead; no configuration migration is required.
 
 = Filters =
 
