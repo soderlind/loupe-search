@@ -3,6 +3,7 @@
 
 # Development and test files
 .distignore
+.git/
 .github/
 .gitignore
 .gitattributes
