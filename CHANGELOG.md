@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.5] - 2026-08-05
+
+### Changed
+- The plugin description now summarises what the search does, and Plugin URI points at the WordPress.org listing.
+- Tested up to WordPress 7.1.
+
+### Fixed
+- The settings help panel still called the plugin "WP Loupe".
+
 ## [1.2.4] - 2026-08-03
 
 ### Security
