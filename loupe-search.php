@@ -2,14 +2,14 @@
 /**
  * The plugin bootstrap file
  *
- * @link              https://github.com/soderlind/loupe-search
+ * @link              https://wordpress.org/plugins/loupe-search/
  * @since             0.0.1
  * @package           WP_Loupe
  *
  * @wordpress-plugin
  * Plugin Name:       Loupe Search
- * Plugin URI:        https://github.com/soderlind/loupe-search
- * Description:       Enhance the search functionality of your WordPress site with Loupe Search.
+ * Plugin URI:        https://wordpress.org/plugins/loupe-search/
+ * Description:       Fast, typo-tolerant WordPress search backed by a dedicated index, with a developer REST API and native WordPress Abilities integration.
  * Version:           1.2.4
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
