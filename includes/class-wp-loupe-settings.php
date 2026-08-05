@@ -802,7 +802,7 @@ class WPLoupe_Settings_Page {
 			'content' => sprintf(
 				'<h2>%s</h2><p>%s</p><p>%s</p><div class="wp-loupe-help-sections"><div class="wp-loupe-help-section basic"><h3>%s</h3><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul></div><div class="wp-loupe-help-section advanced"><h3>%s</h3><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul></div></div>',
 				__( 'Loupe Search Help', 'loupe-search' ),
-				__( 'WP Loupe settings are organized into three tabs: Dashboard, Fields, and Search Behavior.', 'loupe-search' ),
+				__( 'Loupe Search settings are organized into three tabs: Dashboard, Fields, and Search Behavior.', 'loupe-search' ),
 				__( 'The Dashboard tab shows index health for each post type, lets you reindex your content, and reports whether the required PHP extensions are available.', 'loupe-search' ),
 				__( 'Fields', 'loupe-search' ),
 				__( 'Configure which content is searchable and how:', 'loupe-search' ),
