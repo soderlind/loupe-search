@@ -9,7 +9,7 @@
  * @wordpress-plugin
  * Plugin Name:       Loupe Search
  * Plugin URI:        https://wordpress.org/plugins/loupe-search/
- * Description:       Fast, typo-tolerant WordPress search backed by a dedicated index, with a developer REST API and native WordPress Abilities integration.
+ * Description:       Fast, index-backed WordPress search with typo tolerance, phrase matching, exclusions, custom post types, real-time indexing, and a developer-friendly REST API.
  * Version:           1.2.4
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
