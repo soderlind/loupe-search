@@ -171,6 +171,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 = 1.2.5 =
 * Changed: The plugin description now summarises what the search does, and Plugin URI points at the WordPress.org listing.
 * Changed: Tested up to WordPress 7.1.
+* Fixed: Reindexing failed with a "Cannot open for reading gzip" error because the 1.2.4 release package omitted a dictionary the decompounder rebuilds its index from.
 * Fixed: The settings help panel still called the plugin "WP Loupe".
 
 = 1.2.4 =

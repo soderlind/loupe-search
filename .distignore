@@ -103,10 +103,5 @@ vendor/**/Tests/
 vendor/**/test/
 vendor/**/Test/
 
-# Compound-word source dictionaries (loupe/matcher). Only used to rebuild the
-# FastSet index (index_*.bin / hashes_*.bin) when it is missing. The prebuilt
-# .bin indexes ship, so dictionary.gz is never read at runtime.
-vendor/loupe/matcher/dictionaries/*/dictionary.gz
-
 # Third-party package docs shipped alongside runtime code.
 vendor/mjaschen/phpgeo/docs/

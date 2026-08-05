@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tested up to WordPress 7.1.
 
 ### Fixed
+- Reindexing failed with `Cannot open for reading gzip` because the 1.2.4 release package omitted `vendor/loupe/matcher/dictionaries/*/dictionary.gz`. The decompounder's `index_*.bin` / `hashes_*.bin` files are a runtime cache built from that archive, not package contents, so without it the dictionary could never be built.
 - The settings help panel still called the plugin "WP Loupe".
 
 ## [1.2.4] - 2026-08-03
