@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6] - 2026-08-05
+
+### Fixed
+- Reindexing failed with `Cannot open for reading gzip` because the release package omitted `vendor/loupe/matcher/dictionaries/*/dictionary.gz`. The decompounder's `index_*.bin` / `hashes_*.bin` files are a runtime cache built from that archive, not package contents, so without it the dictionary could never be built.
+
 ## [1.2.5] - 2026-08-05
 
 ### Changed
@@ -12,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tested up to WordPress 7.1.
 
 ### Fixed
-- Reindexing failed with `Cannot open for reading gzip` because the 1.2.4 release package omitted `vendor/loupe/matcher/dictionaries/*/dictionary.gz`. The decompounder's `index_*.bin` / `hashes_*.bin` files are a runtime cache built from that archive, not package contents, so without it the dictionary could never be built.
 - The settings help panel still called the plugin "WP Loupe".
 
 ## [1.2.4] - 2026-08-03
