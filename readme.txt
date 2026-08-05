@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -167,6 +167,11 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.2.5 =
+* Changed: The plugin description now summarises what the search does, and Plugin URI points at the WordPress.org listing.
+* Changed: Tested up to WordPress 7.1.
+* Fixed: The settings help panel still called the plugin "WP Loupe".
 
 = 1.2.4 =
 * Changed: The minimum PHP version is now 8.3. The plugin's dependencies already required PHP 8.2/8.3, so the previously advertised 8.1 requirement was not accurate.
