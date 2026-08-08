@@ -29,7 +29,7 @@
 	},
 	"dependencies": {
 		"@soderlind/wp-project-version-sync": "^2.0.2",
-		"@wordpress/api-fetch": "^7.40.0",
+		"@wordpress/api-fetch": "^7.52.0",
 		"@wordpress/i18n": "^6.13.0",
 		"cross-spawn": "^7.0.6"
 	},
