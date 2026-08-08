@@ -22,9 +22,9 @@ This is a list of features, both implemented and planned. Checked items are comp
 - [x] Removed bundled UI integration (block/shortcode/search-form override). Build your own UI via the API.
 - [ ] 2.0.0: Categories, tags, and custom taxonomies (indexing + allowlisting for filtering/faceting).
 - [ ] 2.0.0: Custom fields (indexing + allowlisting for filtering/faceting).
-- [ ] Multisite support, including the option to index all sites in a network.
-- [ ] Multisite support. Select which sites to index.
-- [ ] Multisite support. Select which site to do search from.
+- [x] Multisite support, including the option to index all sites in a network. Done in the [Loupe Cross-Site Search](https://github.com/soderlind/loupe-cross-site-search) add-on.
+- [x] Multisite support. Select which sites to index. Done in the [Loupe Cross-Site Search](https://github.com/soderlind/loupe-cross-site-search) add-on (participation: all/allowlist/blocklist).
+- [x] Multisite support. Select which site to do search from. Done in the [Loupe Cross-Site Search](https://github.com/soderlind/loupe-cross-site-search) add-on (hub site).
 - [ ] Expose/filter/sort on any allowlisted attribute (within schema constraints).
 - [x] 1.1.0: Rename developer hooks `wp_loupe_*` → `loupe_search_*` non-breakingly. Fire the new hook names and keep the old ones via `apply_filters_deprecated()`/`do_action_deprecated()` (deprecated since 1.1.0) so existing integrations keep working.
 - [x] 1.1.0: Rename WP CLI commands `wp loupe` → `wp loupe-search` non-breakingly. Keep the old command names via `WP_CLI::add_command_deprecated()` (deprecated since 1.1.0) so existing integrations keep working.
