@@ -38,7 +38,7 @@ Loupe Search replaces WordPress core search:
 
 ## Installation
 
-1. **Install from WordPress.org** *(not yet available — the plugin is awaiting review)*
+1. **[Install from WordPress.org](https://wordpress.org/plugins/loupe-search/)**
 
    - In your WordPress admin, go to Plugins > Add New
    - Search for "Loupe Search"
