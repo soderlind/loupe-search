@@ -53,6 +53,10 @@ Loupe Search improves WordPress core search by maintaining its own index for fas
 
 See the [Search API documentation](https://github.com/soderlind/loupe-search/blob/main/docs/search-api.md) for REST endpoint details.
 
+= Add-ons =
+
+* 🌐 [Loupe Cross-Site Search](https://github.com/soderlind/loupe-cross-site-search) — Search across every site in a WordPress multisite network from a single hub. Mirrors each site's public content into one combined index and ships a ready-to-use Cross-Site Search block with site and post-type facets, sorting, and highlighted snippets. Requires WordPress multisite 6.9+ and Loupe Search active on the network.
+
 = AI Agent Integration (WordPress Abilities API) =
 
 Loupe Search registers two abilities via the WordPress Abilities API (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively:
