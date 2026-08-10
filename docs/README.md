@@ -21,6 +21,12 @@ settings, start with the [main README](../README.md).
   indexed, field weights, schema, sortability, and results per page. Includes
   recipes and when a reindex is needed.
 
+## Measure performance
+
+- **[Benchmark](benchmark.md)** — How the Loupe engine compares to WordPress
+  core search, the harness in [`bin/`](../bin), and results across
+  ~600 / ~5,600 / ~55,600 documents.
+
 ## Migrating
 
 - **[Renamed from WP Loupe](renamed-from-wp-loupe.md)** — What changed when the
