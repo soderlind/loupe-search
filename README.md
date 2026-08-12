@@ -182,6 +182,7 @@ Developer documentation (schema + examples + Gutenberg block example): **[docs/s
 ## Add-ons
 
 - **[Loupe Cross-Site Search](https://github.com/soderlind/loupe-cross-site-search)** — Search across every site in a WordPress multisite network from a single hub. It mirrors each site's public content into one combined index and ships a ready-to-use Cross-Site Search block with site and post-type facets, sorting, and highlighted snippets. Requires WordPress multisite 6.9+ and Loupe Search active on the network.
+- **[VMFA Search](https://github.com/soderlind/vmfa-search)** — Supercharges the native Media Library search field with fast, typo-tolerant search across title, filename, alt text, caption, and description. Requires the [Virtual Media Folders](https://wordpress.org/plugins/virtual-media-folders/) plugin.
 
 ## AI Agent Integration (WordPress Abilities API)
 
