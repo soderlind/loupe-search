@@ -240,14 +240,11 @@ class WP_Loupe_Abilities {
 			if ( ! $post_id ) {
 				continue;
 			}
-			$post = get_post( $post_id );
-			if ( ! $post || 'publish' !== $post->post_status ) {
+			// Shared tier-2 visibility gate: published, public post type, not password protected.
+			if ( ! WP_Loupe_Utils::is_publicly_viewable_post( $post_id ) ) {
 				continue;
 			}
-			$post_type_obj = get_post_type_object( $post->post_type );
-			if ( ! $post_type_obj || ! $post_type_obj->public ) {
-				continue; // Public ability: never expose non-public post types.
-			}
+			$post = get_post( $post_id );
 			$hits[] = [
 				'id'        => $post_id,
 				'title'     => get_the_title( $post ),
@@ -278,18 +275,15 @@ class WP_Loupe_Abilities {
 	public static function execute_get_post( array $input ) {
 		$post_id = (int) ( $input['id'] ?? 0 );
 		if ( ! $post_id ) {
-			return new \WP_Error( 'invalid_id', __( 'A valid post ID is required.', 'loupe-search' ) );
+			return new \WP_Error( 'invalid_id', __( 'A valid post ID is required.', 'loupe-search' ), [ 'status' => 400 ] );
+		}
+
+		// Shared tier-2 visibility gate: published, public post type, not password protected.
+		if ( ! WP_Loupe_Utils::is_publicly_viewable_post( $post_id ) ) {
+			return new \WP_Error( 'post_not_found', __( 'Post not found or not publicly accessible.', 'loupe-search' ), [ 'status' => 404 ] );
 		}
 
 		$post = get_post( $post_id );
-		if ( ! $post || 'publish' !== $post->post_status ) {
-			return new \WP_Error( 'post_not_found', __( 'Post not found or not publicly accessible.', 'loupe-search' ) );
-		}
-
-		$post_type_obj = get_post_type_object( $post->post_type );
-		if ( ! $post_type_obj || ! $post_type_obj->public ) {
-			return new \WP_Error( 'post_not_found', __( 'Post not found or not publicly accessible.', 'loupe-search' ) );
-		}
 
 		return [
 			'id'        => $post_id,

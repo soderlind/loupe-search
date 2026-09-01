@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-09-01
+
+### Security
+- Hardened the WordPress Abilities API integration (`loupe-search/search`, `loupe-search/get-post`, and their deprecated `wp-loupe/*` aliases). The `loupe-search/get-post` ability could return the full body of a published but password-protected post, because it ran the `the_content` filter on raw content without checking `post_password_required()`. It now returns a 404 and never exposes protected content.
+- Password-protected posts could surface through the `loupe-search/search` ability and the public REST search when a post gained its password after being indexed, leaving a stale index document. Both now exclude such posts via a shared visibility gate.
+
+### Changed
+- The `loupe-search/search` and `loupe-search/get-post` abilities and the REST search endpoints now share one public-visibility gate: published, public post type, and not password protected.
+- The `loupe-search/get-post` ability returns proper HTTP status codes (400 for an invalid id, 404 when not viewable) instead of a status-less error.
+
+### Fixed
+- The index now purges a post's document when it becomes unpublished or password protected, instead of leaving a stale copy behind.
+
+### Added
+- A search benchmark harness.
+
 ## [1.2.6] - 2026-08-05
 
 ### Fixed

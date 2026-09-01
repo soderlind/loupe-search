@@ -54,6 +54,35 @@ class WP_Loupe_Utils {
 	}
 
 	/**
+	 * Whether a post may be exposed to an unauthenticated caller.
+	 *
+	 * Single source of truth for the visibility gate used by the public search
+	 * and get-post abilities/endpoints: the post must exist, be published, belong
+	 * to a public post type, and not be password protected.
+	 *
+	 * @since 1.3.0
+	 * @param \WP_Post|int|null $post Post object or ID.
+	 * @return bool True when the post is publicly viewable.
+	 */
+	public static function is_publicly_viewable_post( $post ): bool {
+		$post = get_post( $post );
+		if ( ! $post || 'publish' !== $post->post_status ) {
+			return false;
+		}
+
+		$post_type_object = get_post_type_object( $post->post_type );
+		if ( ! $post_type_object || empty( $post_type_object->public ) ) {
+			return false;
+		}
+
+		if ( '' !== (string) $post->post_password ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Debug logger helper.
 	 *
 	 * Logs only when WP_DEBUG is enabled.
