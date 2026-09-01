@@ -96,6 +96,14 @@ class WP_Loupe_Indexer {
 	 */
 	public function add( int $post_id, \WP_Post $post, bool $update ): void {
 		if ( ! $this->is_indexable( $post_id, $post ) ) {
+			// A previously indexed post can turn non-indexable (unpublished or
+			// password protected). Purge any stale document so the index never
+			// serves content that is no longer publicly searchable. The post-type
+			// guard skips revisions/autosaves, whose type is never indexed.
+			if ( \in_array( $post->post_type, $this->post_types, true ) ) {
+				WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
+				$this->delete( $post_id );
+			}
 			return;
 		}
 

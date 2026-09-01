@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.2.6
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -172,6 +172,13 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.3.0 =
+* Security: Hardened the Abilities API integration. The loupe-search/get-post ability no longer returns the content of password-protected posts, and password-protected posts can no longer surface through the loupe-search/search ability or the public REST search.
+* Changed: The loupe-search/search and loupe-search/get-post abilities and the REST search endpoints now share one public-visibility gate (published, public post type, not password protected).
+* Changed: The loupe-search/get-post ability now returns proper HTTP status codes (400 for an invalid id, 404 when not viewable).
+* Fixed: A post's index document is now purged when it becomes unpublished or password protected, instead of leaving a stale copy.
+* Added: A search benchmark harness.
 
 = 1.2.6 =
 * Fixed: Reindexing failed with a "Cannot open for reading gzip" error because the release package omitted loupe/matcher's dictionary.gz, which the decompounder rebuilds its search index from.

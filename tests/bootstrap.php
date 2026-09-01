@@ -321,6 +321,12 @@ if ( ! function_exists( 'get_post' ) ) {
 		];
 	}
 }
+if ( ! function_exists( 'get_post_type' ) ) {
+	function get_post_type( $post = null ) {
+		$id = is_object( $post ) ? ( $post->ID ?? 0 ) : (int) $post;
+		return $GLOBALS[ 'wp_loupe_test_post_types' ][ $id ] ?? 'post';
+	}
+}
 if ( ! function_exists( 'get_post_type_object' ) ) {
 	function get_post_type_object( $pt ) {
 		$non_public = $GLOBALS[ 'wp_loupe_test_non_public_post_types' ] ?? [];

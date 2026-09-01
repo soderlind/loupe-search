@@ -19,6 +19,7 @@ class WP_Loupe_IndexerTest extends TestCase {
 		$GLOBALS[ 'wp_loupe_test_taxonomies' ] = [];
 		$GLOBALS[ 'wp_loupe_test_post_meta' ]  = [];
 		$GLOBALS[ 'wp_loupe_test_filters' ]    = [];
+		$GLOBALS[ 'wp_loupe_test_post_types' ] = [];
 		update_option( 'loupe_search_fields', [] );
 	}
 
@@ -92,6 +93,68 @@ class WP_Loupe_IndexerTest extends TestCase {
 		$post    = new \WP_Post( [ 'ID' => 5, 'post_password' => 'secret' ] );
 
 		$this->assertTrue( $this->invoke( $indexer, 'is_indexable', 5, $post ) );
+	}
+
+	// ------------------------------------------------------------------------- add
+
+	/**
+	 * Minimal Loupe double recording add/delete calls.
+	 */
+	private function fake_loupe() {
+		return new class {
+			public array $added   = [];
+			public array $deleted = [];
+			public function addDocument( $doc ) {
+				$this->added[] = $doc;
+			}
+			public function deleteDocument( $id ) {
+				$this->deleted[] = $id;
+			}
+		};
+	}
+
+	private function inject_loupe( WP_Loupe_Indexer $indexer, string $post_type, $loupe ): void {
+		( new \ReflectionProperty( WP_Loupe_Indexer::class, 'loupe' ) )->setValue( $indexer, [ $post_type => $loupe ] );
+	}
+
+	public function test_add_indexes_a_publishable_post() {
+		$indexer = $this->make_indexer( [ 'post' ] );
+		$loupe   = $this->fake_loupe();
+		$this->inject_loupe( $indexer, 'post', $loupe );
+
+		$indexer->add( 23, new \WP_Post( [ 'ID' => 23, 'post_type' => 'post' ] ), true );
+
+		$this->assertCount( 1, $loupe->added );
+		$this->assertSame( 23, $loupe->added[ 0 ][ 'id' ] );
+		$this->assertSame( [], $loupe->deleted, 'an indexable post is never purged' );
+	}
+
+	public function test_add_purges_a_stale_document_when_a_post_becomes_non_indexable() {
+		$indexer = $this->make_indexer( [ 'post' ] );
+		$loupe   = $this->fake_loupe();
+		$this->inject_loupe( $indexer, 'post', $loupe );
+
+		$GLOBALS[ 'wp_loupe_test_post_types' ][ 21 ] = 'post';
+		// Published post that has since gained a password — no longer indexable.
+		$post = new \WP_Post( [ 'ID' => 21, 'post_type' => 'post', 'post_password' => 'secret' ] );
+
+		$indexer->add( 21, $post, true );
+
+		$this->assertSame( [], $loupe->added, 'a protected post is not (re)indexed' );
+		$this->assertSame( [ 21 ], $loupe->deleted, 'a now-protected post must be purged from the index' );
+	}
+
+	public function test_add_leaves_the_index_untouched_for_an_unindexed_post_type() {
+		$indexer = $this->make_indexer( [ 'post' ] );
+		$loupe   = $this->fake_loupe();
+		$this->inject_loupe( $indexer, 'post', $loupe );
+
+		$post = new \WP_Post( [ 'ID' => 22, 'post_type' => 'page', 'post_password' => 'secret' ] );
+
+		$indexer->add( 22, $post, true );
+
+		$this->assertSame( [], $loupe->added );
+		$this->assertSame( [], $loupe->deleted, 'posts of an unindexed type are never touched' );
 	}
 
 	// ------------------------------------------------------------ prepare_document

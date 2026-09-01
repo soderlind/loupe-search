@@ -721,14 +721,10 @@ class WP_Loupe_REST {
 			}
 			$post_id  = (int) $hit[ 'id' ];
 			$ptype    = (string) $hit[ 'post_type' ];
-			$post_obj = get_post( $post_id );
-			if ( ! $post_obj || 'publish' !== $post_obj->post_status ) {
-				continue;
+			if ( ! WP_Loupe_Utils::is_publicly_viewable_post( $post_id ) ) {
+				continue; // Public endpoint: published, public post type, not password protected.
 			}
 			$ptype_obj = get_post_type_object( $ptype );
-			if ( ! $ptype_obj || empty( $ptype_obj->public ) ) {
-				continue; // Never expose results from non-public post types on this public endpoint.
-			}
 			$row       = [
 				'id'              => $post_id,
 				'title'           => get_the_title( $post_id ),
@@ -1432,14 +1428,10 @@ class WP_Loupe_REST {
 			}
 			$post_id  = (int) $hit[ 'id' ];
 			$ptype    = $hit[ 'post_type' ];
-			$post_obj = get_post( $post_id );
-			if ( ! $post_obj || 'publish' !== $post_obj->post_status ) {
-				continue;
+			if ( ! WP_Loupe_Utils::is_publicly_viewable_post( $post_id ) ) {
+				continue; // Public endpoint: published, public post type, not password protected.
 			}
 			$ptype_obj  = get_post_type_object( $ptype );
-			if ( ! $ptype_obj || empty( $ptype_obj->public ) ) {
-				continue; // Never expose results from non-public post types on this public endpoint.
-			}
 			$enriched[] = [
 				'id'              => $post_id,
 				'title'           => get_the_title( $post_id ),
@@ -1485,10 +1477,9 @@ class WP_Loupe_REST {
 
 		foreach ( $search_result[ 'hits' ] as $hit ) {
 			$post_id = $hit[ 'id' ];
-			$post    = get_post( $post_id );
 
-			if ( ! $post || $post->post_status !== 'publish' ) {
-				continue;
+			if ( ! WP_Loupe_Utils::is_publicly_viewable_post( $post_id ) ) {
+				continue; // Public endpoint: published, public post type, not password protected.
 			}
 
 			$formatted_hit = [
