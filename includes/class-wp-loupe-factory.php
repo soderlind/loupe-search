@@ -222,20 +222,20 @@ class WP_Loupe_Factory {
 
 		// Apply settings if they exist
 		if ( ! empty( $settings[ 'alphabet_size' ] ) ) {
-			$typo->withAlphabetSize( $settings[ 'alphabet_size' ] );
+			$typo = $typo->withAlphabetSize( $settings[ 'alphabet_size' ] );
 		}
 
 		if ( ! empty( $settings[ 'index_length' ] ) ) {
-			$typo->withIndexLength( $settings[ 'index_length' ] );
+			$typo = $typo->withIndexLength( $settings[ 'index_length' ] );
 		}
 
 		// Configure boolean settings
-		$typo->withFirstCharTypoCountsDouble( ! empty( $settings[ 'first_char_typo_double' ] ) );
-		$typo->withEnabledForPrefixSearch( ! empty( $settings[ 'typo_prefix_search' ] ) );
+		$typo = $typo->withFirstCharTypoCountsDouble( ! empty( $settings[ 'first_char_typo_double' ] ) );
+		$typo = $typo->withEnabledForPrefixSearch( ! empty( $settings[ 'typo_prefix_search' ] ) );
 
 		// Configure thresholds
 		if ( ! empty( $settings[ 'typo_thresholds' ] ) && is_array( $settings[ 'typo_thresholds' ] ) ) {
-			$typo->withTypoThresholds( $settings[ 'typo_thresholds' ] );
+			$typo = $typo->withTypoThresholds( $settings[ 'typo_thresholds' ] );
 		}
 
 		return $typo;
