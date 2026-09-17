@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -172,6 +172,11 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.3.1 =
+* Fixed: Typo tolerance settings (alphabet size, index length, first-character double counting, prefix search, and thresholds) were silently ignored because Loupe's immutable TypoTolerance builder methods return a new instance that was discarded. Props @Zodiac1978.
+* Fixed: Admin JavaScript strings were not translatable because wp_set_script_translations() was never called for the loupe-search-admin script. Props @Zodiac1978.
+* Fixed: Corrected the broken link to the "Efficient Similarity Search in Very Large String Sets" research paper in the typo tolerance settings description. Props @Zodiac1978.
 
 = 1.3.0 =
 * Security: Hardened the Abilities API integration. The loupe-search/get-post ability no longer returns the content of password-protected posts, and password-protected posts can no longer surface through the loupe-search/search ability or the public REST search.
