@@ -210,7 +210,7 @@ class WPLoupe_Settings_Page {
 		echo wp_kses_post( '<p><small>' . sprintf(
 			/* translators: %s: link to the research paper on efficient similarity search */
 			__( 'Based on the algorithm from "Efficient Similarity Search in Very Large String Sets" %s.', 'loupe-search' ),
-			'<a href="https://hpi.de/fileadmin/user_upload/fachgebiete/naumann/publications/PDFs/2012_ICDE_p1586-fenz.pdf" target="_blank">' . esc_html__( '(read the paper)', 'loupe-search' ) . '</a>'
+			'<a href="https://hpi.de/fileadmin/user_upload/90_Research_Groups/database/IS_Files/publications/PDFs/2012_fenz_efficient.pdf" target="_blank">' . esc_html__( '(read the paper)', 'loupe-search' ) . '</a>'
 		) . '</small></p>' );
 	}
 
