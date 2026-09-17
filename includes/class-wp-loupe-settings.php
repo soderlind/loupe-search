@@ -732,6 +732,12 @@ class WPLoupe_Settings_Page {
 			'availableCache'      => $this->prepare_available_fields_for_js(), // Provide available fields so JS can build UI even if REST route missing
 			'configuredPostTypes' => $this->get_configured_post_types(),
 		] );
+
+		// Load JS translations
+		wp_set_script_translations(
+			'loupe-search-admin',
+			'loupe-search'
+		);
 	}
 
 	/**
