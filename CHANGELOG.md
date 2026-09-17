@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Typo tolerance settings (alphabet size, index length, first-character double counting, prefix search, and thresholds) were silently ignored because Loupe's immutable `TypoTolerance` builder methods returned a new instance that was discarded. Props [@Zodiac1978](https://github.com/Zodiac1978).
+- Admin JavaScript strings were not translatable because `wp_set_script_translations()` was never called for the `loupe-search-admin` script. Props [@Zodiac1978](https://github.com/Zodiac1978).
+- Fixed the broken link to the "Efficient Similarity Search in Very Large String Sets" research paper in the typo tolerance settings description. Props [@Zodiac1978](https://github.com/Zodiac1978).
+
 ## [1.3.0] - 2026-09-01
 
 ### Security
