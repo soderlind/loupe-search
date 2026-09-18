@@ -78,9 +78,7 @@ class WP_Loupe_Indexer {
 	 * @return void
 	 */
 	private function register_hooks() {
-		foreach ( $this->post_types as $post_type ) {
-			add_action( "save_post_{$post_type}", array( $this, 'add' ), 10, 3 );
-		}
+		add_action( 'wp_after_insert_post', array( $this, 'add' ), 10, 3 );
 		add_action( 'wp_trash_post', array( $this, 'trash_post' ), 10, 2 );
 		add_action( 'admin_init', array( $this, 'handle_reindex' ) );
 		add_filter( 'loupe_search_field_post_content', 'wp_strip_all_tags' );
