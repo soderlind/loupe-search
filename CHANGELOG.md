@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4] - 2026-09-22
+
+### Fixed
+- Loupe Search is now fully self-contained: its bundled Composer dependencies (Loupe, Symfony, Doctrine, PSR, etc.) are namespace-scoped with [Strauss](https://github.com/BrianHenryIE/strauss) under `Soderlind\Plugin\LoupeSearch\Vendor\`, so they can no longer collide with different versions of the same libraries loaded by the active theme or another plugin. This fixes fatal errors (e.g. a `TypeError` on load) that appeared with many themes whose `functions.php` loads its own bundled Composer libraries; library-free themes such as Twenty Twenty-Five were never affected. The language detector (`nitotm/efficient-language-detector`) stays unscoped and is registered in the scoped Composer metadata so index/version hashing keeps working.
+
 ## [1.3.3] - 2026-09-22
 
 ### Fixed
