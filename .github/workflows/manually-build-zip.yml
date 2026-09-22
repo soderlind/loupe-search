@@ -25,6 +25,19 @@ jobs:
       - name: Scope bundled dependencies (Strauss)
         run: bash bin/strauss.sh
 
+      - name: Verify scoped autoload
+        run: |
+          php -r '
+            require "vendor/autoload.php";
+            require "vendor-prefixed/autoload.php";
+            $loupe = "Soderlind\\Plugin\\LoupeSearch\\Vendor\\Loupe\\Loupe\\Loupe";
+            $iv = "Soderlind\\Plugin\\LoupeSearch\\Vendor\\Composer\\InstalledVersions";
+            if (!class_exists($loupe)) { fwrite(STDERR, "FAIL: missing $loupe\n"); exit(1); }
+            $v = $iv::getVersion("nitotm/efficient-language-detector");
+            if (!$v) { fwrite(STDERR, "FAIL: ELD not registered in scoped metadata\n"); exit(1); }
+            echo "Scoped autoload OK: Loupe + ELD $v\n";
+          '
+
       - name: Stage release files
         run: |
           mkdir -p /tmp/loupe-search
