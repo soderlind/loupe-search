@@ -210,6 +210,10 @@ A typical UI renders each bucket as a checkbox, then sends the checked values ba
 
 Highlighting is **opt-in**: ask for it and each hit gains a `_formatted` object.
 
+> Highlighting the **default WordPress search results** (theme search page) is a
+> separate, filter-based feature — see the `loupe_search_highlight*` filters in
+> [Filters](filters.md#highlighting). This section covers the REST API only.
+
 ```json
 {
   "q": "wordpress",

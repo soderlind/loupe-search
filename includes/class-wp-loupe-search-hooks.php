@@ -19,6 +19,9 @@ class WP_Loupe_Search_Hooks {
 	/** @var int */
 	private $max_num_pages = 0;
 
+	/** @var array<int,array<string,string>> Loupe `_formatted` fields keyed by post ID. */
+	private $formatted_by_id = [];
+
 	/**
 	 * Constructor.
 	 *
@@ -34,6 +37,11 @@ class WP_Loupe_Search_Hooks {
 	 */
 	public function register(): void {
 		add_filter( 'posts_pre_query', [ $this, 'posts_pre_query' ], 10, 2 );
+		add_filter( 'the_title', [ $this, 'highlight_title' ], 10, 2 );
+		add_filter( 'get_the_excerpt', [ $this, 'highlight_excerpt' ], 10, 2 );
+		// Block themes render the excerpt via core/post-excerpt, which strips tags with
+		// wp_trim_words(); re-inject the highlighted snippet into the block output.
+		add_filter( 'render_block_core/post-excerpt', [ $this, 'highlight_excerpt_block' ], 10, 3 );
 		add_action( 'wp_footer', [ $this, 'action_wp_footer' ], 999 );
 	}
 
@@ -53,7 +61,7 @@ class WP_Loupe_Search_Hooks {
 
 		$query->set( 'post_type', $this->post_types );
 		$search_term = $this->prepare_search_term( $query->query_vars[ 'search_terms' ] ?? [] );
-		$hits        = $this->engine->search( $search_term );
+		$hits        = $this->engine->search( $search_term, $this->get_highlight_options() );
 		$all_posts   = $this->create_post_objects( $hits );
 
 		$this->total_found_posts = count( $all_posts );
@@ -177,8 +185,159 @@ class WP_Loupe_Search_Hooks {
 
 		$posts_lookup = array_column( $all_posts, null, 'ID' );
 		return array_values( array_filter( array_map( function ( $hit ) use ( $posts_lookup ) {
-			return isset( $hit[ 'id' ] ) && isset( $posts_lookup[ $hit[ 'id' ] ] ) ? $posts_lookup[ $hit[ 'id' ] ] : null;
+			if ( ! isset( $hit[ 'id' ], $posts_lookup[ $hit[ 'id' ] ] ) ) {
+				return null;
+			}
+			// Keep highlighted/cropped fields in an ID-keyed map so the render filters
+			// find them regardless of which WP_Post instance the theme renders (block
+			// themes re-run the query and use different instances).
+			if ( ! empty( $hit[ '_formatted' ] ) && is_array( $hit[ '_formatted' ] ) ) {
+				$this->formatted_by_id[ (int) $hit[ 'id' ] ] = $hit[ '_formatted' ];
+			}
+			return $posts_lookup[ $hit[ 'id' ] ];
 		}, $hits ) ) );
+	}
+
+	/**
+	 * Build opt-in highlight/crop options for the front-end search.
+	 *
+	 * Highlighting is OFF by default. Enable it by returning true from the
+	 * `loupe_search_highlight` filter; the remaining filters tune fields, tags and crop.
+	 *
+	 * @return array
+	 */
+	private function get_highlight_options(): array {
+		/**
+		 * Enable match highlighting on the default WordPress search results.
+		 *
+		 * Defaults to the "Highlight Matches" setting (Search Behavior tab); the
+		 * filter overrides it either way.
+		 *
+		 * @since 1.3.2
+		 * @param bool $enabled
+		 */
+		$enabled = ! empty( get_option( 'loupe_search_advanced', [] )[ 'highlight_enabled' ] );
+		if ( ! apply_filters( 'loupe_search_highlight', $enabled ) ) {
+			return [];
+		}
+
+		$fields      = (array) apply_filters( 'loupe_search_highlight_fields', [ 'post_title', 'post_content' ] );
+		$crop_fields = (array) apply_filters( 'loupe_search_highlight_crop_fields', [ 'post_content' ] );
+		$start       = $this->sanitize_highlight_tag( (string) apply_filters( 'loupe_search_highlight_start_tag', '<mark>' ) );
+		$end         = $this->sanitize_highlight_tag( (string) apply_filters( 'loupe_search_highlight_end_tag', '</mark>' ) );
+		$crop_length = (int) apply_filters( 'loupe_search_highlight_crop_length', 55 );
+
+		return [
+			'fields'      => array_values( array_filter( array_map( 'strval', $fields ) ) ),
+			'start_tag'   => '' !== $start ? $start : '<mark>',
+			'end_tag'     => '' !== $end ? $end : '</mark>',
+			'crop_fields' => array_values( array_filter( array_map( 'strval', $crop_fields ) ) ),
+			'crop_length' => $crop_length > 0 ? $crop_length : 55,
+			'crop_marker' => (string) apply_filters( 'loupe_search_highlight_crop_marker', '…' ),
+		];
+	}
+
+	/**
+	 * Replace a search-result title with its highlighted version.
+	 *
+	 * @param string $title
+	 * @param int    $post_id
+	 * @return string
+	 */
+	public function highlight_title( $title, $post_id = 0 ) {
+		if ( ! $this->is_highlightable_context() ) {
+			return $title;
+		}
+		$formatted = $this->formatted_by_id[ (int) $post_id ][ 'post_title' ] ?? '';
+		return '' !== $formatted ? wp_kses( (string) $formatted, $this->highlight_allowed_tags() ) : $title;
+	}
+
+	/**
+	 * Replace a search-result excerpt with a highlighted, cropped snippet.
+	 *
+	 * @param string        $excerpt
+	 * @param \WP_Post|null $post
+	 * @return string
+	 */
+	public function highlight_excerpt( $excerpt, $post = null ) {
+		if ( ! $this->is_highlightable_context() ) {
+			return $excerpt;
+		}
+		$post_id   = $post instanceof \WP_Post ? $post->ID : (int) get_the_ID();
+		$formatted = $this->formatted_by_id[ $post_id ][ 'post_content' ] ?? '';
+		return '' !== $formatted ? wp_kses( (string) $formatted, $this->highlight_allowed_tags() ) : $excerpt;
+	}
+
+	/**
+	 * Re-inject the highlighted snippet into the core/post-excerpt block output.
+	 *
+	 * The block strips tags via wp_trim_words(), so `get_the_excerpt` highlighting is
+	 * lost in block themes; replace the rendered excerpt paragraph with the safe,
+	 * highlighted, cropped snippet from Loupe.
+	 *
+	 * @param string        $block_content
+	 * @param array         $block
+	 * @param \WP_Block|null $instance
+	 * @return string
+	 */
+	public function highlight_excerpt_block( $block_content, $block, $instance = null ) {
+		if ( ! $this->is_highlightable_context() ) {
+			return $block_content;
+		}
+		$post_id   = ( $instance instanceof \WP_Block ) ? (int) ( $instance->context[ 'postId' ] ?? 0 ) : 0;
+		$formatted = $this->formatted_by_id[ $post_id ][ 'post_content' ] ?? '';
+		if ( '' === $formatted ) {
+			return $block_content;
+		}
+		$safe = wp_kses( (string) $formatted, $this->highlight_allowed_tags() );
+		return preg_replace_callback(
+			'#(<p class="wp-block-post-excerpt__excerpt">).*?(</p>)#s',
+			static function ( $m ) use ( $safe ) {
+				return $m[ 1 ] . $safe . $m[ 2 ];
+			},
+			$block_content,
+			1
+		);
+	}
+
+	/**
+	 * Whether the current request is a front-end search where highlighting applies.
+	 *
+	 * Intentionally does not require the main loop: block themes (Twenty Twenty-Five
+	 * etc.) render results via the Query Loop block, outside `in_the_loop()`. The
+	 * render callbacks additionally require the post to carry `loupe_formatted`, so
+	 * non-result titles (menus, widgets) are never touched.
+	 *
+	 * @return bool
+	 */
+	private function is_highlightable_context(): bool {
+		return ! is_admin() && is_search();
+	}
+
+	/**
+	 * Inline-tag allowlist shared by the tag sanitizer and the render escaping.
+	 *
+	 * @return array<string,array<string,bool>>
+	 */
+	private function highlight_allowed_tags(): array {
+		return [
+			'mark'   => [ 'class' => true ],
+			'em'     => [ 'class' => true ],
+			'strong' => [ 'class' => true ],
+			'span'   => [ 'class' => true ],
+			'b'      => [ 'class' => true ],
+			'i'      => [ 'class' => true ],
+		];
+	}
+
+	/**
+	 * Restrict a highlight tag to the safe inline allowlist (matches the REST path).
+	 *
+	 * @param string $tag
+	 * @return string
+	 */
+	private function sanitize_highlight_tag( string $tag ): string {
+		return wp_kses( $tag, $this->highlight_allowed_tags() );
 	}
 
 	/**

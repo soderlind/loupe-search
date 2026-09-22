@@ -34,7 +34,7 @@ Loupe Search improves WordPress core search by maintaining its own index for fas
 * 📖 Pagination support
 * Stemming support
 * Stop words recognition
-* Highlighting and cropped snippets via the REST API
+* Highlighting and cropped snippets on the default search results (opt-in) and via the REST API
 
 = Administration =
 
@@ -172,6 +172,9 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.3.2 =
+* Added: Opt-in match highlighting on the default WordPress search results. Toggle it with the new "Highlight Matches" checkbox under Settings → Loupe Search → Search Behavior (off by default), or override in code with `add_filter( 'loupe_search_highlight', '__return_true' )`. Titles get matched terms wrapped in `<mark>` and excerpts become highlighted, cropped snippets. Tune it with the `loupe_search_highlight_fields`, `loupe_search_highlight_start_tag`/`_end_tag`, `loupe_search_highlight_crop_fields`, `loupe_search_highlight_crop_length`, and `loupe_search_highlight_crop_marker` filters. Highlight tags are sanitized to a safe inline allowlist. Works in classic and block themes (block-theme excerpts are re-highlighted after the core/post-excerpt block strips tags). See the Filters documentation for details.
 
 = 1.3.1 =
 * Fixed: Typo tolerance settings (alphabet size, index length, first-character double counting, prefix search, and thresholds) were silently ignored because Loupe's immutable TypoTolerance builder methods return a new instance that was discarded. Props @Zodiac1978.

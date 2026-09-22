@@ -29,6 +29,18 @@ class WP_Loupe_Search_HooksTest extends TestCase {
 			->once()
 			->with( 'posts_pre_query', [ $hooks, 'posts_pre_query' ], 10, 2 );
 
+		Functions\expect( 'add_filter' )
+			->once()
+			->with( 'the_title', [ $hooks, 'highlight_title' ], 10, 2 );
+
+		Functions\expect( 'add_filter' )
+			->once()
+			->with( 'get_the_excerpt', [ $hooks, 'highlight_excerpt' ], 10, 2 );
+
+		Functions\expect( 'add_filter' )
+			->once()
+			->with( 'render_block_core/post-excerpt', [ $hooks, 'highlight_excerpt_block' ], 10, 3 );
+
 		Functions\expect( 'add_action' )
 			->once()
 			->with( 'wp_footer', [ $hooks, 'action_wp_footer' ], 999 );
