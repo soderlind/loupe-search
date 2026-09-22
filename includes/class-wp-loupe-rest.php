@@ -41,7 +41,7 @@ if ( ! function_exists( __NAMESPACE__ . '\wp_get_attachment_image_src' ) ) {
 	}
 }
 
-use Loupe\Loupe\SearchParameters;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\SearchParameters;
 
 /**
  * REST API handler for WP Loupe

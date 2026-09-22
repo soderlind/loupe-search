@@ -1,9 +1,9 @@
 <?php
 namespace Soderlind\Plugin\LoupeSearch;
 
-use Loupe\Loupe\Config\TypoTolerance;
-use Loupe\Loupe\Configuration;
-use Loupe\Loupe\LoupeFactory;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Config\TypoTolerance;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Configuration;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\LoupeFactory;
 
 /**
  * Factory class for creating Loupe instances
@@ -45,9 +45,9 @@ class WP_Loupe_Factory {
 	 * @param string $lang Language code.
 	 * @param WP_Loupe_DB $db Database instance.
 	 * @param bool $force_new Whether to force creation of a new instance regardless of cache
-	 * @return \Loupe\Loupe\Loupe Loupe instance
+	 * @return \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe Loupe instance
 	 */
-	public static function create_loupe_instance( string $post_type, string $lang, WP_Loupe_DB $db ): \Loupe\Loupe\Loupe {
+	public static function create_loupe_instance( string $post_type, string $lang, WP_Loupe_DB $db ): \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe {
 		// Generate cache key
 		$cache_key = "{$post_type}:{$lang}";
 

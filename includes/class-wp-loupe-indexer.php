@@ -1,10 +1,10 @@
 <?php
 namespace Soderlind\Plugin\LoupeSearch;
 
-use Loupe\Loupe\Config\TypoTolerance;
-use Loupe\Loupe\Configuration;
-use Loupe\Loupe\LoupeFactory;
-use Loupe\Loupe\SearchParameters;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Config\TypoTolerance;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Configuration;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\LoupeFactory;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\SearchParameters;
 
 
 /**
@@ -606,7 +606,7 @@ class WP_Loupe_Indexer {
 	 * When Loupe reports it needs reindex, we trigger migration by indexing the current document (if available)
 	 * before attempting deletes.
 	 *
-	 * @param \Loupe\Loupe\Loupe $loupe
+	 * @param \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe $loupe
 	 * @param int $post_id
 	 */
 	private function maybe_migrate_loupe_before_delete( $loupe, int $post_id ): void {

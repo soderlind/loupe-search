@@ -58,6 +58,19 @@
 		"test:mutate": [
 			"@putenv COMPOSER_PROCESS_TIMEOUT=0",
 			"@php -d memory_limit=1G -d pcov.directory=includes vendor/bin/pest --mutate --path=includes --covered-only --min=40"
+		],
+		"strauss": [
+			"@php bin/strauss.phar"
 		]
+	},
+	"extra": {
+		"strauss": {
+			"target_directory": "vendor-prefixed",
+			"namespace_prefix": "Soderlind\\Plugin\\LoupeSearch\\Vendor\\",
+			"classmap_prefix": "Loupe_Search_Vendor_",
+			"constant_prefix": "LOUPE_SEARCH_VENDOR_",
+			"delete_vendor_packages": true,
+			"include_authors": false
+		}
 	}
 }

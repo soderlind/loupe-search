@@ -1,7 +1,7 @@
 <?php
 namespace Soderlind\Plugin\LoupeSearch;
 
-use Loupe\Loupe\SearchParameters;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\SearchParameters;
 
 /**
  * Side-effect free search engine for WP Loupe.

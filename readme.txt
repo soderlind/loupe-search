@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.3
+Stable tag: 1.3.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -172,6 +172,9 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.3.4 =
+* Fixed: Loupe Search is now fully self-contained — its bundled Composer libraries are namespace-scoped so they can no longer clash with different versions of the same libraries loaded by the active theme or another plugin. This resolves fatal errors that appeared with several themes whose `functions.php` loads its own bundled libraries; library-free themes such as Twenty Twenty-Five were never affected.
 
 = 1.3.3 =
 * Fixed: Categories and tags are now indexed when a post is created or updated — the indexer now runs on `wp_after_insert_post`, which fires after a post's terms are saved. Previously you had to reindex manually. Fixes #41. Props @Zodiac1978.
