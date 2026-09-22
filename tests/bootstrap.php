@@ -16,6 +16,7 @@ if ( file_exists( __DIR__ . '/../vendor-prefixed/autoload.php' ) ) {
 foreach ( array(
 	'Loupe\\Loupe\\Config\\TypoTolerance',
 	'Loupe\\Loupe\\Configuration',
+	'Loupe\\Loupe\\Loupe',
 	'Loupe\\Loupe\\LoupeFactory',
 	'Loupe\\Loupe\\SearchParameters',
 ) as $loupe_class ) {
