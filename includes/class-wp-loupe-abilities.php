@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 /**
  * WordPress Abilities API integration for Loupe Search.
@@ -13,7 +13,7 @@ namespace Soderlind\Plugin\WPLoupe;
  * are still registered as deprecated aliases for backward compatibility and
  * will be removed in a future major release.
  *
- * @package Soderlind\Plugin\WPLoupe
+ * @package Soderlind\Plugin\LoupeSearch
  * @since   0.9.0
  */
 class WP_Loupe_Abilities {

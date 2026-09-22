@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 /**
  * Front-end only hook integration for WP Loupe.

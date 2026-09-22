@@ -17,10 +17,10 @@
  *   BENCH_WARMUP  Warmup iterations, not measured (default 5).
  *   BENCH_JSON    If set to a writable path, results are also written as JSON.
  *
- * @package Soderlind\Plugin\WPLoupe
+ * @package Soderlind\Plugin\LoupeSearch
  */
 
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	fwrite( STDERR, "This script must be run through WP-CLI (wp eval-file).\n" );

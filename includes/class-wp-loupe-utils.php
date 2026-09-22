@@ -1,10 +1,10 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 /**
  * Utility functions for WP Loupe
  *
- * @package Soderlind\Plugin\WPLoupe
+ * @package Soderlind\Plugin\LoupeSearch
  * @since 0.0.1
  */
 class WP_Loupe_Utils {

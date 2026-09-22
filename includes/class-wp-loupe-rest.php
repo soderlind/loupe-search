@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -46,7 +46,7 @@ use Loupe\Loupe\SearchParameters;
 /**
  * REST API handler for WP Loupe
  *
- * @package Soderlind\Plugin\WPLoupe
+ * @package Soderlind\Plugin\LoupeSearch
  * @since 0.0.11
  */
 class WP_Loupe_REST {

@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 /**
  * Legacy combined search class.

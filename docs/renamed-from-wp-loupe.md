@@ -97,5 +97,5 @@ oversights, and there is nothing to migrate:
 | Identifier | Why it stayed |
 | --- | --- |
 | REST error codes, e.g. `wp_loupe_missing_query`, `wp_loupe_unallowlisted_field` | A REST error `code` is a single string; changing it would break clients that branch on it |
-| PHP namespace `Soderlind\Plugin\WPLoupe` and `WP_Loupe_*` class names | Internal API, not part of the public contract |
+| `WP_Loupe_*` class names | Internal API, not part of the public contract; only the enclosing namespace changed to `Soderlind\Plugin\LoupeSearch` (to avoid a fatal class collision when the old WP Loupe plugin is still active) |
 | Admin CSS classes and DOM ids, e.g. `wp-loupe-card` | Presentation only, scoped to the plugin's own settings screen |

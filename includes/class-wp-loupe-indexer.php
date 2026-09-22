@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 use Loupe\Loupe\Config\TypoTolerance;
 use Loupe\Loupe\Configuration;
@@ -10,7 +10,7 @@ use Loupe\Loupe\SearchParameters;
 /**
  * Indexer class for WP Loupe
  *
- * @package Soderlind\Plugin\WPLoupe
+ * @package Soderlind\Plugin\LoupeSearch
  * @since 0.0.11
  */
 class WP_Loupe_Indexer {

@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe\Tests;
+namespace Soderlind\Plugin\LoupeSearch\Tests;
 
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;

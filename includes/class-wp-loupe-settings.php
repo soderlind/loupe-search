@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 /**
  * Settings page.
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Settings page.
  * 
- * @package Soderlind\Plugin\WPLoupe
+ * @package Soderlind\Plugin\LoupeSearch
  * @since 0.0.11
  */
 class WPLoupe_Settings_Page {

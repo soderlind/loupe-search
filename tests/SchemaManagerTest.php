@@ -2,10 +2,10 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
-use Soderlind\Plugin\WPLoupe\WP_Loupe_Schema_Manager;
+use Soderlind\Plugin\LoupeSearch\WP_Loupe_Schema_Manager;
 
 /**
- * @covers \Soderlind\Plugin\WPLoupe\WP_Loupe_Schema_Manager
+ * @covers \Soderlind\Plugin\LoupeSearch\WP_Loupe_Schema_Manager
  */
 final class SchemaManagerTest extends TestCase {
 

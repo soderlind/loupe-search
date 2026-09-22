@@ -33,7 +33,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Soderlind\\Plugin\\WPLoupe\\": "includes/"
+			"Soderlind\\Plugin\\LoupeSearch\\": "includes/"
 		},
 		"classmap": [
 			"includes/"
