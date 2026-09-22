@@ -1,8 +1,8 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe\Tests;
+namespace Soderlind\Plugin\LoupeSearch\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Soderlind\Plugin\WPLoupe\WP_Loupe_Utils;
+use Soderlind\Plugin\LoupeSearch\WP_Loupe_Utils;
 
 class WP_Loupe_UtilsTest extends TestCase {
 

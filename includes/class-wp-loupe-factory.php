@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 use Loupe\Loupe\Config\TypoTolerance;
 use Loupe\Loupe\Configuration;
@@ -8,7 +8,7 @@ use Loupe\Loupe\LoupeFactory;
 /**
  * Factory class for creating Loupe instances
  *
- * @package Soderlind\Plugin\WPLoupe
+ * @package Soderlind\Plugin\LoupeSearch
  * @since 0.1.6
  */
 class WP_Loupe_Factory {

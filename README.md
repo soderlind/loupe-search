@@ -24,6 +24,7 @@ Loupe Search replaces WordPress core search:
 - Fast index-backed search for configured post types
 - Typo-tolerant matching, phrase matching, and exclusion operators
 - Per-field weighting, filterable fields, sortable fields (configured in Settings)
+- Opt-in match highlighting on the default search results (see [Filters](docs/filters.md#highlighting))
 - Developer-facing REST API for building custom UIs, with filters, facets, geo search, and result highlighting/snippets
 - Native AI agent integration via the WordPress Abilities API
 

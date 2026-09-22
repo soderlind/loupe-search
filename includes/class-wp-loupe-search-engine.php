@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 use Loupe\Loupe\SearchParameters;
 
@@ -67,11 +67,12 @@ class WP_Loupe_Search_Engine {
 	 * Execute a search.
 	 *
 	 * @param string $query
+	 * @param array{fields?:array<string>,start_tag?:string,end_tag?:string,crop_fields?:array<string>,crop_length?:int,crop_marker?:string} $highlight Optional opt-in highlight/crop options. Empty for no formatting.
 	 * @return array Raw hit arrays with at least id, _score, post_type.
 	 */
-	public function search( $query ) {
+	public function search( $query, array $highlight = [] ) {
 		$cacheable     = $this->is_cacheable_query( $query );
-		$cache_key     = md5( (string) $query . serialize( $this->post_types ) );
+		$cache_key     = md5( (string) $query . serialize( $this->post_types ) . serialize( $highlight ) );
 		$transient_key = "loupe_search_cache_{$cache_key}";
 		$cached_result = $cacheable ? get_transient( $transient_key ) : false;
 		if ( false !== $cached_result ) {
@@ -131,6 +132,29 @@ class WP_Loupe_Search_Engine {
 						$search_params = $search_params->withSort( $valid_sort_fields );
 					} catch (\Throwable $e) {
 						WP_Loupe_Utils::debug_log( "Sort error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
+					}
+				}
+
+				// Opt-in highlighting/cropping for the front-end search path. Requested
+				// fields are intersected with this post type's indexable fields so an
+				// unknown field never makes Loupe throw and drop the whole type.
+				if ( ! empty( $highlight[ 'fields' ] ) || ! empty( $highlight[ 'crop_fields' ] ) ) {
+					$indexable_names = array_column( $indexable_fields, 'field' );
+					$type_highlight  = ! empty( $highlight[ 'fields' ] ) ? array_values( array_intersect( $highlight[ 'fields' ], $indexable_names ) ) : [];
+					$type_crop       = ! empty( $highlight[ 'crop_fields' ] ) ? array_values( array_intersect( $highlight[ 'crop_fields' ], $indexable_names ) ) : [];
+					if ( ! empty( $type_highlight ) ) {
+						$search_params = $search_params->withAttributesToHighlight(
+							$type_highlight,
+							isset( $highlight[ 'start_tag' ] ) ? (string) $highlight[ 'start_tag' ] : '<em>',
+							isset( $highlight[ 'end_tag' ] ) ? (string) $highlight[ 'end_tag' ] : '</em>'
+						);
+					}
+					if ( ! empty( $type_crop ) ) {
+						$search_params = $search_params->withAttributesToCrop(
+							$type_crop,
+							isset( $highlight[ 'crop_length' ] ) ? (int) $highlight[ 'crop_length' ] : 50,
+							isset( $highlight[ 'crop_marker' ] ) ? (string) $highlight[ 'crop_marker' ] : '…'
+						);
 					}
 				}
 

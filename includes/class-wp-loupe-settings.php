@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 /**
  * Settings page.
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Settings page.
  * 
- * @package Soderlind\Plugin\WPLoupe
+ * @package Soderlind\Plugin\LoupeSearch
  * @since 0.0.11
  */
 class WPLoupe_Settings_Page {
@@ -179,6 +179,8 @@ class WPLoupe_Settings_Page {
 			[ $this, 'prefix_section_callback' ], 'loupe-search-advanced' );
 		add_settings_section( 'loupe_search_typo_section', __( 'Typo Tolerance', 'loupe-search' ),
 			[ $this, 'typo_section_callback' ], 'loupe-search-advanced' );
+		add_settings_section( 'loupe_search_results_section', __( 'Search Results', 'loupe-search' ),
+			[ $this, 'results_section_callback' ], 'loupe-search-advanced' );
 	}
 
 	/**
@@ -219,6 +221,13 @@ class WPLoupe_Settings_Page {
 	 */
 	public function fields_section_callback() {
 		echo '<div id="wp-loupe-fields-config"></div>';
+	}
+
+	/**
+	 * Search results section description
+	 */
+	public function results_section_callback() {
+		echo '<p>' . esc_html__( 'Control how search results are displayed on the front end.', 'loupe-search' ) . '</p>';
 	}
 
 	/**
@@ -336,6 +345,20 @@ class WPLoupe_Settings_Page {
 				'description' => __( 'Treat a typo at the start of a word as two mistakes.', 'loupe-search' ),
 			]
 		);
+
+		// Search results display settings
+		add_settings_field(
+			'loupe_search_highlight_enabled',
+			__( 'Highlight Matches', 'loupe-search' ),
+			[ $this, 'checkbox_field_callback' ],
+			'loupe-search-advanced',
+			'loupe_search_results_section',
+			[
+				'name'        => 'loupe_search_advanced[highlight_enabled]',
+				'value'       => $this->get_advanced_option( 'highlight_enabled', false ),
+				'description' => __( 'Wrap matched terms in the search results (titles and excerpts) with <mark> tags.', 'loupe-search' ),
+			]
+		);
 	}
 
 	/**
@@ -391,7 +414,7 @@ class WPLoupe_Settings_Page {
 		}
 
 		// Sanitize boolean fields
-		$boolean_fields = [ 'typo_enabled', 'typo_prefix_search', 'first_char_typo_double' ];
+		$boolean_fields = [ 'typo_enabled', 'typo_prefix_search', 'first_char_typo_double', 'highlight_enabled' ];
 		foreach ( $boolean_fields as $field ) {
 			$sanitized[ $field ] = ! empty( $input[ $field ] );
 		}

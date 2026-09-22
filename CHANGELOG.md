@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-09-22
+
+### Added
+- Opt-in match highlighting on the default WordPress search results. Toggle it with the new **Highlight Matches** checkbox on Settings → Loupe Search → Search Behavior (off by default), or override in code with the `loupe_search_highlight` filter. Titles then wrap matched terms in `<mark>` and excerpts become highlighted, cropped snippets built around the match. Tune it with `loupe_search_highlight_fields`, `loupe_search_highlight_start_tag` / `loupe_search_highlight_end_tag`, `loupe_search_highlight_crop_fields`, `loupe_search_highlight_crop_length`, and `loupe_search_highlight_crop_marker`. Matches come from Loupe (so typo-corrected queries still highlight), and highlight tags are sanitized to a safe inline allowlist. See [docs/filters.md](docs/filters.md#highlighting).
+- Highlighting works in both classic and block themes. Titles highlight via the `the_title` filter; block-theme excerpts are highlighted by re-injecting the snippet into the `core/post-excerpt` block output, because that block strips tags with `wp_trim_words()`.
+
+### Fixed
+- Fatal error when the legacy **WP Loupe** plugin was active alongside Loupe Search: both declared the same classes in the `Soderlind\Plugin\WPLoupe` namespace, so loading one while the other was active died with "Cannot declare class ... already in use". Loupe Search now lives in the `Soderlind\Plugin\LoupeSearch` namespace and stands down with an admin notice while WP Loupe is active, so the two never run at once.
+
 ## [1.3.1] - 2026-09-17
 
 ### Fixed

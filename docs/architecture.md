@@ -69,8 +69,8 @@ Not included:
 | CLI | `wp loupe-search reindex` | [includes/class-wp-loupe-cli.php](../includes/class-wp-loupe-cli.php) | indexer |
 | Utilities | Post-type resolution, environment checks, debug logging, transient purging | [includes/class-wp-loupe-utils.php](../includes/class-wp-loupe-utils.php) | — |
 
-All classes live in the `Soderlind\Plugin\WPLoupe` namespace. Class names and
-the `WP_LOUPE_*` constants retain the historic `WP_Loupe` prefix; see
+All classes live in the `Soderlind\Plugin\LoupeSearch` namespace. Class names
+retain the historic `WP_Loupe_*` prefix; see
 [renamed-from-wp-loupe.md](renamed-from-wp-loupe.md).
 
 ```mermaid

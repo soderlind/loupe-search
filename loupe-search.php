@@ -10,7 +10,7 @@
  * Plugin Name:       Loupe Search
  * Plugin URI:        https://wordpress.org/plugins/loupe-search/
  * Description:       Fast, index-backed WordPress search with typo tolerance, phrase matching, exclusions, custom post types, real-time indexing, and a developer-friendly REST API.
- * Version:           1.3.1
+ * Version:           1.3.2
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
  * License:           GPL-2.0+
@@ -22,13 +22,34 @@
  */
 
 declare(strict_types=1);
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
-use Soderlind\Plugin\WPLoupe\WP_Loupe_Utils;
+use Soderlind\Plugin\LoupeSearch\WP_Loupe_Utils;
 
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) {
 	die;
+}
+
+// Stand down if the predecessor "WP Loupe" plugin is still active. It ships the
+// same components under the old Soderlind\Plugin\WPLoupe namespace, so running
+// both would duplicate search interception and REST routes.
+if (
+	in_array( 'wp-loupe/wp-loupe.php', (array) get_option( 'active_plugins', array() ), true )
+	|| isset( ( (array) get_site_option( 'active_sitewide_plugins', array() ) )[ 'wp-loupe/wp-loupe.php' ] )
+	|| class_exists( 'Soderlind\\Plugin\\WPLoupe\\WP_Loupe_Loader', false )
+) {
+	add_action( 'admin_notices', function () {
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+		printf(
+			'<div class="notice notice-error"><p><strong>%1$s</strong> %2$s</p></div>',
+			esc_html__( 'Loupe Search is inactive.', 'loupe-search' ),
+			esc_html__( 'The older “WP Loupe” plugin is still active and supersedes it. Deactivate and delete WP Loupe to use Loupe Search.', 'loupe-search' )
+		);
+	} );
+	return;
 }
 
 define( 'LOUPE_SEARCH_FILE', __FILE__ );

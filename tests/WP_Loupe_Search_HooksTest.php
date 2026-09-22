@@ -1,10 +1,10 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe\Tests;
+namespace Soderlind\Plugin\LoupeSearch\Tests;
 
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
-use Soderlind\Plugin\WPLoupe\WP_Loupe_Search_Engine;
-use Soderlind\Plugin\WPLoupe\WP_Loupe_Search_Hooks;
+use Soderlind\Plugin\LoupeSearch\WP_Loupe_Search_Engine;
+use Soderlind\Plugin\LoupeSearch\WP_Loupe_Search_Hooks;
 
 class WP_Loupe_Search_HooksTest extends TestCase {
 	protected function setUp(): void {
@@ -28,6 +28,18 @@ class WP_Loupe_Search_HooksTest extends TestCase {
 		Functions\expect( 'add_filter' )
 			->once()
 			->with( 'posts_pre_query', [ $hooks, 'posts_pre_query' ], 10, 2 );
+
+		Functions\expect( 'add_filter' )
+			->once()
+			->with( 'the_title', [ $hooks, 'highlight_title' ], 10, 2 );
+
+		Functions\expect( 'add_filter' )
+			->once()
+			->with( 'get_the_excerpt', [ $hooks, 'highlight_excerpt' ], 10, 2 );
+
+		Functions\expect( 'add_filter' )
+			->once()
+			->with( 'render_block_core/post-excerpt', [ $hooks, 'highlight_excerpt_block' ], 10, 3 );
 
 		Functions\expect( 'add_action' )
 			->once()

@@ -1,10 +1,10 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe;
+namespace Soderlind\Plugin\LoupeSearch;
 
 /**
  * Schema manager for WP Loupe
  * 
- * @package Soderlind\Plugin\WPLoupe
+ * @package Soderlind\Plugin\LoupeSearch
  * @since 0.1.0
  */
 class WP_Loupe_Schema_Manager {

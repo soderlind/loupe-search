@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe; // Match plugin namespace for class references.
+namespace Soderlind\Plugin\LoupeSearch; // Match plugin namespace for class references.
 
 use PHPUnit\Framework\TestCase;
 

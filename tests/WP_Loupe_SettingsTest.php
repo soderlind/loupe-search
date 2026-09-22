@@ -4,7 +4,7 @@
  */
 
 use PHPUnit\Framework\TestCase;
-use Soderlind\Plugin\WPLoupe\WPLoupe_Settings_Page;
+use Soderlind\Plugin\LoupeSearch\WPLoupe_Settings_Page;
 
 require_once __DIR__ . '/bootstrap.php';
 

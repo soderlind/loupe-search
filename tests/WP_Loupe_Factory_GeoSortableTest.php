@@ -1,8 +1,8 @@
 <?php
-namespace Soderlind\Plugin\WPLoupe\Tests;
+namespace Soderlind\Plugin\LoupeSearch\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Soderlind\Plugin\WPLoupe\WP_Loupe_Factory;
+use Soderlind\Plugin\LoupeSearch\WP_Loupe_Factory;
 
 class WP_Loupe_Factory_GeoSortableTest extends TestCase {
 	protected function setUp(): void {
