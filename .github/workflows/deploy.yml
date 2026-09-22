@@ -41,8 +41,30 @@ jobs:
           '
 
       - name: Deploy to WordPress.org
+        id: deploy
+        # The wp.org SVN server frequently drops the client with E000002
+        # (txn/props) after a long "Committing transaction…" on a large first
+        # commit, even though the commit lands server-side. Don't fail the job
+        # on that client error — the next step verifies the real destination.
+        continue-on-error: true
         uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
         env:
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SLUG: loupe-search
+
+      - name: Verify release landed on WordPress.org
+        run: |
+          VERSION="${{ github.ref_name }}"
+          URL="https://plugins.svn.wordpress.org/loupe-search/tags/${VERSION}/"
+          for i in 1 2 3 4 5; do
+            if curl -fsSL -o /dev/null "$URL"; then
+              echo "Verified: tags/${VERSION} is live on WordPress.org."
+              exit 0
+            fi
+            echo "tags/${VERSION} not visible yet (attempt $i/5); retrying in 20s…"
+            sleep 20
+          done
+          echo "::error::tags/${VERSION} not found on WordPress.org after deploy."
+          exit 1
+

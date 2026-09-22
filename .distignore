@@ -122,3 +122,15 @@ vendor-prefixed/**/tests/
 vendor-prefixed/**/Tests/
 vendor-prefixed/**/test/
 vendor-prefixed/**/Test/
+
+# Non-runtime metadata inside scoped packages. The scoped autoloader
+# (vendor-prefixed/composer/*.php) and installed.php are authoritative at
+# runtime, so per-package composer.json, licenses, docs and phpunit config are
+# never loaded — drop them to keep the wp.org commit lean.
+vendor-prefixed/**/composer.json
+vendor-prefixed/**/LICENSE
+vendor-prefixed/**/LICENSE.*
+vendor-prefixed/**/*.md
+vendor-prefixed/**/phpunit.xml
+vendor-prefixed/**/phpunit.xml.dist
+vendor-prefixed/**/.github/
