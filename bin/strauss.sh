@@ -53,3 +53,8 @@ if [ -n "${STASH:-}" ] && [ -d "$ELD_PREFIXED" ] && [ -d "$STASH/resources" ]; t
 		"$NG"/blob/extralarge.* "$NG"/blob/medium.* "$NG"/blob/small.* 2>/dev/null || true
 fi
 
+# Loupe hashes the ELD version via the scoped Composer\InstalledVersions. ELD is
+# left unscoped, so register it in the scoped installed.php; otherwise
+# getVersion() throws "Package ... is not installed" during search/reindex.
+php bin/register-eld-version.php
+
