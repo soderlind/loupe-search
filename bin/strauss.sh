@@ -7,14 +7,39 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 STRAUSS_VERSION="0.30.0"
+# SHA-256 of the official strauss.phar for STRAUSS_VERSION. The PHAR is executed
+# with access to the build workspace, so verify its integrity before running it
+# to guard against a tampered or swapped release asset.
+STRAUSS_SHA256="08c1a8e553594745c22294e158129005fd11ed09ed452d7d4f48566f38c66c96"
 PHAR="bin/strauss.phar"
 ELD="vendor/nitotm/efficient-language-detector"
 ELD_PREFIXED="vendor-prefixed/nitotm/efficient-language-detector"
+
+sha256_file() {
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$1" | awk '{print $1}'
+	elif command -v shasum >/dev/null 2>&1; then
+		shasum -a 256 "$1" | awk '{print $1}'
+	else
+		echo "Error: neither sha256sum nor shasum is available to verify $1" >&2
+		exit 1
+	fi
+}
 
 if [ ! -f "$PHAR" ]; then
 	echo "Downloading Strauss ${STRAUSS_VERSION}…"
 	curl -fsSL -o "$PHAR" \
 		"https://github.com/BrianHenryIE/strauss/releases/download/${STRAUSS_VERSION}/strauss.phar"
+fi
+
+# Verify the PHAR every run (a cached copy could have been tampered with too).
+ACTUAL_SHA256="$(sha256_file "$PHAR")"
+if [ "$ACTUAL_SHA256" != "$STRAUSS_SHA256" ]; then
+	echo "Error: checksum mismatch for $PHAR" >&2
+	echo "  expected: $STRAUSS_SHA256" >&2
+	echo "  actual:   $ACTUAL_SHA256" >&2
+	rm -f "$PHAR"
+	exit 1
 fi
 
 # Strauss tokenises every file to build its symbol table. The bundled language
