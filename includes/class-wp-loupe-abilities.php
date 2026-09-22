@@ -43,7 +43,7 @@ class WP_Loupe_Abilities {
 			'wp-loupe',
 			[
 				'label'       => __( 'Loupe Search (deprecated)', 'loupe-search' ),
-				'description' => __( 'Deprecated alias of the "loupe-search" category. Use "loupe-search" instead.', 'loupe-search' ),
+				'description' => __( 'Deprecated "wp-loupe" category. Use "loupe-search" instead.', 'loupe-search' ),
 			]
 		);
 	}
@@ -74,7 +74,7 @@ class WP_Loupe_Abilities {
 	private static function get_search_ability_args( string $category, bool $deprecated = false ): array {
 		$description = __( 'Search WordPress content using Loupe Search\'s typo-tolerant full-text search engine. Supports phrase matching with quotes, exclusion with -, and OR searches.', 'loupe-search' );
 		if ( $deprecated ) {
-			$description = __( 'Deprecated alias of "loupe-search/search". Use "loupe-search/search" instead. ', 'loupe-search' ) . $description;
+			$description = __( 'Deprecated "wp-loupe/search" ability. Use "loupe-search/search" instead.', 'loupe-search' ) . ' ' . $description;
 		}
 
 		return [
@@ -157,7 +157,7 @@ class WP_Loupe_Abilities {
 	private static function get_get_post_ability_args( string $category, bool $deprecated = false ): array {
 		$description = __( 'Retrieve a single published post by its ID, including title, content, excerpt, URL, author, and publication date.', 'loupe-search' );
 		if ( $deprecated ) {
-			$description = __( 'Deprecated alias of "loupe-search/get-post". Use "loupe-search/get-post" instead. ', 'loupe-search' ) . $description;
+			$description = __( 'Deprecated "wp-loupe/get-post" ability. Use "loupe-search/get-post" instead.', 'loupe-search' ) . ' ' . $description;
 		}
 
 		return [

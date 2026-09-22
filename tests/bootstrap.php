@@ -223,6 +223,11 @@ if ( ! function_exists( 'is_wp_error' ) ) {
 		return $thing instanceof \WP_Error;
 	}
 }
+if ( ! function_exists( 'get_objects_in_term' ) ) {
+	function get_objects_in_term( $term_ids, $taxonomies, $args = [] ) {
+		return $GLOBALS[ 'wp_loupe_test_term_objects' ] ?? [];
+	}
+}
 if ( ! function_exists( 'get_query_var' ) ) {
 	function get_query_var( $v ) {
 		return null;
@@ -310,6 +315,9 @@ if ( ! function_exists( 'rest_ensure_response' ) ) {
 }
 if ( ! function_exists( 'get_post' ) ) {
 	function get_post( $id ) {
+		if ( isset( $GLOBALS[ 'wp_loupe_test_posts' ][ (int) $id ] ) ) {
+			return $GLOBALS[ 'wp_loupe_test_posts' ][ (int) $id ];
+		}
 		// Provide richer WP_Post-like stub so REST enrichment passes.
 		return (object) [
 			'ID'           => (int) $id,

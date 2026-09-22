@@ -223,8 +223,7 @@ class WP_Loupe_Utils {
 				'label'    => __( 'SQLite version', 'loupe-search' ),
 				'ok'       => $sqlite_ok,
 				'value'    => $sqlite_version ? $sqlite_version : __( 'Unknown', 'loupe-search' ),
-				/* translators: %s: required SQLite version */
-				'required' => sprintf( __( '>= %s', 'loupe-search' ), self::REQUIRED_SQLITE_VERSION ),
+				'required' => sprintf( '>= %s', self::REQUIRED_SQLITE_VERSION ),
 			],
 			[
 				'id'       => 'intl',

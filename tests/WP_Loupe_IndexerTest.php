@@ -20,6 +20,8 @@ class WP_Loupe_IndexerTest extends TestCase {
 		$GLOBALS[ 'wp_loupe_test_post_meta' ]  = [];
 		$GLOBALS[ 'wp_loupe_test_filters' ]    = [];
 		$GLOBALS[ 'wp_loupe_test_post_types' ] = [];
+		$GLOBALS[ 'wp_loupe_test_posts' ]        = [];
+		$GLOBALS[ 'wp_loupe_test_term_objects' ] = [];
 		update_option( 'loupe_search_fields', [] );
 	}
 
@@ -155,6 +157,48 @@ class WP_Loupe_IndexerTest extends TestCase {
 
 		$this->assertSame( [], $loupe->added );
 		$this->assertSame( [], $loupe->deleted, 'posts of an unindexed type are never touched' );
+	}
+
+	// ----------------------------------------------------------------- term reindex
+
+	public function test_reindex_term_reindexes_posts_attached_to_the_term() {
+		$indexer = $this->make_indexer( [ 'post' ] );
+		$loupe   = $this->fake_loupe();
+		$this->inject_loupe( $indexer, 'post', $loupe );
+
+		$GLOBALS[ 'wp_loupe_test_term_objects' ]     = [ 31, 32 ];
+		$GLOBALS[ 'wp_loupe_test_posts' ][ 31 ]      = new \WP_Post( [ 'ID' => 31, 'post_type' => 'post' ] );
+		$GLOBALS[ 'wp_loupe_test_posts' ][ 32 ]      = new \WP_Post( [ 'ID' => 32, 'post_type' => 'post' ] );
+
+		$indexer->reindex_term( 5, 5, 'category' );
+
+		$this->assertSame( [ 31, 32 ], array_column( $loupe->added, 'id' ), 'both posts on the term are reindexed' );
+	}
+
+	public function test_reindex_deleted_term_reindexes_the_affected_posts() {
+		$indexer = $this->make_indexer( [ 'post' ] );
+		$loupe   = $this->fake_loupe();
+		$this->inject_loupe( $indexer, 'post', $loupe );
+
+		$GLOBALS[ 'wp_loupe_test_posts' ][ 41 ] = new \WP_Post( [ 'ID' => 41, 'post_type' => 'post' ] );
+
+		$indexer->reindex_deleted_term( 9, 9, 'post_tag', null, [ 41 ] );
+
+		$this->assertSame( [ 41 ], array_column( $loupe->added, 'id' ), 'a post that lost the deleted term is reindexed' );
+	}
+
+	public function test_reindex_term_skips_posts_of_unindexed_types() {
+		$indexer = $this->make_indexer( [ 'post' ] );
+		$loupe   = $this->fake_loupe();
+		$this->inject_loupe( $indexer, 'post', $loupe );
+
+		$GLOBALS[ 'wp_loupe_test_term_objects' ] = [ 51 ];
+		$GLOBALS[ 'wp_loupe_test_posts' ][ 51 ]  = new \WP_Post( [ 'ID' => 51, 'post_type' => 'page' ] );
+
+		$indexer->reindex_term( 7, 7, 'category' );
+
+		$this->assertSame( [], $loupe->added, 'a term object of an unindexed type is not reindexed' );
+		$this->assertSame( [], $loupe->deleted );
 	}
 
 	// ------------------------------------------------------------ prepare_document
