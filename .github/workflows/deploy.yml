@@ -24,6 +24,9 @@ jobs:
       - name: Install production dependencies
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
+      - name: Scope bundled dependencies (Strauss)
+        run: bash bin/strauss.sh
+
       - name: Deploy to WordPress.org
         uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
         env:

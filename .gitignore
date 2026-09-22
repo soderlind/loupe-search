@@ -1,5 +1,7 @@
 node_modules/
 vendor/
+vendor-prefixed/
+bin/strauss.phar
 
 .phpunit.cache/
 

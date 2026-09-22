@@ -17,6 +17,9 @@ jobs:
       - name: Build plugin
         run: composer install --no-dev --optimize-autoloader
 
+      - name: Scope bundled dependencies (Strauss)
+        run: bash bin/strauss.sh
+
       - name: Stage release files
         run: |
           mkdir -p /tmp/loupe-search

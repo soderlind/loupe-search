@@ -1,10 +1,10 @@
 <?php
 namespace Soderlind\Plugin\LoupeSearch;
 
-use Loupe\Loupe\Config\TypoTolerance;
-use Loupe\Loupe\Configuration;
-use Loupe\Loupe\LoupeFactory;
-use Loupe\Loupe\SearchParameters;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Config\TypoTolerance;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Configuration;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\LoupeFactory;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\SearchParameters;
 
 
 /**

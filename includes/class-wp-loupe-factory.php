@@ -1,9 +1,9 @@
 <?php
 namespace Soderlind\Plugin\LoupeSearch;
 
-use Loupe\Loupe\Config\TypoTolerance;
-use Loupe\Loupe\Configuration;
-use Loupe\Loupe\LoupeFactory;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Config\TypoTolerance;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Configuration;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\LoupeFactory;
 
 /**
  * Factory class for creating Loupe instances
