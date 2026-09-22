@@ -1,7 +1,7 @@
 # Filters
 
-Loupe Search exposes nine filters for changing what gets indexed, how it is
-weighted, and how results are returned.
+Loupe Search exposes sixteen filters for changing what gets indexed, how it is
+weighted, how results are returned, and how matches are highlighted.
 
 > Filters use the `loupe_search_*` prefix. The old `wp_loupe_*` names still work
 > as deprecated aliases — see [Renamed from WP Loupe](renamed-from-wp-loupe.md).
@@ -24,8 +24,15 @@ weighted, and how results are returned.
 7. [Results](#results)
    - [`loupe_search_posts_per_page`](#loupe_search_posts_per_page)
    - [`loupe_search_max_cacheable_query_length`](#loupe_search_max_cacheable_query_length)
-8. [Recipes](#recipes)
-9. [After changing a filter](#after-changing-a-filter)
+8. [Highlighting](#highlighting)
+   - [`loupe_search_highlight`](#loupe_search_highlight)
+   - [`loupe_search_highlight_fields`](#loupe_search_highlight_fields)
+   - [`loupe_search_highlight_start_tag` / `loupe_search_highlight_end_tag`](#loupe_search_highlight_start_tag--loupe_search_highlight_end_tag)
+   - [`loupe_search_highlight_crop_fields`](#loupe_search_highlight_crop_fields)
+   - [`loupe_search_highlight_crop_length`](#loupe_search_highlight_crop_length)
+   - [`loupe_search_highlight_crop_marker`](#loupe_search_highlight_crop_marker)
+9. [Recipes](#recipes)
+10. [After changing a filter](#after-changing-a-filter)
 
 ## Where to put filter code
 
@@ -51,6 +58,12 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_is_safely_sortable_meta_{$post_type}` | `bool $sortable`, `string $field_name` | Correct meta-field sortability detection |
 | `loupe_search_posts_per_page` | `int $per_page` | Change results per page |
 | `loupe_search_max_cacheable_query_length` | `int $max_length` | Change which queries are written to the result cache |
+| `loupe_search_highlight` | `bool $enabled` | Turn match highlighting on for the default search |
+| `loupe_search_highlight_fields` | `array $fields` | Choose which fields are highlighted |
+| `loupe_search_highlight_start_tag` / `_end_tag` | `string $tag` | Change the tags wrapped around matches |
+| `loupe_search_highlight_crop_fields` | `array $fields` | Choose which fields become cropped snippets |
+| `loupe_search_highlight_crop_length` | `int $length` | Change snippet length (in words) |
+| `loupe_search_highlight_crop_marker` | `string $marker` | Change the ellipsis on cropped snippets |
 
 ## Indexing scope
 
@@ -269,6 +282,84 @@ add_filter( 'loupe_search_max_cacheable_query_length', function ( int $max_lengt
 
 Return `0` to disable result caching entirely.
 
+## Highlighting
+
+By default the WordPress search results page shows plain titles and excerpts.
+Turn on the **Highlight Matches** checkbox (Settings → Loupe Search → Search
+Behavior), or use these filters, to opt the **default search loop** into match
+highlighting: matched terms are wrapped in a tag (default `<mark>`) and the
+excerpt becomes a cropped snippet built around the match. The matches come from
+Loupe, so a typo-corrected query still highlights the term it actually matched.
+
+Highlighting is a rendering concern only — it needs no reindex and does not
+change what is stored. The REST API has its own per-request highlighting; see
+[Search API](search-api.md#highlight-matches-and-build-snippets).
+
+### `loupe_search_highlight`
+
+The master switch. It defaults to the **Highlight Matches** checkbox on
+**Settings → Loupe Search → Search Behavior** (off out of the box). Use this
+filter to force it on or off in code regardless of the setting:
+
+```php
+add_filter( 'loupe_search_highlight', '__return_true' );
+```
+
+Nothing else here has any effect until this resolves to `true`.
+
+### `loupe_search_highlight_fields`
+
+Which fields get matched terms wrapped in tags. Defaults to
+`[ 'post_title', 'post_content' ]`. A field is only highlighted if it is
+indexable for that post type; unknown names are ignored.
+
+```php
+add_filter( 'loupe_search_highlight_fields', function ( array $fields ): array {
+	return [ 'post_title' ]; // Highlight titles only.
+} );
+```
+
+### `loupe_search_highlight_start_tag` / `loupe_search_highlight_end_tag`
+
+The markup wrapped around each match. Default `<mark>` / `</mark>`. Tags are
+sanitized to a safe inline allowlist (`mark`, `em`, `strong`, `span`, `b`, `i`,
+each allowing `class`), so script-capable markup can never be injected.
+
+```php
+add_filter( 'loupe_search_highlight_start_tag', fn() => '<span class="hit">' );
+add_filter( 'loupe_search_highlight_end_tag', fn() => '</span>' );
+```
+
+If a theme wraps `get_the_title()` in `esc_html()`, the tags will show as literal
+text on that theme — highlight titles via `the_title` there instead.
+
+### `loupe_search_highlight_crop_fields`
+
+Which fields are returned as a cropped snippet centered on the match, instead of
+the full field. Defaults to `[ 'post_content' ]`, which is what turns the search
+excerpt into a snippet. Pass an empty array to keep full (still highlighted)
+fields.
+
+```php
+add_filter( 'loupe_search_highlight_crop_fields', '__return_empty_array' );
+```
+
+### `loupe_search_highlight_crop_length`
+
+Snippet length in **words**. Default `55`.
+
+```php
+add_filter( 'loupe_search_highlight_crop_length', fn() => 30 );
+```
+
+### `loupe_search_highlight_crop_marker`
+
+The marker placed where text is trimmed. Default `…`.
+
+```php
+add_filter( 'loupe_search_highlight_crop_marker', fn() => ' [&hellip;]' );
+```
+
 ## Recipes
 
 ### Index a custom post type with its custom fields
@@ -316,6 +407,16 @@ add_filter( 'loupe_search_post_types', function ( array $post_types ): array {
 } );
 ```
 
+### Highlight matches on the default search results
+
+```php
+// Turn it on, wrap matches in a styled span, and keep excerpts short.
+add_filter( 'loupe_search_highlight', '__return_true' );
+add_filter( 'loupe_search_highlight_start_tag', fn() => '<mark class="loupe-hit">' );
+add_filter( 'loupe_search_highlight_end_tag', fn() => '</mark>' );
+add_filter( 'loupe_search_highlight_crop_length', fn() => 40 );
+```
+
 ## After changing a filter
 
 Filters that affect **what** or **how** content is indexed — post types, schema,
@@ -326,5 +427,5 @@ indexed afterwards. Reindex so the existing index matches:
 wp loupe-search reindex
 ```
 
-Filters that only affect reading, such as `loupe_search_posts_per_page`, take
-effect immediately.
+Filters that only affect reading, such as `loupe_search_posts_per_page` and the
+`loupe_search_highlight*` filters, take effect immediately.
