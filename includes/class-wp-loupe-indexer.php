@@ -81,6 +81,10 @@ class WP_Loupe_Indexer {
 		add_action( 'wp_after_insert_post', array( $this, 'add' ), 10, 3 );
 		add_action( 'wp_trash_post', array( $this, 'trash_post' ), 10, 2 );
 		add_action( 'admin_init', array( $this, 'handle_reindex' ) );
+		// Renaming or deleting a term does not fire a post save, so reindex the
+		// posts attached to that term to keep taxonomy fields in sync.
+		add_action( 'edited_term', array( $this, 'reindex_term' ), 10, 3 );
+		add_action( 'delete_term', array( $this, 'reindex_deleted_term' ), 10, 5 );
 		add_filter( 'loupe_search_field_post_content', 'wp_strip_all_tags' );
 	}
 
@@ -111,6 +115,60 @@ class WP_Loupe_Indexer {
 		$loupe    = $this->loupe[ $post->post_type ];
 		// $loupe->deleteDocument( $post_id );
 		$loupe->addDocument( $document );
+	}
+
+	/**
+	 * Reindex posts attached to an edited term.
+	 *
+	 * Fires on `edited_term`. Renaming a term does not trigger a post save, so
+	 * the stored taxonomy fields would keep the old name until a manual reindex.
+	 *
+	 * @param int    $term_id  Term ID.
+	 * @param int    $tt_id    Term taxonomy ID.
+	 * @param string $taxonomy Taxonomy slug.
+	 * @return void
+	 */
+	public function reindex_term( int $term_id, int $tt_id, string $taxonomy ): void {
+		$object_ids = get_objects_in_term( $term_id, $taxonomy );
+		if ( is_wp_error( $object_ids ) ) {
+			return;
+		}
+		$this->reindex_object_ids( $object_ids );
+	}
+
+	/**
+	 * Reindex posts that were attached to a deleted term.
+	 *
+	 * Fires on `delete_term`. The term relationships are already gone by the
+	 * time this runs, so we rely on the affected object IDs passed by core.
+	 *
+	 * @param int    $term         Term ID.
+	 * @param int    $tt_id        Term taxonomy ID.
+	 * @param string $taxonomy     Taxonomy slug.
+	 * @param mixed  $deleted_term The deleted term object.
+	 * @param array  $object_ids   Object IDs that were attached to the term.
+	 * @return void
+	 */
+	public function reindex_deleted_term( int $term, int $tt_id, string $taxonomy, $deleted_term, array $object_ids ): void {
+		$this->reindex_object_ids( $object_ids );
+	}
+
+	/**
+	 * Reindex a list of object (post) IDs.
+	 *
+	 * Non-indexable objects (wrong post type, unpublished, revisions) are skipped
+	 * or purged by add()/is_indexable(), so this is safe to call with any IDs.
+	 *
+	 * @param array $object_ids Object IDs to reindex.
+	 * @return void
+	 */
+	private function reindex_object_ids( array $object_ids ): void {
+		foreach ( $object_ids as $object_id ) {
+			$post = get_post( (int) $object_id );
+			if ( $post instanceof \WP_Post ) {
+				$this->add( (int) $object_id, $post, true );
+			}
+		}
 	}
 
 	/**

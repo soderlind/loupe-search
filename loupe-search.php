@@ -2,15 +2,15 @@
 /**
  * The plugin bootstrap file
  *
- * @link              https://wordpress.org/plugins/loupe-search/
+ * @link              https://github.com/soderlind/loupe-search
  * @since             0.0.1
  * @package           WP_Loupe
  *
  * @wordpress-plugin
  * Plugin Name:       Loupe Search
- * Plugin URI:        https://wordpress.org/plugins/loupe-search/
+ * Plugin URI:        https://github.com/soderlind/loupe-search
  * Description:       Fast, index-backed WordPress search with typo tolerance, phrase matching, exclusions, custom post types, real-time indexing, and a developer-friendly REST API.
- * Version:           1.3.2
+ * Version:           1.3.3
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
  * License:           GPL-2.0+

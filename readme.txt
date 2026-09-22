@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -172,6 +172,12 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.3.3 =
+* Fixed: Categories and tags are now indexed when a post is created or updated — the indexer now runs on `wp_after_insert_post`, which fires after a post's terms are saved. Previously you had to reindex manually. Fixes #41. Props @Zodiac1978.
+* Fixed: Renaming or deleting a category/tag now reindexes the posts attached to that term, so search finds them under the new name immediately. Fixes #43. Props @Zodiac1978.
+* Fixed: Plugin URI header now points to the GitHub repository instead of a WordPress.org URL. Fixes #38. Props @Zodiac1978.
+* Fixed: Several i18n string issues — clearer deprecated-alias descriptions, a removed trailing space and a needless translatable string, and a missing closing quote in the Prefix Search help text. Fixes #36. Props @Zodiac1978.
 
 = 1.3.2 =
 * Added: Opt-in match highlighting on the default WordPress search results. Toggle it with the new "Highlight Matches" checkbox under Settings → Loupe Search → Search Behavior (off by default), or override in code with `add_filter( 'loupe_search_highlight', '__return_true' )`. Titles get matched terms wrapped in `<mark>` and excerpts become highlighted, cropped snippets. Tune it with the `loupe_search_highlight_fields`, `loupe_search_highlight_start_tag`/`_end_tag`, `loupe_search_highlight_crop_fields`, `loupe_search_highlight_crop_length`, and `loupe_search_highlight_crop_marker` filters. Highlight tags are sanitized to a safe inline allowlist. Works in classic and block themes (block-theme excerpts are re-highlighted after the core/post-excerpt block strips tags). See the Filters documentation for details.

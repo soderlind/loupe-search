@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: Loupe Search 1.3.2\n"
+"Project-Id-Version: Loupe Search 1.3.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/loupe-search\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-22T00:59:14+00:00\n"
+"POT-Creation-Date: 2026-09-22T02:04:28+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: loupe-search\n"
@@ -22,7 +22,7 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #: loupe-search.php
-msgid "https://wordpress.org/plugins/loupe-search/"
+msgid "https://github.com/soderlind/loupe-search"
 msgstr ""
 
 #. Description of the plugin
@@ -49,7 +49,7 @@ msgid "Loupe Search (deprecated)"
 msgstr ""
 
 #: includes/class-wp-loupe-abilities.php:46
-msgid "Deprecated alias of the \"loupe-search\" category. Use \"loupe-search\" instead."
+msgid "Deprecated \"wp-loupe\" category. Use \"loupe-search\" instead."
 msgstr ""
 
 #: includes/class-wp-loupe-abilities.php:75
@@ -57,7 +57,7 @@ msgid "Search WordPress content using Loupe Search's typo-tolerant full-text sea
 msgstr ""
 
 #: includes/class-wp-loupe-abilities.php:77
-msgid "Deprecated alias of \"loupe-search/search\". Use \"loupe-search/search\" instead. "
+msgid "Deprecated \"wp-loupe/search\" ability. Use \"loupe-search/search\" instead."
 msgstr ""
 
 #: includes/class-wp-loupe-abilities.php:81
@@ -131,7 +131,7 @@ msgid "Retrieve a single published post by its ID, including title, content, exc
 msgstr ""
 
 #: includes/class-wp-loupe-abilities.php:160
-msgid "Deprecated alias of \"loupe-search/get-post\". Use \"loupe-search/get-post\" instead. "
+msgid "Deprecated \"wp-loupe/get-post\" ability. Use \"loupe-search/get-post\" instead."
 msgstr ""
 
 #: includes/class-wp-loupe-abilities.php:164
@@ -158,12 +158,12 @@ msgstr ""
 msgid "Post not found or not publicly accessible."
 msgstr ""
 
-#: includes/class-wp-loupe-indexer.php:213
+#: includes/class-wp-loupe-indexer.php:269
 msgid "Reindexing completed successfully!"
 msgstr ""
 
 #. translators: %s: list of post types and reasons
-#: includes/class-wp-loupe-indexer.php:511
+#: includes/class-wp-loupe-indexer.php:567
 #, php-format
 msgid "Loupe Search debug: index rebuild triggered for %s."
 msgstr ""
@@ -695,7 +695,7 @@ msgid "Limits the number of words processed in a search query. Higher values all
 msgstr ""
 
 #: includes/class-wp-loupe-settings.php:913
-msgid "Prefix search allows users to find words by typing just the beginning of the term. For example, \"huck\" will match \"huckleberry. Prefix search is only performed on the last word in a search query. Prior words must be typed out fully to get accurate results. E.g. my friend huck would find documents containing huckleberry - huck is my friend, however, would not."
+msgid "Prefix search allows users to find words by typing just the beginning of the term. For example, \"huck\" will match \"huckleberry\". Prefix search is only performed on the last word in a search query. Prior words must be typed out fully to get accurate results. E.g. my friend huck would find documents containing huckleberry - huck is my friend, however, would not."
 msgstr ""
 
 #: includes/class-wp-loupe-settings.php:914
@@ -790,8 +790,8 @@ msgid "PDO SQLite extension"
 msgstr ""
 
 #: includes/class-wp-loupe-utils.php:219
-#: includes/class-wp-loupe-utils.php:234
-#: includes/class-wp-loupe-utils.php:241
+#: includes/class-wp-loupe-utils.php:233
+#: includes/class-wp-loupe-utils.php:240
 msgid "Required"
 msgstr ""
 
@@ -803,22 +803,16 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
-#. translators: %s: required SQLite version
-#: includes/class-wp-loupe-utils.php:227
-#, php-format
-msgid ">= %s"
-msgstr ""
-
-#: includes/class-wp-loupe-utils.php:231
+#: includes/class-wp-loupe-utils.php:230
 msgid "intl extension"
 msgstr ""
 
-#: includes/class-wp-loupe-utils.php:238
+#: includes/class-wp-loupe-utils.php:237
 msgid "mbstring extension"
 msgstr ""
 
 #. translators: 1: pdo_sqlite yes/no, 2: sqlite version or ?, 3: required sqlite version, 4: ok/missing, 5: intl yes/no, 6: mbstring yes/no
-#: includes/class-wp-loupe-utils.php:279
+#: includes/class-wp-loupe-utils.php:278
 #, php-format
 msgid "Requirements: pdo_sqlite=%1$s; SQLite=%2$s (>= %3$s): %4$s; intl=%5$s; mbstring=%6$s"
 msgstr ""

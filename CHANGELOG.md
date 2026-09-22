@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2026-09-22
+
+### Fixed
+- Categories and tags are now indexed when a post is created or updated. The indexer switched from `save_post_{type}` to `wp_after_insert_post`, which fires after a post's terms and meta are saved. Fixes [#41](https://github.com/soderlind/loupe-search/issues/41). Props [@Zodiac1978](https://github.com/Zodiac1978).
+- Renaming or deleting a category/tag now reindexes the posts attached to that term, so search reflects the new term name immediately instead of after a manual reindex. Fixes [#43](https://github.com/soderlind/loupe-search/issues/43). Props [@Zodiac1978](https://github.com/Zodiac1978).
+- `Plugin URI` header now points to the GitHub repository instead of a WordPress.org URL, which is not allowed for that field. Fixes [#38](https://github.com/soderlind/loupe-search/issues/38). Props [@Zodiac1978](https://github.com/Zodiac1978).
+- i18n cleanups: the deprecated ability and category alias descriptions now name the deprecated `wp-loupe/*` slug (instead of repeating the current name), a trailing space and a needless `>= %s` translatable string were removed, and a missing closing quote in the Prefix Search help text was fixed. Fixes [#36](https://github.com/soderlind/loupe-search/issues/36). Props [@Zodiac1978](https://github.com/Zodiac1978).
+
 ## [1.3.2] - 2026-09-22
 
 ### Added
