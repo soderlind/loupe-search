@@ -24,6 +24,7 @@ weighted, how results are returned, and how matches are highlighted.
 7. [Results](#results)
    - [`loupe_search_posts_per_page`](#loupe_search_posts_per_page)
    - [`loupe_search_max_cacheable_query_length`](#loupe_search_max_cacheable_query_length)
+   - [`loupe_search_order_results`](#loupe_search_order_results)
 8. [Highlighting](#highlighting)
    - [`loupe_search_highlight`](#loupe_search_highlight)
    - [`loupe_search_highlight_fields`](#loupe_search_highlight_fields)
@@ -58,6 +59,7 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_is_safely_sortable_meta_{$post_type}` | `bool $sortable`, `string $field_name` | Correct meta-field sortability detection |
 | `loupe_search_posts_per_page` | `int $per_page` | Change results per page |
 | `loupe_search_max_cacheable_query_length` | `int $max_length` | Change which queries are written to the result cache |
+| `loupe_search_order_results` | `array $hits`, `string $query` | Reorder or regroup results merged across post types |
 | `loupe_search_highlight` | `bool $enabled` | Turn match highlighting on for the default search |
 | `loupe_search_highlight_fields` | `array $fields` | Choose which fields are highlighted |
 | `loupe_search_highlight_start_tag` / `_end_tag` | `string $tag` | Change the tags wrapped around matches |
@@ -281,6 +283,33 @@ add_filter( 'loupe_search_max_cacheable_query_length', function ( int $max_lengt
 ```
 
 Return `0` to disable result caching entirely.
+
+### `loupe_search_order_results`
+
+Reorders the combined result set after hits from every post-type index are
+merged. Each post type has its own index, so the engine searches them in turn;
+by default the merged hits are sorted by relevance score (descending) so a more
+relevant `page` can outrank a less relevant `post` instead of every post type
+being grouped together.
+
+Each `$hit` is an array carrying at least `id`, `_score`, and `post_type`.
+Return the array reordered to apply a different policy.
+
+```php
+// Keep pages above posts, most relevant first within each group.
+add_filter( 'loupe_search_order_results', function ( array $hits, string $query ): array {
+	$rank = [ 'page' => 0, 'post' => 1 ];
+	usort( $hits, function ( $a, $b ) use ( $rank ) {
+		return [ $rank[ $a['post_type'] ] ?? 9, -$a['_score'] ]
+			<=> [ $rank[ $b['post_type'] ] ?? 9, -$b['_score'] ];
+	} );
+	return $hits;
+}, 10, 2 );
+```
+
+Scores from separate indexes are only approximately comparable, so the default
+relevance merge is a heuristic; use this filter when a site needs a stricter or
+different ordering.
 
 ## Highlighting
 

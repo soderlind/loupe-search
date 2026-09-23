@@ -67,11 +67,12 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
  * Initialize plugin
  */
 function init() {
-	// Don't run on autosave, Heartbeat or cron requests.
+	// Don't run on autosave or Heartbeat requests. Cron must run: scheduled-post
+	// publishing and imports/syncs fire wp_after_insert_post during WP-Cron, and the
+	// indexer only hears it when the loader is wired up (see issue #52).
 	if (
 		( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) ||
-		( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_REQUEST[ 'action' ] ) && 'heartbeat' === $_REQUEST[ 'action' ] ) ||
-		( defined( 'DOING_CRON' ) && DOING_CRON )
+		( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_REQUEST[ 'action' ] ) && 'heartbeat' === $_REQUEST[ 'action' ] )
 	) {
 		return;
 	}

@@ -183,6 +183,27 @@ class WP_Loupe_Search_Engine {
 			}
 		}
 
+		// Each post type has its own index, so hits arrive grouped by type (all posts,
+		// then all pages). Merge them into one relevance-ordered list so score/weight
+		// interleaves types instead of always ranking one type above another (issue #51).
+		// Cross-index scores are only approximately comparable; usort is stable in PHP 8+,
+		// so equal scores keep their original per-type order.
+		usort( $hits, static fn( array $a, array $b ): int => ( $b[ '_score' ] ?? 0 ) <=> ( $a[ '_score' ] ?? 0 ) );
+
+		/**
+		 * Reorder or regroup the merged, cross-post-type result set.
+		 *
+		 * Fires after hits from every post-type index are merged and sorted by relevance
+		 * score (descending). Return the hits reordered to apply a custom policy, e.g.
+		 * grouping by post type or boosting a type. Each hit carries at least `id`,
+		 * `_score`, and `post_type`.
+		 *
+		 * @since 1.3.5
+		 * @param array  $hits  Hits sorted by relevance score (descending).
+		 * @param string $query The search query.
+		 */
+		$hits = apply_filters( 'loupe_search_order_results', $hits, (string) $query );
+
 		$this->log = sprintf( 'WP Loupe processing time: %s ms', (string) $processing_time_sum );
 		if ( $cacheable ) {
 			set_transient( $transient_key, $hits, self::CACHE_TTL );

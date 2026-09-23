@@ -42,6 +42,9 @@ class WP_Loupe_Search_Hooks {
 		// Block themes render the excerpt via core/post-excerpt, which strips tags with
 		// wp_trim_words(); re-inject the highlighted snippet into the block output.
 		add_filter( 'render_block_core/post-excerpt', [ $this, 'highlight_excerpt_block' ], 10, 3 );
+		// Some block themes (Twenty Twenty-Five) render search results via
+		// core/post-content instead of the excerpt; highlight that block too (issue #50).
+		add_filter( 'render_block_core/post-content', [ $this, 'highlight_content_block' ], 10, 3 );
 		add_action( 'wp_footer', [ $this, 'action_wp_footer' ], 999 );
 	}
 
@@ -292,6 +295,40 @@ class WP_Loupe_Search_Hooks {
 		$safe = wp_kses( (string) $formatted, $this->highlight_allowed_tags() );
 		return preg_replace_callback(
 			'#(<p class="wp-block-post-excerpt__excerpt">).*?(</p>)#s',
+			static function ( $m ) use ( $safe ) {
+				return $m[ 1 ] . $safe . $m[ 2 ];
+			},
+			$block_content,
+			1
+		);
+	}
+
+	/**
+	 * Re-inject the highlighted snippet into the core/post-content block output.
+	 *
+	 * Themes that render full content (e.g. Twenty Twenty-Five's search results) use
+	 * core/post-content, which never sees the get_the_excerpt highlighting. Replace the
+	 * block wrapper's inner HTML with the safe, highlighted, cropped snippet from Loupe.
+	 *
+	 * @param string         $block_content
+	 * @param array          $block
+	 * @param \WP_Block|null $instance
+	 * @return string
+	 */
+	public function highlight_content_block( $block_content, $block, $instance = null ) {
+		if ( ! $this->is_highlightable_context() ) {
+			return $block_content;
+		}
+		$post_id   = ( $instance instanceof \WP_Block ) ? (int) ( $instance->context[ 'postId' ] ?? 0 ) : 0;
+		$formatted = $this->formatted_by_id[ $post_id ][ 'post_content' ] ?? '';
+		if ( '' === $formatted ) {
+			return $block_content;
+		}
+		$safe = wp_kses( (string) $formatted, $this->highlight_allowed_tags() );
+		// Greedy body match resolves to the outermost </div> of the block wrapper, so
+		// nested divs in the rendered content don't truncate the replacement.
+		return preg_replace_callback(
+			'#(<div\b[^>]*\bwp-block-post-content\b[^>]*>).*(</div>)#s',
 			static function ( $m ) use ( $safe ) {
 				return $m[ 1 ] . $safe . $m[ 2 ];
 			},
