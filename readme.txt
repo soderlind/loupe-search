@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.4
+Stable tag: 1.3.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -172,6 +172,12 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.3.5 =
+* Added: New `loupe_search_order_results` filter to customize how results are ordered or grouped across post types.
+* Fixed: The indexer now runs during WP-Cron, so scheduled posts and cron-driven imports are indexed automatically. Fixes #52.
+* Fixed: Search ordering now respects field weights, and results are merged across post types by relevance instead of grouping one type above another. Fixes #51.
+* Fixed: Match highlighting now works in block themes that render full content via core/post-content, such as Twenty Twenty-Five. Fixes #50.
 
 = 1.3.4 =
 * Fixed: Loupe Search is now fully self-contained — its bundled Composer libraries are namespace-scoped so they can no longer clash with different versions of the same libraries loaded by the active theme or another plugin. This resolves fatal errors that appeared with several themes whose `functions.php` loads its own bundled libraries; library-free themes such as Twenty Twenty-Five were never affected.

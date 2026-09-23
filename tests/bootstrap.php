@@ -107,6 +107,12 @@ if ( ! function_exists( 'get_post_meta' ) ) {
 	}
 }
 
+if ( ! class_exists( 'WP_Block' ) ) {
+	class WP_Block {
+		public $context = [];
+	}
+}
+
 if ( ! class_exists( 'WP_Query' ) ) {
 	class WP_Query {
 		public $posts = [];

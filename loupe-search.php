@@ -10,7 +10,7 @@
  * Plugin Name:       Loupe Search
  * Plugin URI:        https://github.com/soderlind/loupe-search
  * Description:       Fast, index-backed WordPress search with typo tolerance, phrase matching, exclusions, custom post types, real-time indexing, and a developer-friendly REST API.
- * Version:           1.3.4
+ * Version:           1.3.5
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
  * License:           GPL-2.0+
@@ -67,11 +67,12 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
  * Initialize plugin
  */
 function init() {
-	// Don't run on autosave, Heartbeat or cron requests.
+	// Don't run on autosave or Heartbeat requests. Cron must run: scheduled-post
+	// publishing and imports/syncs fire wp_after_insert_post during WP-Cron, and the
+	// indexer only hears it when the loader is wired up (see issue #52).
 	if (
 		( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) ||
-		( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_REQUEST[ 'action' ] ) && 'heartbeat' === $_REQUEST[ 'action' ] ) ||
-		( defined( 'DOING_CRON' ) && DOING_CRON )
+		( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_REQUEST[ 'action' ] ) && 'heartbeat' === $_REQUEST[ 'action' ] )
 	) {
 		return;
 	}

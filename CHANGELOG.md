@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.5] - 2026-09-23
+
+### Added
+- New `loupe_search_order_results` filter to customize how results are ordered or grouped across post types. See the Filters documentation.
+
+### Fixed
+- The indexer now runs during WP-Cron, so scheduled posts and cron-driven imports/syncs are indexed automatically instead of being skipped. Fixes [#52](https://github.com/soderlind/loupe-search/issues/52).
+- Search result ordering now respects field weights (heavier fields rank higher), and results are merged across post types by relevance instead of always grouping one post type above another. Fixes [#51](https://github.com/soderlind/loupe-search/issues/51).
+- Match highlighting now works in block themes that render full post content via `core/post-content` (e.g. Twenty Twenty-Five); previously only the title was highlighted on those themes. Fixes [#50](https://github.com/soderlind/loupe-search/issues/50).
+
 ## [1.3.4] - 2026-09-22
 
 ### Fixed

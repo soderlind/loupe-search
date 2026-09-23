@@ -167,9 +167,14 @@ class WP_Loupe_Factory {
 			'sortable'   => [],
 		];
 
+		$indexable = [];
+
 		foreach ( $fields as $field_name => $settings ) {
 			if ( ! empty( $settings[ 'indexable' ] ) ) {
-				$attributes[ 'indexable' ][] = $field_name;
+				$indexable[] = [
+					'name'   => $field_name,
+					'weight' => isset( $settings[ 'weight' ] ) ? (float) $settings[ 'weight' ] : 1.0,
+				];
 			}
 
 			if ( ! empty( $settings[ 'filterable' ] ) ) {
@@ -180,6 +185,13 @@ class WP_Loupe_Factory {
 				$attributes[ 'sortable' ][] = $field_name;
 			}
 		}
+
+		// Loupe has no numeric per-field boost; searchable-attribute order drives
+		// relevance (earlier = more important). Order heavier fields first so weights
+		// influence ranking (issue #51). usort is stable in PHP 8.0+, so fields with
+		// equal weight keep their original configuration order.
+		usort( $indexable, static fn( array $a, array $b ): int => $b[ 'weight' ] <=> $a[ 'weight' ] );
+		$attributes[ 'indexable' ] = array_column( $indexable, 'name' );
 
 		return $attributes;
 	}
