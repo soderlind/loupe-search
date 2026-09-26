@@ -111,6 +111,40 @@ class WP_Loupe_Search_HooksTest extends TestCase {
 		);
 	}
 
+	public function test_highlight_content_block_custom_tag_does_not_skip_ordinary_elements(): void {
+		Functions\when( 'is_search' )->justReturn( true );
+
+		$engine = $this->getMockBuilder( WP_Loupe_Search_Engine::class )
+			->disableOriginalConstructor()
+			->getMock();
+		$engine->method( 'get_post_types' )->willReturn( [ 'post' ] );
+
+		$hooks = new WP_Loupe_Search_Hooks( $engine );
+
+		// Custom highlight tags reuse the <span> element; ordinary spans in the theme
+		// markup must still be highlighted, not skipped as if already highlighted.
+		foreach ( [ 'highlight_start' => '<span class="hit">', 'highlight_end' => '</span>' ] as $name => $value ) {
+			$rp = new \ReflectionProperty( $hooks, $name );
+			$rp->setAccessible( true );
+			$rp->setValue( $hooks, $value );
+		}
+
+		$prop = new \ReflectionProperty( $hooks, 'formatted_by_id' );
+		$prop->setAccessible( true );
+		$prop->setValue( $hooks, [ 5 => [ 'post_content' => 'a <span class="hit">term</span>' ] ] );
+
+		$block          = new \WP_Block();
+		$block->context = [ 'postId' => 5 ];
+
+		$content = '<div class="wp-block-post-content"><p><span class="ordinary">a term here</span></p></div>';
+		$out     = $hooks->highlight_content_block( $content, [], $block );
+
+		$this->assertSame(
+			'<div class="wp-block-post-content"><p><span class="ordinary">a <span class="hit">term</span> here</span></p></div>',
+			$out
+		);
+	}
+
 	public function test_highlight_content_block_noop_without_formatted(): void {
 		Functions\when( 'is_search' )->justReturn( true );
 

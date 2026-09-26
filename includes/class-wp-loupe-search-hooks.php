@@ -368,18 +368,20 @@ class WP_Loupe_Search_Hooks {
 	/**
 	 * Wrap the given terms in the highlight tag within an HTML fragment's text nodes.
 	 *
-	 * Splits the fragment into tags and text so markup is preserved untouched, and
-	 * skips script/style bodies and already-highlighted spans to avoid nested marks.
+	 * Splits the fragment into tags and text so markup is preserved untouched. Skips
+	 * script/style bodies (by element name) and the highlight region itself — matched
+	 * by the exact configured start/end tag so a custom tag like `<span class="hit">`
+	 * never skips ordinary <span> elements.
 	 *
 	 * @param string            $html
 	 * @param array<int,string> $terms
 	 * @return string
 	 */
 	private function mark_terms_in_html( string $html, array $terms ): string {
-		$start   = '' !== $this->highlight_start ? $this->highlight_start : '<mark>';
-		$end     = '' !== $this->highlight_end ? $this->highlight_end : '</mark>';
-		$hl_tag  = preg_match( '#^<\s*([a-z0-9]+)#i', $start, $tm ) ? strtolower( $tm[ 1 ] ) : 'mark';
-		$skip_re = '#^<\s*/?\s*(?:script|style|' . preg_quote( $hl_tag, '#' ) . ')\b#i';
+		$start      = '' !== $this->highlight_start ? $this->highlight_start : '<mark>';
+		$end        = '' !== $this->highlight_end ? $this->highlight_end : '</mark>';
+		$start_norm = $this->normalize_tag( $start );
+		$end_norm   = $this->normalize_tag( $end );
 
 		// Longest terms first so overlapping matches wrap the fuller word.
 		usort( $terms, static fn( $a, $b ) => strlen( (string) $b ) <=> strlen( (string) $a ) );
@@ -396,9 +398,13 @@ class WP_Loupe_Search_Hooks {
 				continue;
 			}
 			if ( '<' === $part[ 0 ] ) {
-				if ( preg_match( $skip_re, $part ) ) {
-					$skip += preg_match( '#^<\s*/#', $part ) ? -1 : 1;
+				if ( preg_match( '#^<\s*(/?)\s*(?:script|style)\b#i', $part, $m ) ) {
+					$skip += '' === $m[ 1 ] ? 1 : -1;
 					$skip  = max( 0, $skip );
+				} elseif ( $this->normalize_tag( $part ) === $start_norm ) {
+					$skip++;
+				} elseif ( '' !== $end_norm && $this->normalize_tag( $part ) === $end_norm ) {
+					$skip = max( 0, $skip - 1 );
 				}
 				$out .= $part;
 				continue;
@@ -414,6 +420,16 @@ class WP_Loupe_Search_Hooks {
 			);
 		}
 		return $out;
+	}
+
+	/**
+	 * Normalise a tag for equality checks: trimmed, single-spaced and lower-cased.
+	 *
+	 * @param string $tag
+	 * @return string
+	 */
+	private function normalize_tag( string $tag ): string {
+		return strtolower( (string) preg_replace( '#\s+#', ' ', trim( $tag ) ) );
 	}
 
 	/**
