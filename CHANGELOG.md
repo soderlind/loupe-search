@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Match highlighting no longer strips paragraph and layout markup in block themes such as Twenty Twenty-Five; matched terms are now highlighted in place within the rendered `core/post-content`, preserving the theme's markup. Fixes [#54](https://github.com/soderlind/loupe-search/issues/54).
+- A custom highlight tag that reuses a common element (e.g. `<span class="hit">`) no longer causes ordinary elements of the same name to be skipped, so matches inside them are highlighted correctly.
 
 ## [1.3.5] - 2026-09-23
 

@@ -175,6 +175,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 = 1.3.6 =
 * Fixed: Match highlighting no longer strips paragraph/layout markup in block themes like Twenty Twenty-Five; matches are highlighted in place within the rendered content. Fixes #54.
+* Fixed: A custom highlight tag that reuses a common element (e.g. `<span class="hit">`) no longer skips ordinary elements of the same name.
 
 = 1.3.5 =
 * Added: New `loupe_search_order_results` filter to customize how results are ordered or grouped across post types.
