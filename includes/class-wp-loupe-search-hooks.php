@@ -22,6 +22,12 @@ class WP_Loupe_Search_Hooks {
 	/** @var array<int,array<string,string>> Loupe `_formatted` fields keyed by post ID. */
 	private $formatted_by_id = [];
 
+	/** @var string Highlight opening tag resolved from options; used to parse Loupe marks and wrap in-place. */
+	private $highlight_start = '<mark>';
+
+	/** @var string Highlight closing tag resolved from options. */
+	private $highlight_end = '</mark>';
+
 	/**
 	 * Constructor.
 	 *
@@ -230,6 +236,9 @@ class WP_Loupe_Search_Hooks {
 		$end         = $this->sanitize_highlight_tag( (string) apply_filters( 'loupe_search_highlight_end_tag', '</mark>' ) );
 		$crop_length = (int) apply_filters( 'loupe_search_highlight_crop_length', 55 );
 
+		$this->highlight_start = '' !== $start ? $start : '<mark>';
+		$this->highlight_end   = '' !== $end ? $end : '</mark>';
+
 		return [
 			'fields'      => array_values( array_filter( array_map( 'strval', $fields ) ) ),
 			'start_tag'   => '' !== $start ? $start : '<mark>',
@@ -304,11 +313,14 @@ class WP_Loupe_Search_Hooks {
 	}
 
 	/**
-	 * Re-inject the highlighted snippet into the core/post-content block output.
+	 * Highlight search terms inside the rendered core/post-content block.
 	 *
 	 * Themes that render full content (e.g. Twenty Twenty-Five's search results) use
-	 * core/post-content, which never sees the get_the_excerpt highlighting. Replace the
-	 * block wrapper's inner HTML with the safe, highlighted, cropped snippet from Loupe.
+	 * core/post-content. Rather than swapping the body for Loupe's plain-text snippet
+	 * (which drops the theme's block markup — issue #54), keep the rendered HTML and
+	 * only wrap the matched terms in the highlight tag, decorating text nodes in place.
+	 * Terms come from the words Loupe actually marked in `_formatted`, so highlighting
+	 * still reflects Loupe's matching (typo/stem tolerance).
 	 *
 	 * @param string         $block_content
 	 * @param array          $block
@@ -324,17 +336,100 @@ class WP_Loupe_Search_Hooks {
 		if ( '' === $formatted ) {
 			return $block_content;
 		}
-		$safe = wp_kses( (string) $formatted, $this->highlight_allowed_tags() );
-		// Greedy body match resolves to the outermost </div> of the block wrapper, so
-		// nested divs in the rendered content don't truncate the replacement.
-		return preg_replace_callback(
-			'#(<div\b[^>]*\bwp-block-post-content\b[^>]*>).*(</div>)#s',
-			static function ( $m ) use ( $safe ) {
-				return $m[ 1 ] . $safe . $m[ 2 ];
-			},
-			$block_content,
-			1
-		);
+		$terms = $this->extract_marked_terms( (string) $formatted );
+		if ( empty( $terms ) ) {
+			return $block_content;
+		}
+		return $this->mark_terms_in_html( (string) $block_content, $terms );
+	}
+
+	/**
+	 * Pull the distinct matched terms out of a Loupe `_formatted` value.
+	 *
+	 * @param string $formatted
+	 * @return array<int,string>
+	 */
+	private function extract_marked_terms( string $formatted ): array {
+		$start = preg_quote( '' !== $this->highlight_start ? $this->highlight_start : '<mark>', '#' );
+		$end   = preg_quote( '' !== $this->highlight_end ? $this->highlight_end : '</mark>', '#' );
+		if ( ! preg_match_all( '#' . $start . '(.+?)' . $end . '#su', $formatted, $matches ) ) {
+			return [];
+		}
+		$terms = [];
+		foreach ( $matches[ 1 ] as $term ) {
+			$term = trim( wp_strip_all_tags( (string) $term ) );
+			if ( '' !== $term ) {
+				$terms[ function_exists( 'mb_strtolower' ) ? mb_strtolower( $term ) : strtolower( $term ) ] = $term;
+			}
+		}
+		return array_values( $terms );
+	}
+
+	/**
+	 * Wrap the given terms in the highlight tag within an HTML fragment's text nodes.
+	 *
+	 * Splits the fragment into tags and text so markup is preserved untouched. Skips
+	 * script/style bodies (by element name) and the highlight region itself — matched
+	 * by the exact configured start/end tag so a custom tag like `<span class="hit">`
+	 * never skips ordinary <span> elements.
+	 *
+	 * @param string            $html
+	 * @param array<int,string> $terms
+	 * @return string
+	 */
+	private function mark_terms_in_html( string $html, array $terms ): string {
+		$start      = '' !== $this->highlight_start ? $this->highlight_start : '<mark>';
+		$end        = '' !== $this->highlight_end ? $this->highlight_end : '</mark>';
+		$start_norm = $this->normalize_tag( $start );
+		$end_norm   = $this->normalize_tag( $end );
+
+		// Longest terms first so overlapping matches wrap the fuller word.
+		usort( $terms, static fn( $a, $b ) => strlen( (string) $b ) <=> strlen( (string) $a ) );
+		$pattern = '#(' . implode( '|', array_map( static fn( $t ) => preg_quote( (string) $t, '#' ), $terms ) ) . ')#iu';
+
+		$parts = preg_split( '#(<[^>]*>)#', $html, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+		if ( ! is_array( $parts ) ) {
+			return $html;
+		}
+		$skip = 0;
+		$out  = '';
+		foreach ( $parts as $part ) {
+			if ( '' === $part ) {
+				continue;
+			}
+			if ( '<' === $part[ 0 ] ) {
+				if ( preg_match( '#^<\s*(/?)\s*(?:script|style)\b#i', $part, $m ) ) {
+					$skip += '' === $m[ 1 ] ? 1 : -1;
+					$skip  = max( 0, $skip );
+				} elseif ( $this->normalize_tag( $part ) === $start_norm ) {
+					$skip++;
+				} elseif ( '' !== $end_norm && $this->normalize_tag( $part ) === $end_norm ) {
+					$skip = max( 0, $skip - 1 );
+				}
+				$out .= $part;
+				continue;
+			}
+			if ( $skip > 0 ) {
+				$out .= $part;
+				continue;
+			}
+			$out .= preg_replace_callback(
+				$pattern,
+				static fn( $m ) => $start . $m[ 0 ] . $end,
+				$part
+			);
+		}
+		return $out;
+	}
+
+	/**
+	 * Normalise a tag for equality checks: trimmed, single-spaced and lower-cased.
+	 *
+	 * @param string $tag
+	 * @return string
+	 */
+	private function normalize_tag( string $tag ): string {
+		return strtolower( (string) preg_replace( '#\s+#', ' ', trim( $tag ) ) );
 	}
 
 	/**
