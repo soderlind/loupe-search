@@ -63,7 +63,7 @@ class WP_Loupe_Factory {
 		$attributes = self::extract_attributes_from_fields( $field_config );
 
 		// Get advanced configuration
-		$configuration = self::build_configuration( $attributes );
+		$configuration = self::build_configuration( $attributes, $lang );
 
 		// Create and cache the Loupe instance
 		$loupe_factory = new LoupeFactory();
@@ -199,11 +199,19 @@ class WP_Loupe_Factory {
 	/**
 	 * Build the Loupe configuration object
 	 * 
-	 * @param array $attributes Attributes for configuration
+	 * @param array  $attributes Attributes for configuration
+	 * @param string $lang       ISO 639-1 language code from the site locale.
 	 * @return Configuration Loupe configuration object
 	 */
-	private static function build_configuration( array $attributes ): Configuration {
+	private static function build_configuration( array $attributes, string $lang = 'en' ): Configuration {
 		$advanced_settings = get_option( 'loupe_search_advanced', [] );
+
+		// Use the site locale for stemming/stopwords instead of hardcoding English
+		// (issue #57). An explicit `languages` advanced setting still wins if present.
+		$languages = $advanced_settings[ 'languages' ] ?? [];
+		if ( ! is_array( $languages ) || [] === $languages ) {
+			$languages = [ '' !== $lang ? $lang : 'en' ];
+		}
 
 		// Create the configuration
 		$configuration = Configuration::create()
@@ -213,7 +221,7 @@ class WP_Loupe_Factory {
 			->withSortableAttributes( $attributes[ 'sortable' ] )
 			->withMaxQueryTokens( $advanced_settings[ 'max_query_tokens' ] ?? 12 )
 			->withMinTokenLengthForPrefixSearch( $advanced_settings[ 'min_prefix_length' ] ?? 3 )
-			->withLanguages( $advanced_settings[ 'languages' ] ?? [ 'en' ] )
+			->withLanguages( $languages )
 			->withTypoTolerance( self::configure_typo_tolerance( $advanced_settings ) );
 
 		return $configuration;
