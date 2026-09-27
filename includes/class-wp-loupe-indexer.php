@@ -283,6 +283,7 @@ class WP_Loupe_Indexer {
 		) {
 			$this->reindex_all();
 			$this->maybe_add_reindex_rebuild_notice();
+			WP_Loupe_Index_Notice::flush();
 			add_settings_error( 'loupe-search', 'loupe-search-reindex', __( 'Reindexing completed successfully!', 'loupe-search' ), 'updated' );
 
 		}

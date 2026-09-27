@@ -53,6 +53,7 @@ class WP_Loupe_Loader {
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-indexer.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-db.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-utils.php';
+		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-index-notice.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-settings.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-rest.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-abilities.php';
@@ -159,6 +160,12 @@ class WP_Loupe_Loader {
 		}
 		$this->indexer = new WP_Loupe_Indexer( $this->post_types );
 
+		// Admin-only: warn when an index is missing/out of date so results aren't
+		// silently empty (e.g. after the multisite path change orphans an old index).
+		if ( is_admin() && ! wp_doing_ajax() ) {
+			( new WP_Loupe_Index_Notice( $this->search_engine, $this->post_types ) )->register();
+		}
+
 		// Initialize REST API handler
 		new WP_Loupe_REST();
 
@@ -173,6 +180,10 @@ class WP_Loupe_Loader {
 	 */
 	private function register_hooks() {
 		add_action( 'init', [ $this, 'load_textdomain' ] );
+		// Recompute the index-readiness notice when the indexed post types or field
+		// configuration change.
+		add_action( 'update_option_loupe_search_custom_post_types', [ WP_Loupe_Index_Notice::class, 'flush' ] );
+		add_action( 'update_option_loupe_search_fields', [ WP_Loupe_Index_Notice::class, 'flush' ] );
 	}
 
 	/**

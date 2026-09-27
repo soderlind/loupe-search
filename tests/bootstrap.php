@@ -211,6 +211,16 @@ if ( ! function_exists( 'esc_url' ) ) {
 		return $u;
 	}
 }
+if ( ! function_exists( 'esc_html__' ) ) {
+	function esc_html__( $text, $domain = null ) {
+		return $text;
+	}
+}
+if ( ! function_exists( 'admin_url' ) ) {
+	function admin_url( $path = '' ) {
+		return 'https://example.test/wp-admin/' . ltrim( (string) $path, '/' );
+	}
+}
 if ( ! function_exists( 'esc_attr' ) ) {
 	function esc_attr( $t ) {
 		return $t;

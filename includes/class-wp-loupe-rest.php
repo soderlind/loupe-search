@@ -306,6 +306,10 @@ class WP_Loupe_REST {
 		$done        = ! empty( $state[ 'done' ] );
 		$next_cursor = $done ? null : $this->encode_reindex_cursor( $state );
 
+		if ( $done ) {
+			WP_Loupe_Index_Notice::flush();
+		}
+
 		$idx              = isset( $state[ 'idx' ] ) ? (int) $state[ 'idx' ] : 0;
 		$post_types_state = isset( $state[ 'post_types' ] ) && is_array( $state[ 'post_types' ] ) ? $state[ 'post_types' ] : [];
 		$current_pt       = ( $idx < count( $post_types_state ) ) ? (string) $post_types_state[ $idx ] : null;
