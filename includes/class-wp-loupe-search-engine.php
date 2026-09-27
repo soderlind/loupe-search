@@ -68,11 +68,13 @@ class WP_Loupe_Search_Engine {
 	 *
 	 * @param string $query
 	 * @param array{fields?:array<string>,start_tag?:string,end_tag?:string,crop_fields?:array<string>,crop_length?:int,crop_marker?:string} $highlight Optional opt-in highlight/crop options. Empty for no formatting.
+	 * @param array<int,string|array{field:string,direction?:string}> $sort Optional explicit sort. Each entry is "field" or "field:dir", validated against the configured sortable fields. Empty keeps relevance ordering (issue #64).
 	 * @return array Raw hit arrays with at least id, _score, post_type.
 	 */
-	public function search( $query, array $highlight = [] ) {
+	public function search( $query, array $highlight = [], array $sort = [] ) {
+		$requested_sort = $this->parse_requested_sort( $sort );
 		$cacheable     = $this->is_cacheable_query( $query );
-		$cache_key     = md5( (string) $query . serialize( $this->post_types ) . serialize( $highlight ) );
+		$cache_key     = md5( (string) $query . serialize( $this->post_types ) . serialize( $highlight ) . serialize( $requested_sort ) );
 		$transient_key = "loupe_search_cache_{$cache_key}";
 		$cached_result = $cacheable ? get_transient( $transient_key ) : false;
 		if ( false !== $cached_result ) {
@@ -83,6 +85,29 @@ class WP_Loupe_Search_Engine {
 		$hits                = [];
 		$processing_time_sum = 0;
 
+		// Resolve the requested sort against the sortable fields configured across all
+		// post types, carrying each field's effective direction (explicit, else its
+		// configured default). Only fields that survive validation drive ordering; if
+		// none do, results stay relevance-ordered (issue #64).
+		$sortable_union = [];
+		foreach ( $this->post_types as $pt ) {
+			foreach ( (array) ( $this->saved_fields[ $pt ] ?? [] ) as $field_name => $settings ) {
+				if ( ! empty( $settings[ 'sortable' ] ) && ! isset( $sortable_union[ $field_name ] ) ) {
+					$sortable_union[ $field_name ] = $settings[ 'sort_direction' ] ?? 'desc';
+				}
+			}
+		}
+		$effective_sort = [];
+		foreach ( $requested_sort as $rs ) {
+			if ( ! isset( $sortable_union[ $rs[ 'field' ] ] ) ) {
+				continue;
+			}
+			$effective_sort[] = [
+				'field'     => $rs[ 'field' ],
+				'direction' => '' !== $rs[ 'direction' ] ? $rs[ 'direction' ] : $sortable_union[ $rs[ 'field' ] ],
+			];
+		}
+
 		foreach ( $this->post_types as $post_type ) {
 			$post_type_fields = $this->saved_fields[ $post_type ] ?? [];
 			if ( empty( $post_type_fields ) ) {
@@ -92,7 +117,7 @@ class WP_Loupe_Search_Engine {
 			try {
 				$indexable_fields   = [];
 				$filterable_fields  = [];
-				$valid_sort_fields  = [];
+				$sortable_allowlist = [];
 				$retrievable_fields = [ 'id' ];
 
 				foreach ( $post_type_fields as $field_name => $settings ) {
@@ -107,10 +132,21 @@ class WP_Loupe_Search_Engine {
 						$filterable_fields[] = $field_name;
 					}
 
+					// sortable only marks a field as eligible for sorting; it is not applied
+					// unless the caller explicitly requests it (issue #64).
 					if ( ! empty( $settings[ 'sortable' ] ) ) {
-						$sort_direction      = $settings[ 'sort_direction' ] ?? 'desc';
-						$valid_sort_fields[] = "{$field_name}:{$sort_direction}";
+						$sortable_allowlist[ $field_name ] = $settings[ 'sort_direction' ] ?? 'desc';
 					}
+				}
+
+				// Apply the validated sort, keeping only fields this type can sort by.
+				$type_sort = [];
+				foreach ( $effective_sort as $rs ) {
+					if ( ! isset( $sortable_allowlist[ $rs[ 'field' ] ] ) ) {
+						continue;
+					}
+					$type_sort[]         = "{$rs[ 'field' ]}:{$rs[ 'direction' ]}";
+					$filterable_fields[] = $rs[ 'field' ]; // ensure the value is retrieved for the cross-type merge.
 				}
 
 				$retrievable_fields = array_unique( array_merge(
@@ -127,9 +163,9 @@ class WP_Loupe_Search_Engine {
 					->withShowRankingScore( true )
 					->withLimit( 1000 );
 
-				if ( ! empty( $valid_sort_fields ) ) {
+				if ( ! empty( $type_sort ) ) {
 					try {
-						$search_params = $search_params->withSort( $valid_sort_fields );
+						$search_params = $search_params->withSort( $type_sort );
 					} catch (\Throwable $e) {
 						WP_Loupe_Utils::debug_log( "Sort error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
 					}
@@ -187,8 +223,13 @@ class WP_Loupe_Search_Engine {
 		// then all pages). Merge them into one relevance-ordered list so score/weight
 		// interleaves types instead of always ranking one type above another (issue #51).
 		// Cross-index scores are only approximately comparable; usort is stable in PHP 8+,
-		// so equal scores keep their original per-type order.
-		usort( $hits, static fn( array $a, array $b ): int => ( $b[ '_score' ] ?? 0 ) <=> ( $a[ '_score' ] ?? 0 ) );
+		// so equal scores keep their original per-type order. When the caller requested an
+		// explicit sort, order by those fields instead of relevance (issue #64).
+		if ( ! empty( $effective_sort ) ) {
+			$this->sort_hits_by_fields( $hits, $effective_sort );
+		} else {
+			usort( $hits, static fn( array $a, array $b ): int => ( $b[ '_score' ] ?? 0 ) <=> ( $a[ '_score' ] ?? 0 ) );
+		}
 
 		/**
 		 * Reorder or regroup the merged, cross-post-type result set.
@@ -209,6 +250,57 @@ class WP_Loupe_Search_Engine {
 			set_transient( $transient_key, $hits, self::CACHE_TTL );
 		}
 		return $hits;
+	}
+
+	/**
+	 * Normalise a caller-supplied sort request into a list of field/direction pairs.
+	 *
+	 * Accepts "field", "field:asc"/"field:desc" strings, or ['field'=>..,'direction'=>..]
+	 * arrays. Validity against the sortable allowlist is enforced later, per post type.
+	 *
+	 * @param array<int,mixed> $sort
+	 * @return array<int,array{field:string,direction:string}>
+	 */
+	private function parse_requested_sort( array $sort ): array {
+		$out = [];
+		foreach ( $sort as $entry ) {
+			if ( is_string( $entry ) ) {
+				[ $field, $dir ] = array_pad( explode( ':', $entry, 2 ), 2, '' );
+			} elseif ( is_array( $entry ) && isset( $entry[ 'field' ] ) ) {
+				$field = $entry[ 'field' ];
+				$dir   = $entry[ 'direction' ] ?? '';
+			} else {
+				continue;
+			}
+			$field = trim( (string) $field );
+			if ( '' === $field ) {
+				continue;
+			}
+			$dir     = strtolower( trim( (string) $dir ) );
+			$out[]   = [ 'field' => $field, 'direction' => ( 'asc' === $dir || 'desc' === $dir ) ? $dir : '' ];
+		}
+		return $out;
+	}
+
+	/**
+	 * Sort merged cross-type hits by the requested fields, in order, honouring
+	 * direction. Missing values compare equal so partially-shared fields are safe.
+	 *
+	 * @param array<int,array<string,mixed>>                 $hits
+	 * @param array<int,array{field:string,direction:string}> $requested_sort
+	 */
+	private function sort_hits_by_fields( array &$hits, array $requested_sort ): void {
+		usort( $hits, static function ( array $a, array $b ) use ( $requested_sort ): int {
+			foreach ( $requested_sort as $rs ) {
+				$field = $rs[ 'field' ];
+				$dir   = '' !== $rs[ 'direction' ] ? $rs[ 'direction' ] : 'desc';
+				$cmp   = ( $a[ $field ] ?? null ) <=> ( $b[ $field ] ?? null );
+				if ( 0 !== $cmp ) {
+					return 'asc' === $dir ? $cmp : -$cmp;
+				}
+			}
+			return 0;
+		} );
 	}
 
 	/**
@@ -251,6 +343,65 @@ class WP_Loupe_Search_Engine {
 		}
 
 		return [ 'ready' => true ];
+	}
+
+	/**
+	 * Whether a post type's index should be (re)built before it can serve results.
+	 *
+	 * True when the index is missing/unreadable/needs-reindex, or when it exists with
+	 * a valid schema but holds zero documents while the site actually has published
+	 * posts of that type — the exact state left behind when a fresh empty index is
+	 * created at a new location (e.g. the multisite per-site path change, issue #56).
+	 *
+	 * @param string $post_type
+	 * @return bool
+	 */
+	public function index_needs_rebuild( string $post_type ): bool {
+		$status = $this->is_index_ready( $post_type );
+		if ( empty( $status[ 'ready' ] ) ) {
+			return true;
+		}
+
+		$count = $this->count_documents( $post_type );
+		if ( $count < 0 ) {
+			return false; // Can't determine reliably; don't nag.
+		}
+		if ( $count > 0 ) {
+			return false;
+		}
+
+		return $this->post_type_has_published( $post_type );
+	}
+
+	/**
+	 * Number of documents indexed for a post type, or -1 when it cannot be read.
+	 *
+	 * @param string $post_type
+	 * @return int
+	 */
+	public function count_documents( string $post_type ): int {
+		if ( ! isset( $this->loupe[ $post_type ] ) || ! method_exists( $this->loupe[ $post_type ], 'countDocuments' ) ) {
+			return -1;
+		}
+		try {
+			return (int) $this->loupe[ $post_type ]->countDocuments();
+		} catch (\Throwable $e) {
+			return -1;
+		}
+	}
+
+	/**
+	 * Whether the post type has at least one published post worth indexing.
+	 *
+	 * @param string $post_type
+	 * @return bool
+	 */
+	private function post_type_has_published( string $post_type ): bool {
+		if ( ! function_exists( 'wp_count_posts' ) ) {
+			return false;
+		}
+		$counts = wp_count_posts( $post_type );
+		return is_object( $counts ) && ! empty( $counts->publish ) && (int) $counts->publish > 0;
 	}
 
 	/**

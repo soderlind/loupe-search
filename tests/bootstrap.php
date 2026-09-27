@@ -211,6 +211,16 @@ if ( ! function_exists( 'esc_url' ) ) {
 		return $u;
 	}
 }
+if ( ! function_exists( 'esc_html__' ) ) {
+	function esc_html__( $text, $domain = null ) {
+		return $text;
+	}
+}
+if ( ! function_exists( 'admin_url' ) ) {
+	function admin_url( $path = '' ) {
+		return 'https://example.test/wp-admin/' . ltrim( (string) $path, '/' );
+	}
+}
 if ( ! function_exists( 'esc_attr' ) ) {
 	function esc_attr( $t ) {
 		return $t;
@@ -355,6 +365,22 @@ if ( ! function_exists( 'get_post' ) ) {
 			'post_content' => 'Content for ' . $id,
 			'post_author'  => 1,
 		];
+	}
+}
+if ( ! function_exists( 'is_multisite' ) ) {
+	function is_multisite() {
+		return ! empty( $GLOBALS[ 'wp_loupe_test_is_multisite' ] );
+	}
+}
+if ( ! function_exists( 'wp_count_posts' ) ) {
+	function wp_count_posts( $type = 'post' ) {
+		$publish = $GLOBALS[ 'wp_loupe_test_published_counts' ][ $type ] ?? 0;
+		return (object) [ 'publish' => $publish ];
+	}
+}
+if ( ! function_exists( 'get_current_blog_id' ) ) {
+	function get_current_blog_id() {
+		return (int) ( $GLOBALS[ 'wp_loupe_test_blog_id' ] ?? 1 );
 	}
 }
 if ( ! function_exists( 'get_post_type' ) ) {

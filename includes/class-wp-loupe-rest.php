@@ -306,6 +306,10 @@ class WP_Loupe_REST {
 		$done        = ! empty( $state[ 'done' ] );
 		$next_cursor = $done ? null : $this->encode_reindex_cursor( $state );
 
+		if ( $done ) {
+			WP_Loupe_Index_Notice::flush();
+		}
+
 		$idx              = isset( $state[ 'idx' ] ) ? (int) $state[ 'idx' ] : 0;
 		$post_types_state = isset( $state[ 'post_types' ] ) && is_array( $state[ 'post_types' ] ) ? $state[ 'post_types' ] : [];
 		$current_pt       = ( $idx < count( $post_types_state ) ) ? (string) $post_types_state[ $idx ] : null;
@@ -1231,12 +1235,20 @@ class WP_Loupe_REST {
 			$obj     = function_exists( 'get_post_type_object' ) ? get_post_type_object( $pt ) : null;
 			$label   = ( is_object( $obj ) && isset( $obj->labels->name ) ) ? (string) $obj->labels->name : $pt;
 
+			$ready         = ! empty( $status[ 'ready' ] );
+			$indexed       = $engine->count_documents( $pt );
+			// An empty but valid index while published content exists still needs a
+			// rebuild — Loupe creates a fresh empty db on load (issue: #56 path change).
+			$needs_rebuild = ! $ready || ( 0 === $indexed && $publish > 0 );
+
 			$items[] = [
-				'postType'  => $pt,
-				'label'     => $label,
-				'ready'     => ! empty( $status[ 'ready' ] ),
-				'reason'    => isset( $status[ 'reason' ] ) ? (string) $status[ 'reason' ] : null,
-				'published' => $publish,
+				'postType'     => $pt,
+				'label'        => $label,
+				'ready'        => $ready,
+				'needsRebuild' => $needs_rebuild,
+				'reason'       => isset( $status[ 'reason' ] ) ? (string) $status[ 'reason' ] : null,
+				'indexed'      => $indexed >= 0 ? $indexed : null,
+				'published'    => $publish,
 			];
 		}
 

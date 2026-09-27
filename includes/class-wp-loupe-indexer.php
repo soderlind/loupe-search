@@ -80,6 +80,9 @@ class WP_Loupe_Indexer {
 	private function register_hooks() {
 		add_action( 'wp_after_insert_post', array( $this, 'add' ), 10, 3 );
 		add_action( 'wp_trash_post', array( $this, 'trash_post' ), 10, 2 );
+		// wp_trash_post misses permanent deletes; before_delete_post fires for those
+		// (including wp_delete_post() when the trash is bypassed) — issue #59.
+		add_action( 'before_delete_post', array( $this, 'delete_post' ), 10 );
 		add_action( 'admin_init', array( $this, 'handle_reindex' ) );
 		// Renaming or deleting a term does not fire a post save, so reindex the
 		// posts attached to that term to keep taxonomy fields in sync.
@@ -195,6 +198,20 @@ class WP_Loupe_Indexer {
 	}
 
 	/**
+	 * Fires before a post is permanently deleted, including via wp_delete_post()
+	 * when the trash is bypassed — cases wp_trash_post never sees (issue #59).
+	 *
+	 * @param int $post_id Post ID.
+	 */
+	public function delete_post( int $post_id ): void {
+		if ( ! in_array( get_post_type( $post_id ), $this->post_types, true ) ) {
+			return;
+		}
+		WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
+		$this->delete( $post_id );
+	}
+
+	/**
 	 * Delete post from loupe index
 	 *
 	 * @param int $post_id    Post ID.
@@ -266,6 +283,7 @@ class WP_Loupe_Indexer {
 		) {
 			$this->reindex_all();
 			$this->maybe_add_reindex_rebuild_notice();
+			WP_Loupe_Index_Notice::flush();
 			add_settings_error( 'loupe-search', 'loupe-search-reindex', __( 'Reindexing completed successfully!', 'loupe-search' ), 'updated' );
 
 		}

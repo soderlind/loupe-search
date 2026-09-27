@@ -329,4 +329,47 @@ class WP_Loupe_IndexerTest extends TestCase {
 
 		$this->assertSame( 'Loupe', $this->invoke( $indexer, 'sanitize_field_value', $stringable ) );
 	}
+
+	// ---------------------------------------------------------------- permanent delete (issue #59)
+
+	public function test_register_hooks_registers_before_delete_post() {
+		$indexer                        = $this->make_indexer();
+		$GLOBALS[ 'wp_loupe_test_hooks' ] = [];
+
+		$this->invoke( $indexer, 'register_hooks' );
+
+		$this->assertArrayHasKey( 'before_delete_post', $GLOBALS[ 'wp_loupe_test_hooks' ] );
+		$callbacks = array_map( static fn( $h ) => $h[ 0 ], $GLOBALS[ 'wp_loupe_test_hooks' ][ 'before_delete_post' ] );
+		$this->assertContains( 'delete_post', array_column( $callbacks, 1 ) );
+	}
+
+	public function test_delete_post_ignores_non_indexed_post_type() {
+		$indexer                                    = $this->make_indexer( [ 'post' ] );
+		$GLOBALS[ 'wp_loupe_test_post_types' ][ 99 ] = 'page';
+
+		// Non-indexed type must return before touching any Loupe instance (none exist).
+		$indexer->delete_post( 99 );
+		$this->assertTrue( true );
+	}
+
+	public function test_delete_post_removes_indexed_post_from_index() {
+		$indexer                                    = $this->make_indexer( [ 'post' ] );
+		$GLOBALS[ 'wp_loupe_test_post_types' ][ 55 ] = 'post';
+
+		$loupe = new class {
+			/** @var array<int,int|string> */
+			public array $deleted = [];
+			public function needsReindex(): bool {
+				return false;
+			}
+			public function deleteDocument( $id ): void {
+				$this->deleted[] = $id;
+			}
+		};
+		( new \ReflectionProperty( WP_Loupe_Indexer::class, 'loupe' ) )->setValue( $indexer, [ 'post' => $loupe ] );
+
+		$indexer->delete_post( 55 );
+
+		$this->assertSame( [ 55 ], $loupe->deleted, 'deleteDocument must receive the permanently deleted post ID' );
+	}
 }
