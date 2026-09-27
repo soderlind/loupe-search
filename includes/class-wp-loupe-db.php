@@ -79,10 +79,18 @@ class WP_Loupe_DB {
 	public function get_base_path() {
 		$default = defined( 'WP_CONTENT_DIR' ) ? ( WP_CONTENT_DIR . '/loupe-search-db' ) : '';
 
+		// On multisite each site needs its own index directory; otherwise every site
+		// in the network shares one path and overwrites the others (issue #56).
+		$is_multisite = function_exists( 'is_multisite' ) && is_multisite();
+		if ( '' !== $default && $is_multisite ) {
+			$default .= '/site-' . ( function_exists( 'get_current_blog_id' ) ? (int) get_current_blog_id() : 1 );
+		}
+
 		// Backward compatibility (deprecated since 1.1.0): if the legacy `wp-loupe-db`
 		// folder exists and the new `loupe-search-db` folder does not, keep using the
-		// legacy path so existing indexes are not orphaned.
-		if ( '' !== $default ) {
+		// legacy path so existing indexes are not orphaned. Single-site only: the legacy
+		// layout never namespaced per site, so it must not be reused on a network.
+		if ( '' !== $default && ! $is_multisite ) {
 			$legacy = WP_CONTENT_DIR . '/wp-loupe-db';
 			if ( is_dir( $legacy ) && ! is_dir( $default ) ) {
 				$default = $legacy;

@@ -357,6 +357,16 @@ if ( ! function_exists( 'get_post' ) ) {
 		];
 	}
 }
+if ( ! function_exists( 'is_multisite' ) ) {
+	function is_multisite() {
+		return ! empty( $GLOBALS[ 'wp_loupe_test_is_multisite' ] );
+	}
+}
+if ( ! function_exists( 'get_current_blog_id' ) ) {
+	function get_current_blog_id() {
+		return (int) ( $GLOBALS[ 'wp_loupe_test_blog_id' ] ?? 1 );
+	}
+}
 if ( ! function_exists( 'get_post_type' ) ) {
 	function get_post_type( $post = null ) {
 		$id = is_object( $post ) ? ( $post->ID ?? 0 ) : (int) $post;

@@ -26,4 +26,18 @@ class WP_Loupe_DBTest extends TestCase {
 		@rmdir( $base );
 		unset( $wp_loupe_test_filters[ 'loupe_search_db_path' ] );
 	}
+
+	public function test_base_path_is_scoped_per_site_on_multisite(): void {
+		$GLOBALS[ 'wp_loupe_test_is_multisite' ] = true;
+		$GLOBALS[ 'wp_loupe_test_blog_id' ]      = 7;
+
+		$base = WP_Loupe_DB::get_instance()->get_base_path();
+		$this->assertStringEndsWith( '/loupe-search-db/site-7', $base );
+
+		foreach ( [ '.htaccess', 'web.config', 'index.php' ] as $file ) {
+			@unlink( $base . '/' . $file );
+		}
+		@rmdir( $base );
+		unset( $GLOBALS[ 'wp_loupe_test_is_multisite' ], $GLOBALS[ 'wp_loupe_test_blog_id' ] );
+	}
 }
