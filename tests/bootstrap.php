@@ -372,6 +372,12 @@ if ( ! function_exists( 'is_multisite' ) ) {
 		return ! empty( $GLOBALS[ 'wp_loupe_test_is_multisite' ] );
 	}
 }
+if ( ! function_exists( 'wp_count_posts' ) ) {
+	function wp_count_posts( $type = 'post' ) {
+		$publish = $GLOBALS[ 'wp_loupe_test_published_counts' ][ $type ] ?? 0;
+		return (object) [ 'publish' => $publish ];
+	}
+}
 if ( ! function_exists( 'get_current_blog_id' ) ) {
 	function get_current_blog_id() {
 		return (int) ( $GLOBALS[ 'wp_loupe_test_blog_id' ] ?? 1 );

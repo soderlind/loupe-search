@@ -90,8 +90,7 @@ class WP_Loupe_Index_Notice {
 
 		$unready = [];
 		foreach ( $this->post_types as $post_type ) {
-			$status = $this->engine->is_index_ready( (string) $post_type );
-			if ( empty( $status[ 'ready' ] ) ) {
+			if ( $this->engine->index_needs_rebuild( (string) $post_type ) ) {
 				$unready[] = (string) $post_type;
 			}
 		}

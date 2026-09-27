@@ -325,6 +325,49 @@ class WP_Loupe_Search_Engine {
 	}
 
 	/**
+	 * Whether a post type's index should be (re)built before it can serve results.
+	 *
+	 * True when the index is missing/unreadable/needs-reindex, or when it exists with
+	 * a valid schema but holds zero documents while the site actually has published
+	 * posts of that type — the exact state left behind when a fresh empty index is
+	 * created at a new location (e.g. the multisite per-site path change, issue #56).
+	 *
+	 * @param string $post_type
+	 * @return bool
+	 */
+	public function index_needs_rebuild( string $post_type ): bool {
+		$status = $this->is_index_ready( $post_type );
+		if ( empty( $status[ 'ready' ] ) ) {
+			return true;
+		}
+
+		try {
+			$count = (int) $this->loupe[ $post_type ]->countDocuments();
+		} catch (\Throwable $e) {
+			return false; // Can't determine reliably; don't nag.
+		}
+		if ( $count > 0 ) {
+			return false;
+		}
+
+		return $this->post_type_has_published( $post_type );
+	}
+
+	/**
+	 * Whether the post type has at least one published post worth indexing.
+	 *
+	 * @param string $post_type
+	 * @return bool
+	 */
+	private function post_type_has_published( string $post_type ): bool {
+		if ( ! function_exists( 'wp_count_posts' ) ) {
+			return false;
+		}
+		$counts = wp_count_posts( $post_type );
+		return is_object( $counts ) && ! empty( $counts->publish ) && (int) $counts->publish > 0;
+	}
+
+	/**
 	 * Execute an advanced search for REST / API usage.
 	 *
 	 * This method is intentionally low-level: it accepts an already validated set of

@@ -13,15 +13,15 @@ class WP_Loupe_Index_NoticeTest extends TestCase {
 	}
 
 	/**
-	 * @param array<string,bool> $ready_by_type
+	 * @param array<string,bool> $ready_by_type True = ready (no rebuild needed).
 	 */
 	private function make_engine( array $ready_by_type ): WP_Loupe_Search_Engine {
 		$engine = $this->getMockBuilder( WP_Loupe_Search_Engine::class )
 			->disableOriginalConstructor()
-			->onlyMethods( [ 'is_index_ready' ] )
+			->onlyMethods( [ 'index_needs_rebuild' ] )
 			->getMock();
-		$engine->method( 'is_index_ready' )->willReturnCallback(
-			static fn( string $pt ): array => ! empty( $ready_by_type[ $pt ] ) ? [ 'ready' => true ] : [ 'ready' => false, 'reason' => 'index_missing' ]
+		$engine->method( 'index_needs_rebuild' )->willReturnCallback(
+			static fn( string $pt ): bool => empty( $ready_by_type[ $pt ] )
 		);
 		return $engine;
 	}
