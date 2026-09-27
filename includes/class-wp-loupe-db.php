@@ -100,6 +100,7 @@ class WP_Loupe_DB {
 
 		$path = is_string( $path ) ? rtrim( $path, '/' ) : '';
 		$this->ensure_directory_exists( $path );
+		$this->maybe_protect_directory( $path );
 		return $path;
 	}
 
@@ -121,6 +122,33 @@ class WP_Loupe_DB {
 		// Fallback for very early contexts.
 		if ( ! is_dir( $path ) ) {
 			@mkdir( $path, 0755, true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- fallback for very early contexts before wp_mkdir_p() is available.
+		}
+	}
+
+	/**
+	 * Drop server-level protection files into the index directory so the SQLite
+	 * files (which can contain private post data) are not web-accessible. Written
+	 * once and skipped on later calls. Apache and IIS are covered directly; nginx
+	 * users must deny access to the directory in their server config.
+	 *
+	 * @param string $path Base index directory.
+	 */
+	private function maybe_protect_directory( string $path ): void {
+		if ( '' === $path || ! is_dir( $path ) ) {
+			return;
+		}
+
+		$files = [
+			'.htaccess'  => "# Loupe Search: deny direct access to index files.\n<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tOrder allow,deny\n\tDeny from all\n</IfModule>\n",
+			'web.config' => "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<system.webServer>\n\t\t<authorization>\n\t\t\t<deny users=\"*\" />\n\t\t</authorization>\n\t</system.webServer>\n</configuration>\n",
+			'index.php'  => "<?php\n// Silence is golden.\n",
+		];
+
+		foreach ( $files as $name => $contents ) {
+			$file = $path . '/' . $name;
+			if ( ! file_exists( $file ) ) {
+				@file_put_contents( $file, $contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- best-effort protection file, may run before WP_Filesystem is available.
+			}
 		}
 	}
 }
