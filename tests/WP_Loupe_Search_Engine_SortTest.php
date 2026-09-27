@@ -18,9 +18,10 @@ class WP_Loupe_Search_Engine_SortTest extends TestCase {
 	}
 
 	/**
-	 * @param array<int,array<string,mixed>> $hits
+	 * @param array<int,array<string,mixed>>         $hits
+	 * @param array<string,array<string,mixed>>|null $post_fields Override the 'post' field config.
 	 */
-	private function make_engine( array $hits ): array {
+	private function make_engine( array $hits, ?array $post_fields = null ): array {
 		$engine = new WP_Loupe_Search_Engine( [], new \stdClass() );
 
 		$loupe = new class( $hits ) {
@@ -45,7 +46,7 @@ class WP_Loupe_Search_Engine_SortTest extends TestCase {
 		};
 
 		$saved_fields = [
-			'post' => [
+			'post' => $post_fields ?? [
 				'post_title' => [ 'indexable' => true, 'weight' => 1.0, 'sortable' => true, 'sort_direction' => 'desc' ],
 				'post_date'  => [ 'indexable' => true, 'weight' => 1.0, 'sortable' => true, 'sort_direction' => 'desc' ],
 			],
@@ -99,5 +100,35 @@ class WP_Loupe_Search_Engine_SortTest extends TestCase {
 		$engine->search( 'alpha', [], [ 'post_content:asc' ] );
 
 		$this->assertSame( [ '_relevance:desc' ], $loupe->captured[ 0 ]->getSort(), 'a non-sortable field must not be applied' );
+	}
+
+	public function test_only_non_sortable_field_keeps_relevance_order(): void {
+		[ $engine ] = $this->make_engine( [
+			[ 'id' => 1, '_rankingScore' => 0.20, 'post_content' => 'zzz' ],
+			[ 'id' => 2, '_rankingScore' => 0.80, 'post_content' => 'aaa' ],
+		] );
+
+		// post_content is not sortable; ordering must fall back to relevance, not be
+		// reordered by the retrieved field value.
+		$hits = $engine->search( 'alpha', [], [ 'post_content:asc' ] );
+
+		$this->assertSame( [ 2, 1 ], array_column( $hits, 'id' ) );
+	}
+
+	public function test_configured_direction_is_used_when_omitted(): void {
+		$fields = [
+			'post_date' => [ 'indexable' => true, 'weight' => 1.0, 'sortable' => true, 'sort_direction' => 'asc' ],
+		];
+		[ $engine, $loupe ] = $this->make_engine( [
+			[ 'id' => 1, '_rankingScore' => 0.90, 'post_date' => '2020-01-01' ],
+			[ 'id' => 2, '_rankingScore' => 0.10, 'post_date' => '2019-01-01' ],
+		], $fields );
+
+		// Direction omitted: the field's configured 'asc' must drive both the Loupe
+		// sort and the cross-type merge (not a hardcoded desc).
+		$hits = $engine->search( 'alpha', [], [ 'post_date' ] );
+
+		$this->assertSame( [ 'post_date:asc' ], $loupe->captured[ 0 ]->getSort() );
+		$this->assertSame( [ 2, 1 ], array_column( $hits, 'id' ) );
 	}
 }

@@ -419,6 +419,20 @@ class WPLoupe_Settings_Page {
 			$sanitized[ $field ] = ! empty( $input[ $field ] );
 		}
 
+		// Preserve the optional `languages` override (no UI field; set via the option or
+		// a filter). Without this it would be stripped on every save, so the factory's
+		// locale override could never take effect (issue #57).
+		$languages = $input[ 'languages' ] ?? ( get_option( 'loupe_search_advanced', [] )[ 'languages' ] ?? null );
+		if ( is_array( $languages ) ) {
+			$languages = array_values( array_filter( array_map(
+				static fn( $lang ) => is_string( $lang ) ? sanitize_key( $lang ) : '',
+				$languages
+			) ) );
+			if ( ! empty( $languages ) ) {
+				$sanitized[ 'languages' ] = $languages;
+			}
+		}
+
 		return $sanitized;
 	}
 

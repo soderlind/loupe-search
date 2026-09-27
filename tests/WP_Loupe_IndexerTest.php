@@ -351,4 +351,25 @@ class WP_Loupe_IndexerTest extends TestCase {
 		$indexer->delete_post( 99 );
 		$this->assertTrue( true );
 	}
+
+	public function test_delete_post_removes_indexed_post_from_index() {
+		$indexer                                    = $this->make_indexer( [ 'post' ] );
+		$GLOBALS[ 'wp_loupe_test_post_types' ][ 55 ] = 'post';
+
+		$loupe = new class {
+			/** @var array<int,int|string> */
+			public array $deleted = [];
+			public function needsReindex(): bool {
+				return false;
+			}
+			public function deleteDocument( $id ): void {
+				$this->deleted[] = $id;
+			}
+		};
+		( new \ReflectionProperty( WP_Loupe_Indexer::class, 'loupe' ) )->setValue( $indexer, [ 'post' => $loupe ] );
+
+		$indexer->delete_post( 55 );
+
+		$this->assertSame( [ 55 ], $loupe->deleted, 'deleteDocument must receive the permanently deleted post ID' );
+	}
 }

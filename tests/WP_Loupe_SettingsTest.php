@@ -51,6 +51,21 @@ class WP_Loupe_SettingsTest extends TestCase {
 		$this->assertSame( 'asc', $title[ 'sort_direction' ] );
 	}
 
+	public function test_sanitize_advanced_settings_preserves_languages_from_input() {
+		$settings_page = $this->make_settings_page();
+		$sanitized     = $settings_page->sanitize_advanced_settings( [ 'languages' => [ 'de', 'FR', 'bad lang!' ] ] );
+		$this->assertSame( [ 'de', 'fr', 'badlang' ], $sanitized[ 'languages' ] );
+	}
+
+	public function test_sanitize_advanced_settings_preserves_existing_languages_on_save() {
+		update_option( 'loupe_search_advanced', [ 'languages' => [ 'nb' ] ] );
+		$settings_page = $this->make_settings_page();
+		// A normal save (no languages field submitted) must not strip the stored value.
+		$sanitized = $settings_page->sanitize_advanced_settings( [ 'typo_enabled' => '1' ] );
+		$this->assertSame( [ 'nb' ], $sanitized[ 'languages' ] );
+		delete_option( 'loupe_search_advanced' );
+	}
+
 	/** Helper to instantiate settings page without WP hooks side effects */
 	private function make_settings_page() {
 		// We suppress constructor hooks by creating an instance via reflection if needed.

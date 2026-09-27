@@ -85,6 +85,29 @@ class WP_Loupe_Search_Engine {
 		$hits                = [];
 		$processing_time_sum = 0;
 
+		// Resolve the requested sort against the sortable fields configured across all
+		// post types, carrying each field's effective direction (explicit, else its
+		// configured default). Only fields that survive validation drive ordering; if
+		// none do, results stay relevance-ordered (issue #64).
+		$sortable_union = [];
+		foreach ( $this->post_types as $pt ) {
+			foreach ( (array) ( $this->saved_fields[ $pt ] ?? [] ) as $field_name => $settings ) {
+				if ( ! empty( $settings[ 'sortable' ] ) && ! isset( $sortable_union[ $field_name ] ) ) {
+					$sortable_union[ $field_name ] = $settings[ 'sort_direction' ] ?? 'desc';
+				}
+			}
+		}
+		$effective_sort = [];
+		foreach ( $requested_sort as $rs ) {
+			if ( ! isset( $sortable_union[ $rs[ 'field' ] ] ) ) {
+				continue;
+			}
+			$effective_sort[] = [
+				'field'     => $rs[ 'field' ],
+				'direction' => '' !== $rs[ 'direction' ] ? $rs[ 'direction' ] : $sortable_union[ $rs[ 'field' ] ],
+			];
+		}
+
 		foreach ( $this->post_types as $post_type ) {
 			$post_type_fields = $this->saved_fields[ $post_type ] ?? [];
 			if ( empty( $post_type_fields ) ) {
@@ -116,16 +139,14 @@ class WP_Loupe_Search_Engine {
 					}
 				}
 
-				// Translate any explicitly requested sort into Loupe expressions, keeping
-				// only fields this type actually allows to be sorted.
+				// Apply the validated sort, keeping only fields this type can sort by.
 				$type_sort = [];
-				foreach ( $requested_sort as $rs ) {
+				foreach ( $effective_sort as $rs ) {
 					if ( ! isset( $sortable_allowlist[ $rs[ 'field' ] ] ) ) {
 						continue;
 					}
-					$dir                  = '' !== $rs[ 'direction' ] ? $rs[ 'direction' ] : $sortable_allowlist[ $rs[ 'field' ] ];
-					$type_sort[]          = "{$rs[ 'field' ]}:{$dir}";
-					$filterable_fields[]  = $rs[ 'field' ]; // ensure the value is retrieved for the cross-type merge.
+					$type_sort[]         = "{$rs[ 'field' ]}:{$rs[ 'direction' ]}";
+					$filterable_fields[] = $rs[ 'field' ]; // ensure the value is retrieved for the cross-type merge.
 				}
 
 				$retrievable_fields = array_unique( array_merge(
@@ -204,8 +225,8 @@ class WP_Loupe_Search_Engine {
 		// Cross-index scores are only approximately comparable; usort is stable in PHP 8+,
 		// so equal scores keep their original per-type order. When the caller requested an
 		// explicit sort, order by those fields instead of relevance (issue #64).
-		if ( ! empty( $requested_sort ) ) {
-			$this->sort_hits_by_fields( $hits, $requested_sort );
+		if ( ! empty( $effective_sort ) ) {
+			$this->sort_hits_by_fields( $hits, $effective_sort );
 		} else {
 			usort( $hits, static fn( array $a, array $b ): int => ( $b[ '_score' ] ?? 0 ) <=> ( $a[ '_score' ] ?? 0 ) );
 		}

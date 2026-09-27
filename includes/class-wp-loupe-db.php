@@ -109,6 +109,11 @@ class WP_Loupe_DB {
 		$path = is_string( $path ) ? rtrim( $path, '/' ) : '';
 		$this->ensure_directory_exists( $path );
 		$this->maybe_protect_directory( $path );
+		// Also protect the top-level index root so pre-1.3.7 shared files (from before
+		// the multisite per-site split) are not left web-readable after an upgrade.
+		if ( defined( 'WP_CONTENT_DIR' ) ) {
+			$this->maybe_protect_directory( WP_CONTENT_DIR . '/loupe-search-db' );
+		}
 		return $path;
 	}
 
