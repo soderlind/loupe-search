@@ -226,7 +226,10 @@ class WP_Loupe_Factory {
 	 * @return TypoTolerance Configured typo tolerance object
 	 */
 	private static function configure_typo_tolerance( array $settings ): TypoTolerance {
-		if ( empty( $settings[ 'typo_enabled' ] ) ) {
+		// Default to enabled when the setting was never saved, matching the settings
+		// UI default. A saved-but-unchecked value is stored as false and disables it
+		// (issue #58).
+		if ( ! ( $settings[ 'typo_enabled' ] ?? true ) ) {
 			return TypoTolerance::disabled();
 		}
 
