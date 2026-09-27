@@ -68,11 +68,13 @@ class WP_Loupe_Search_Engine {
 	 *
 	 * @param string $query
 	 * @param array{fields?:array<string>,start_tag?:string,end_tag?:string,crop_fields?:array<string>,crop_length?:int,crop_marker?:string} $highlight Optional opt-in highlight/crop options. Empty for no formatting.
+	 * @param array<int,string|array{field:string,direction?:string}> $sort Optional explicit sort. Each entry is "field" or "field:dir", validated against the configured sortable fields. Empty keeps relevance ordering (issue #64).
 	 * @return array Raw hit arrays with at least id, _score, post_type.
 	 */
-	public function search( $query, array $highlight = [] ) {
+	public function search( $query, array $highlight = [], array $sort = [] ) {
+		$requested_sort = $this->parse_requested_sort( $sort );
 		$cacheable     = $this->is_cacheable_query( $query );
-		$cache_key     = md5( (string) $query . serialize( $this->post_types ) . serialize( $highlight ) );
+		$cache_key     = md5( (string) $query . serialize( $this->post_types ) . serialize( $highlight ) . serialize( $requested_sort ) );
 		$transient_key = "loupe_search_cache_{$cache_key}";
 		$cached_result = $cacheable ? get_transient( $transient_key ) : false;
 		if ( false !== $cached_result ) {
@@ -92,7 +94,7 @@ class WP_Loupe_Search_Engine {
 			try {
 				$indexable_fields   = [];
 				$filterable_fields  = [];
-				$valid_sort_fields  = [];
+				$sortable_allowlist = [];
 				$retrievable_fields = [ 'id' ];
 
 				foreach ( $post_type_fields as $field_name => $settings ) {
@@ -107,10 +109,23 @@ class WP_Loupe_Search_Engine {
 						$filterable_fields[] = $field_name;
 					}
 
+					// sortable only marks a field as eligible for sorting; it is not applied
+					// unless the caller explicitly requests it (issue #64).
 					if ( ! empty( $settings[ 'sortable' ] ) ) {
-						$sort_direction      = $settings[ 'sort_direction' ] ?? 'desc';
-						$valid_sort_fields[] = "{$field_name}:{$sort_direction}";
+						$sortable_allowlist[ $field_name ] = $settings[ 'sort_direction' ] ?? 'desc';
 					}
+				}
+
+				// Translate any explicitly requested sort into Loupe expressions, keeping
+				// only fields this type actually allows to be sorted.
+				$type_sort = [];
+				foreach ( $requested_sort as $rs ) {
+					if ( ! isset( $sortable_allowlist[ $rs[ 'field' ] ] ) ) {
+						continue;
+					}
+					$dir                  = '' !== $rs[ 'direction' ] ? $rs[ 'direction' ] : $sortable_allowlist[ $rs[ 'field' ] ];
+					$type_sort[]          = "{$rs[ 'field' ]}:{$dir}";
+					$filterable_fields[]  = $rs[ 'field' ]; // ensure the value is retrieved for the cross-type merge.
 				}
 
 				$retrievable_fields = array_unique( array_merge(
@@ -127,9 +142,9 @@ class WP_Loupe_Search_Engine {
 					->withShowRankingScore( true )
 					->withLimit( 1000 );
 
-				if ( ! empty( $valid_sort_fields ) ) {
+				if ( ! empty( $type_sort ) ) {
 					try {
-						$search_params = $search_params->withSort( $valid_sort_fields );
+						$search_params = $search_params->withSort( $type_sort );
 					} catch (\Throwable $e) {
 						WP_Loupe_Utils::debug_log( "Sort error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
 					}
@@ -187,8 +202,13 @@ class WP_Loupe_Search_Engine {
 		// then all pages). Merge them into one relevance-ordered list so score/weight
 		// interleaves types instead of always ranking one type above another (issue #51).
 		// Cross-index scores are only approximately comparable; usort is stable in PHP 8+,
-		// so equal scores keep their original per-type order.
-		usort( $hits, static fn( array $a, array $b ): int => ( $b[ '_score' ] ?? 0 ) <=> ( $a[ '_score' ] ?? 0 ) );
+		// so equal scores keep their original per-type order. When the caller requested an
+		// explicit sort, order by those fields instead of relevance (issue #64).
+		if ( ! empty( $requested_sort ) ) {
+			$this->sort_hits_by_fields( $hits, $requested_sort );
+		} else {
+			usort( $hits, static fn( array $a, array $b ): int => ( $b[ '_score' ] ?? 0 ) <=> ( $a[ '_score' ] ?? 0 ) );
+		}
 
 		/**
 		 * Reorder or regroup the merged, cross-post-type result set.
@@ -209,6 +229,57 @@ class WP_Loupe_Search_Engine {
 			set_transient( $transient_key, $hits, self::CACHE_TTL );
 		}
 		return $hits;
+	}
+
+	/**
+	 * Normalise a caller-supplied sort request into a list of field/direction pairs.
+	 *
+	 * Accepts "field", "field:asc"/"field:desc" strings, or ['field'=>..,'direction'=>..]
+	 * arrays. Validity against the sortable allowlist is enforced later, per post type.
+	 *
+	 * @param array<int,mixed> $sort
+	 * @return array<int,array{field:string,direction:string}>
+	 */
+	private function parse_requested_sort( array $sort ): array {
+		$out = [];
+		foreach ( $sort as $entry ) {
+			if ( is_string( $entry ) ) {
+				[ $field, $dir ] = array_pad( explode( ':', $entry, 2 ), 2, '' );
+			} elseif ( is_array( $entry ) && isset( $entry[ 'field' ] ) ) {
+				$field = $entry[ 'field' ];
+				$dir   = $entry[ 'direction' ] ?? '';
+			} else {
+				continue;
+			}
+			$field = trim( (string) $field );
+			if ( '' === $field ) {
+				continue;
+			}
+			$dir     = strtolower( trim( (string) $dir ) );
+			$out[]   = [ 'field' => $field, 'direction' => ( 'asc' === $dir || 'desc' === $dir ) ? $dir : '' ];
+		}
+		return $out;
+	}
+
+	/**
+	 * Sort merged cross-type hits by the requested fields, in order, honouring
+	 * direction. Missing values compare equal so partially-shared fields are safe.
+	 *
+	 * @param array<int,array<string,mixed>>                 $hits
+	 * @param array<int,array{field:string,direction:string}> $requested_sort
+	 */
+	private function sort_hits_by_fields( array &$hits, array $requested_sort ): void {
+		usort( $hits, static function ( array $a, array $b ) use ( $requested_sort ): int {
+			foreach ( $requested_sort as $rs ) {
+				$field = $rs[ 'field' ];
+				$dir   = '' !== $rs[ 'direction' ] ? $rs[ 'direction' ] : 'desc';
+				$cmp   = ( $a[ $field ] ?? null ) <=> ( $b[ $field ] ?? null );
+				if ( 0 !== $cmp ) {
+					return 'asc' === $dir ? $cmp : -$cmp;
+				}
+			}
+			return 0;
+		} );
 	}
 
 	/**
