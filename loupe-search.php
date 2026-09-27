@@ -77,10 +77,15 @@ function init() {
 		return;
 	}
 
-	WP_Loupe_Loader::get_instance();
+	// Verify SQLite is available before wiring up the loader, which instantiates the
+	// SQLite-backed components. The utils class only needs PDO, so it can load first
+	// (issue #63).
+	require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-utils.php';
 	if ( ! WP_Loupe_Utils::has_sqlite() ) {
 		return;
 	}
+
+	WP_Loupe_Loader::get_instance();
 
 	// new WP_Loupe_Updater( LOUPE_SEARCH_FILE );
 }
