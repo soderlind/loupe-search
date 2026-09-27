@@ -175,6 +175,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 = 1.3.7 =
 * Added: Admin notice prompting a reindex when an index is missing or out of date (e.g. after upgrading or on multisite), with a link to the reindex dashboard.
+* Added: The Dashboard “Index health” now shows the indexed document count and flags an empty index as needing a reindex.
 * Security: The index directory is now protected from direct web access with .htaccess/web.config/index.php files, so the SQLite index (which can contain private post data) is no longer downloadable. Nginx users must deny the directory in their server config. Fixes #62.
 * Fixed: Search now uses the site locale for stemming and stopwords instead of always English. Fixes #57.
 * Fixed: Sortable fields are no longer forced as sort criteria on every search; regular searches keep relevance ordering. Fixes #64.

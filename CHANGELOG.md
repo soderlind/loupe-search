@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Admin notice that prompts a reindex when a configured post type's index is missing, unreadable, or out of date — for example after upgrading or on multisite where each site keeps its own index. Includes a one-click link to the reindex dashboard.
+- The Dashboard “Index health” now shows the indexed document count per post type and flags an empty index (0 documents while content exists) as needing a reindex, instead of reporting it as ready.
 
 ### Security
 - The index directory is now protected from direct web access with `.htaccess` (Apache), `web.config` (IIS) and `index.php` files, so the SQLite index — which can contain private post data — is no longer directly downloadable. Nginx users must deny access to the directory in their server config. Fixes [#62](https://github.com/soderlind/loupe-search/issues/62).

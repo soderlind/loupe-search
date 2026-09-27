@@ -341,9 +341,8 @@ class WP_Loupe_Search_Engine {
 			return true;
 		}
 
-		try {
-			$count = (int) $this->loupe[ $post_type ]->countDocuments();
-		} catch (\Throwable $e) {
+		$count = $this->count_documents( $post_type );
+		if ( $count < 0 ) {
 			return false; // Can't determine reliably; don't nag.
 		}
 		if ( $count > 0 ) {
@@ -351,6 +350,23 @@ class WP_Loupe_Search_Engine {
 		}
 
 		return $this->post_type_has_published( $post_type );
+	}
+
+	/**
+	 * Number of documents indexed for a post type, or -1 when it cannot be read.
+	 *
+	 * @param string $post_type
+	 * @return int
+	 */
+	public function count_documents( string $post_type ): int {
+		if ( ! isset( $this->loupe[ $post_type ] ) || ! method_exists( $this->loupe[ $post_type ], 'countDocuments' ) ) {
+			return -1;
+		}
+		try {
+			return (int) $this->loupe[ $post_type ]->countDocuments();
+		} catch (\Throwable $e) {
+			return -1;
+		}
 	}
 
 	/**
