@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.7] - 2026-09-27
+
+### Security
+- The index directory is now protected from direct web access with `.htaccess` (Apache), `web.config` (IIS) and `index.php` files, so the SQLite index — which can contain private post data — is no longer directly downloadable. Nginx users must deny access to the directory in their server config. Fixes [#62](https://github.com/soderlind/loupe-search/issues/62).
+
+### Fixed
+- Search now applies the site locale for stemming and stopwords; previously the language was only used for the instance cache key and Loupe always ran in English. Fixes [#57](https://github.com/soderlind/loupe-search/issues/57).
+- Sortable fields no longer force a sort on every search. Marking a field sortable only makes it eligible for sorting; regular searches keep Loupe's relevance ordering, and an explicit, validated sort can still be requested. Fixes [#64](https://github.com/soderlind/loupe-search/issues/64).
+- Typo tolerance now defaults to enabled when the settings were never saved, matching the settings UI; a saved-but-unchecked value still disables it. Fixes [#58](https://github.com/soderlind/loupe-search/issues/58).
+- Permanently deleting a post — including via `wp_delete_post()` or when the trash is bypassed — now removes it from the index. Previously only trashing did. Fixes [#59](https://github.com/soderlind/loupe-search/issues/59).
+- Multisite installs now store the index under `loupe-search-db/site-{blog_id}` so networked sites no longer share and overwrite one index. Fixes [#56](https://github.com/soderlind/loupe-search/issues/56).
+- The SQLite availability check now runs before the loader instantiates the SQLite-backed components. Fixes [#63](https://github.com/soderlind/loupe-search/issues/63).
+
 ## [1.3.6] - 2026-09-26
 
 ### Fixed

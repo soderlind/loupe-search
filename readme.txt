@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, fast search, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.6
+Stable tag: 1.3.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -172,6 +172,15 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.3.7 =
+* Security: The index directory is now protected from direct web access with .htaccess/web.config/index.php files, so the SQLite index (which can contain private post data) is no longer downloadable. Nginx users must deny the directory in their server config. Fixes #62.
+* Fixed: Search now uses the site locale for stemming and stopwords instead of always English. Fixes #57.
+* Fixed: Sortable fields are no longer forced as sort criteria on every search; regular searches keep relevance ordering. Fixes #64.
+* Fixed: Typo tolerance now defaults to enabled when settings were never saved, matching the settings UI. Fixes #58.
+* Fixed: Permanently deleting a post (including via wp_delete_post()) now removes it from the index. Fixes #59.
+* Fixed: Multisite installs now use a per-site index directory so networked sites no longer overwrite each other's index. Fixes #56.
+* Fixed: The SQLite availability check now runs before the plugin wires up its SQLite-backed components. Fixes #63.
 
 = 1.3.6 =
 * Fixed: Match highlighting no longer strips paragraph/layout markup in block themes like Twenty Twenty-Five; matches are highlighted in place within the rendered content. Fixes #54.
