@@ -161,6 +161,7 @@ class WP_Loupe_Search_Hooks {
 		foreach ( $hits_by_type as $post_type => $type_hits ) {
 			$type_posts = get_posts( [
 				'post_type'        => $post_type,
+				'post_status'      => WP_Loupe_Utils::get_indexable_post_statuses( (string) $post_type ),
 				'post__in'         => array_column( $type_hits, 'id' ),
 				'posts_per_page'   => -1,
 				'orderby'          => 'post__in',

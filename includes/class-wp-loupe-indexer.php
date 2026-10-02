@@ -165,7 +165,7 @@ class WP_Loupe_Indexer {
 	 * @param array $object_ids Object IDs to reindex.
 	 * @return void
 	 */
-	private function reindex_object_ids( array $object_ids ): void {
+	public function reindex_object_ids( array $object_ids ): void {
 		foreach ( $object_ids as $object_id ) {
 			$post = get_post( (int) $object_id );
 			if ( $post instanceof \WP_Post ) {
@@ -322,7 +322,7 @@ class WP_Loupe_Indexer {
 			$posts = get_posts( [
 				'post_type'      => $post_type,
 				'posts_per_page' => -1,
-				'post_status'    => 'publish',
+				'post_status'    => $this->get_indexable_statuses( $post_type ),
 			] );
 
 			// If Loupe indicates the on-disk schema/version needs a rebuild, do that first.
@@ -362,11 +362,12 @@ class WP_Loupe_Indexer {
 				continue;
 			}
 
-			// Prepare documents and add them to the index
-			$documents = array_map(
-				[ $this, 'prepare_document' ],
-				$posts
-			);
+			$documents = [];
+			foreach ( $posts as $post ) {
+				if ( $post instanceof \WP_Post && $this->is_indexable( (int) $post->ID, $post ) ) {
+					$documents[] = $this->prepare_document( $post );
+				}
+			}
 
 			if ( ! empty( $documents ) ) {
 				$this->loupe[ $post_type ]->addDocuments( $documents );
@@ -503,7 +504,7 @@ class WP_Loupe_Indexer {
 
 		$posts = get_posts( [
 			'post_type'      => $post_type,
-			'post_status'    => 'publish',
+			'post_status'    => $this->get_indexable_statuses( $post_type ),
 			'post__in'       => $ids,
 			'orderby'        => 'post__in',
 			'posts_per_page' => count( $ids ),
@@ -511,7 +512,7 @@ class WP_Loupe_Indexer {
 
 		$documents = [];
 		foreach ( $posts as $post ) {
-			if ( $post instanceof \WP_Post ) {
+			if ( $post instanceof \WP_Post && $this->is_indexable( (int) $post->ID, $post ) ) {
 				$documents[] = $this->prepare_document( $post );
 			}
 		}
@@ -545,13 +546,17 @@ class WP_Loupe_Indexer {
 		global $wpdb;
 		$limit    = max( 1, (int) $limit );
 		$after_id = max( 0, (int) $after_id );
+		$statuses = $this->get_indexable_statuses( $post_type );
+		if ( empty( $statuses ) ) {
+			return [];
+		}
+		$status_placeholders = implode( ', ', array_fill( 0, count( $statuses ), '%s' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$ids = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_status = 'publish' AND ID > %d ORDER BY ID ASC LIMIT %d",
-				$post_type,
-				$after_id,
-				$limit
+				// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders are built from a fixed '%s' list.
+				"SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_status IN ( {$status_placeholders} ) AND ID > %d ORDER BY ID ASC LIMIT %d",
+				array_merge( [ $post_type ], $statuses, [ $after_id, $limit ] )
 			)
 		);
 		if ( ! is_array( $ids ) ) {
@@ -880,8 +885,7 @@ class WP_Loupe_Indexer {
 			return false;
 		}
 
-		// Check if the post status is 'publish'.
-		if ( 'publish' !== $post->post_status ) {
+		if ( ! \in_array( $post->post_status, $this->get_indexable_statuses( $post->post_type ), true ) ) {
 			return false;
 		}
 
@@ -892,7 +896,27 @@ class WP_Loupe_Indexer {
 			return false;
 		}
 
-		return true;
+		/**
+		 * Filters whether a post that passed the built-in checks may be indexed.
+		 *
+		 * Lets integrations veto posts whose visibility depends on more than their
+		 * own status, e.g. bbPress topics inside a private or hidden forum.
+		 *
+		 * @since 1.3.8
+		 * @param bool     $indexable Whether the post may be indexed.
+		 * @param \WP_Post $post      Post object.
+		 */
+		return (bool) \apply_filters( 'loupe_search_is_indexable', true, $post );
+	}
+
+	/**
+	 * Post statuses that may be indexed for a post type.
+	 *
+	 * @param string $post_type Post type slug.
+	 * @return array<int,string>
+	 */
+	private function get_indexable_statuses( string $post_type ): array {
+		return WP_Loupe_Utils::get_indexable_post_statuses( $post_type );
 	}
 
 	/**

@@ -98,12 +98,12 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\\WP_CLI' ) ) {
 		}
 	}
 
-	\WP_CLI::add_command( 'loupe-search', '\\Soderlind\\Plugin\\WPLoupe\\WP_Loupe_CLI_Command' );
+	\WP_CLI::add_command( 'loupe-search', WP_Loupe_CLI_Command::class );
 
 	// Deprecated alias, kept for backward compatibility. Deprecated since 1.1.0; use `wp loupe-search`.
 	\WP_CLI::add_command(
 		'wp-loupe',
-		'\\Soderlind\\Plugin\\WPLoupe\\WP_Loupe_CLI_Command',
+		WP_Loupe_CLI_Command::class,
 		[
 			'before_invoke' => function () {
 				\WP_CLI::warning( 'The `wp wp-loupe` command is deprecated since 1.1.0 and will be removed in a future major release. Use `wp loupe-search` instead.' );

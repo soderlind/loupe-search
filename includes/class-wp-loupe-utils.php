@@ -33,6 +33,27 @@ class WP_Loupe_Utils {
 	}
 
 	/**
+	 * Post statuses that may be indexed and shown in front-end results for a post type.
+	 *
+	 * @since 1.3.8
+	 * @param string $post_type Post type slug.
+	 * @return array<int, string> Post statuses.
+	 */
+	public static function get_indexable_post_statuses( string $post_type ): array {
+		/**
+		 * Filters the post statuses that are indexed for a post type.
+		 *
+		 * Only add statuses that are publicly viewable.
+		 *
+		 * @since 1.3.8
+		 * @param array<int,string> $statuses  Indexable statuses. Default [ 'publish' ].
+		 * @param string            $post_type Post type slug.
+		 */
+		$statuses = apply_filters( 'loupe_search_indexable_post_statuses', array( 'publish' ), $post_type );
+		return array_values( array_filter( array_map( 'strval', (array) $statuses ) ) );
+	}
+
+	/**
 	 * Indexed post types narrowed to publicly viewable ones.
 	 *
 	 * Unauthenticated endpoints must scope the search itself to these post types,

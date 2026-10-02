@@ -1,10 +1,10 @@
 === Loupe Search ===
 Contributors: PerS
-Tags: search, full-text search, typo-tolerant, fast search, SQLite
+Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.7
+Stable tag: 1.3.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -172,6 +172,14 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.3.8 =
+* Added: bbPress support. Forums, topics and replies are indexed only when their forum and all parent forums are public; changing a forum's visibility or moving a forum or topic re-checks the affected sub-forums, topics and replies.
+* Added: `loupe_search_is_indexable` filter to keep individual posts out of the index.
+* Added: `loupe_search_indexable_post_statuses` filter to index extra publicly viewable statuses per post type.
+* Fixed: WP-CLI crashed on sites where Loupe Search is active because `wp loupe-search` was registered under the old namespace.
+* Fixed: A full reindex now applies the same rules as saving a post, so password-protected posts are no longer indexed by a reindex.
+* Changed: Updated npm dependencies.
 
 = 1.3.7 =
 * Added: Admin notice prompting a reindex when an index is missing or out of date (e.g. after upgrading or on multisite), with a link to the reindex dashboard.

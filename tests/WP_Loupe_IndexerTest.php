@@ -97,6 +97,46 @@ class WP_Loupe_IndexerTest extends TestCase {
 		$this->assertTrue( $this->invoke( $indexer, 'is_indexable', 5, $post ) );
 	}
 
+	public function test_is_indexable_honours_a_loupe_search_is_indexable_veto() {
+		$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_is_indexable' ] = function () {
+			return false;
+		};
+
+		$indexer = $this->make_indexer();
+		$post    = new \WP_Post( [ 'ID' => 6 ] );
+
+		$this->assertFalse( $this->invoke( $indexer, 'is_indexable', 6, $post ) );
+	}
+
+	public function test_is_indexable_skips_the_veto_filter_for_posts_already_rejected() {
+		$called = false;
+		$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_is_indexable' ] = function () use ( &$called ) {
+			$called = true;
+			return true;
+		};
+
+		$indexer = $this->make_indexer();
+		$post    = new \WP_Post( [ 'ID' => 9, 'post_status' => 'draft' ] );
+
+		$this->assertFalse( $this->invoke( $indexer, 'is_indexable', 9, $post ) );
+		$this->assertFalse( $called, 'a filter returning true must not resurrect a draft' );
+	}
+
+	public function test_indexable_post_statuses_filter_can_opt_in_an_extra_status() {
+		$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_indexable_post_statuses' ] = function ( $statuses ) {
+			$statuses[] = 'closed';
+			return $statuses;
+		};
+
+		$indexer = $this->make_indexer( [ 'topic' ] );
+
+		$closed = new \WP_Post( [ 'ID' => 10, 'post_type' => 'topic', 'post_status' => 'closed' ] );
+		$this->assertTrue( $this->invoke( $indexer, 'is_indexable', 10, $closed ) );
+
+		$private = new \WP_Post( [ 'ID' => 11, 'post_type' => 'topic', 'post_status' => 'private' ] );
+		$this->assertFalse( $this->invoke( $indexer, 'is_indexable', 11, $private ) );
+	}
+
 	// ------------------------------------------------------------------------- add
 
 	/**

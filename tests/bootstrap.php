@@ -511,6 +511,7 @@ if ( ! class_exists( 'WP_Post' ) ) {
 		public $ID            = 0;
 		public $post_type     = 'post';
 		public $post_status   = 'publish';
+		public $post_parent   = 0;
 		public $post_password = '';
 		public $post_title    = '';
 		public $post_content  = '';

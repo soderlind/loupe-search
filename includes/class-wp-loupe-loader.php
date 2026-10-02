@@ -51,6 +51,7 @@ class WP_Loupe_Loader {
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-search-engine.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-search-hooks.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-indexer.php';
+		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-bbpress.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-db.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-utils.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-index-notice.php';
@@ -159,6 +160,10 @@ class WP_Loupe_Loader {
 			$this->search_hooks->register();
 		}
 		$this->indexer = new WP_Loupe_Indexer( $this->post_types );
+
+		if ( WP_Loupe_BBPress::is_active() ) {
+			( new WP_Loupe_BBPress( $this->indexer ) )->register();
+		}
 
 		// Admin-only: warn when an index is missing/out of date so results aren't
 		// silently empty (e.g. after the multisite path change orphans an old index).

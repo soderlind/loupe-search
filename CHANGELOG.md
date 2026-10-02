@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.8] - 2026-10-02
+
+### Added
+- bbPress support: forums, topics and replies are indexed only when their forum and all parent forums are public. Making a forum private, hidden or public again, or moving a forum or topic, automatically re-checks the affected sub-forums, topics and replies.
+- `loupe_search_is_indexable` filter to keep individual posts out of the index.
+- `loupe_search_indexable_post_statuses` filter to index extra publicly viewable statuses per post type.
+
+### Fixed
+- WP-CLI: the `wp loupe-search` command was registered under the old `WPLoupe` namespace, so every `wp` command crashed on sites where Loupe Search is active.
+- A full reindex (settings screen and `wp loupe-search reindex`) now applies the same rules as saving a post, so password-protected posts are no longer indexed by a reindex.
+
+### Changed
+- Updated npm development and production dependencies.
+
 ## [1.3.7] - 2026-09-27
 
 ### Added
