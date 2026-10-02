@@ -13,6 +13,8 @@ weighted, how results are returned, and how matches are highlighted.
 3. [Indexing scope](#indexing-scope)
    - [`loupe_search_post_types`](#loupe_search_post_types)
    - [`loupe_search_index_protected`](#loupe_search_index_protected)
+   - [`loupe_search_indexable_post_statuses`](#loupe_search_indexable_post_statuses)
+   - [`loupe_search_is_indexable`](#loupe_search_is_indexable)
    - [`loupe_search_db_path`](#loupe_search_db_path)
 4. [Field content](#field-content)
    - [`loupe_search_field_{$field_name}`](#loupe_search_field_field_name)
@@ -52,6 +54,8 @@ register them at load time (not inside an `init` callback that runs late).
 | --- | --- | --- |
 | `loupe_search_post_types` | `array $post_types` | Choose which post types are indexed |
 | `loupe_search_index_protected` | `bool $should_index` | Index password-protected posts |
+| `loupe_search_indexable_post_statuses` | `array $statuses`, `string $post_type` | Index extra publicly viewable statuses |
+| `loupe_search_is_indexable` | `bool $indexable`, `WP_Post $post` | Veto individual posts from the index |
 | `loupe_search_db_path` | `string $path` | Move the index directory |
 | `loupe_search_field_{$field_name}` | `mixed $value` | Clean a core post field before indexing |
 | `loupe_search_schema_{$post_type}` | `array $schema` | Add/remove fields, set weights and sorting |
@@ -98,6 +102,42 @@ add_filter( 'loupe_search_index_protected', '__return_true' );
 The filter receives no post object, so it cannot make a per-post decision —
 it is an on/off switch. Note that indexed protected posts become findable by
 their content, which is usually not what a password is for.
+
+### `loupe_search_indexable_post_statuses`
+
+Post statuses that are indexed for a post type. Defaults to `[ 'publish' ]`.
+Applies when a post is saved and during a full or CLI reindex.
+
+```php
+// Index closed bbPress topics, which stay publicly readable.
+add_filter( 'loupe_search_indexable_post_statuses', function ( array $statuses, string $post_type ): array {
+	if ( 'topic' === $post_type ) {
+		$statuses[] = 'closed';
+	}
+	return $statuses;
+}, 10, 2 );
+```
+
+Only add statuses that anonymous visitors can read. The REST API and abilities
+still return only `publish` posts to unauthenticated callers.
+
+### `loupe_search_is_indexable`
+
+Final per-post veto, run after the post type, status and password checks pass.
+Return `false` to keep a post out of the index (an already indexed copy is
+removed on the next save). Returning `true` cannot re-admit a post that an
+earlier check rejected.
+
+```php
+add_filter( 'loupe_search_is_indexable', function ( bool $indexable, WP_Post $post ): bool {
+	return $indexable && ! get_post_meta( $post->ID, 'noindex', true );
+}, 10, 2 );
+```
+
+When bbPress is active, Loupe Search uses this filter itself: forums, topics
+and replies are only indexed when their forum and all of its parent forums are
+public. When a forum is made private, hidden or public again, its sub-forums,
+topics and replies are re-evaluated automatically.
 
 ### `loupe_search_db_path`
 
