@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.8] - 2026-10-02
 
 ### Added
-- bbPress support: forums, topics and replies are indexed only when their forum and all parent forums are public. Making a forum private, hidden or public again automatically re-checks its sub-forums, topics and replies.
+- bbPress support: forums, topics and replies are indexed only when their forum and all parent forums are public. Making a forum private, hidden or public again, or moving a forum or topic, automatically re-checks the affected sub-forums, topics and replies.
 - `loupe_search_is_indexable` filter to keep individual posts out of the index.
 - `loupe_search_indexable_post_statuses` filter to index extra publicly viewable statuses per post type.
 

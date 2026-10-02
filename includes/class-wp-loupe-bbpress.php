@@ -43,7 +43,11 @@ class WP_Loupe_BBPress {
 		foreach ( [ 'bbp_publicized_forum', 'bbp_privatized_forum', 'bbp_hid_forum' ] as $hook ) {
 			add_action( $hook, [ $this, 'reindex_forum_contents' ] );
 		}
-		add_action( 'wp_after_insert_post', [ $this, 'maybe_reindex_forum_contents' ], 20, 4 );
+		// Re-check once bbPress has written its relationship meta, which can land after wp_after_insert_post.
+		foreach ( [ 'bbp_insert_topic', 'bbp_insert_reply', 'bbp_new_topic', 'bbp_edit_topic', 'bbp_new_reply', 'bbp_edit_reply' ] as $hook ) {
+			add_action( $hook, [ $this, 'reindex_post' ] );
+		}
+		add_action( 'wp_after_insert_post', [ $this, 'maybe_reindex_after_save' ], 20, 4 );
 	}
 
 	/**
@@ -67,7 +71,7 @@ class WP_Loupe_BBPress {
 	}
 
 	/**
-	 * Reindex a forum's contents when a regular post save changed its status.
+	 * Re-check posts whose visibility depends on a forum or topic that was moved or changed status.
 	 *
 	 * @param int           $post_id     Post ID.
 	 * @param \WP_Post      $post        Post object.
@@ -75,14 +79,62 @@ class WP_Loupe_BBPress {
 	 * @param \WP_Post|null $post_before Post before the update.
 	 * @return void
 	 */
-	public function maybe_reindex_forum_contents( int $post_id, $post, bool $update, $post_before = null ): void {
+	public function maybe_reindex_after_save( int $post_id, $post, bool $update, $post_before = null ): void {
 		if ( ! $update || ! $post instanceof \WP_Post || ! $post_before instanceof \WP_Post ) {
 			return;
 		}
-		if ( bbp_get_forum_post_type() !== $post->post_type || $post->post_status === $post_before->post_status ) {
+
+		$parent_changed = (int) $post->post_parent !== (int) $post_before->post_parent;
+
+		if ( bbp_get_forum_post_type() === $post->post_type ) {
+			if ( $parent_changed || $post->post_status !== $post_before->post_status ) {
+				$this->reindex_forum_contents( $post_id );
+			}
 			return;
 		}
-		$this->reindex_forum_contents( $post_id );
+
+		if ( bbp_get_topic_post_type() === $post->post_type && $parent_changed ) {
+			$this->reindex_topic_replies( $post_id );
+		}
+	}
+
+	/**
+	 * Re-check a single topic or reply.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return void
+	 */
+	public function reindex_post( $post_id ): void {
+		$post_id = (int) $post_id;
+		if ( $post_id > 0 ) {
+			$this->indexer->reindex_object_ids( [ $post_id ] );
+		}
+	}
+
+	/**
+	 * Re-check all replies of a topic, whose forum is resolved through the topic.
+	 *
+	 * @param int $topic_id Topic ID.
+	 * @return void
+	 */
+	public function reindex_topic_replies( $topic_id ): void {
+		global $wpdb;
+
+		$topic_id = (int) $topic_id;
+		if ( $topic_id <= 0 ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_parent = %d",
+				bbp_get_reply_post_type(),
+				$topic_id
+			)
+		);
+
+		$this->indexer->reindex_object_ids( array_map( 'intval', (array) $ids ) );
 	}
 
 	/**

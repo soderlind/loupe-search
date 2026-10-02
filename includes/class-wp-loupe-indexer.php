@@ -916,17 +916,7 @@ class WP_Loupe_Indexer {
 	 * @return array<int,string>
 	 */
 	private function get_indexable_statuses( string $post_type ): array {
-		/**
-		 * Filters the post statuses that are indexed for a post type.
-		 *
-		 * Only add statuses that are publicly viewable.
-		 *
-		 * @since 1.3.8
-		 * @param array<int,string> $statuses  Indexable statuses. Default [ 'publish' ].
-		 * @param string            $post_type Post type slug.
-		 */
-		$statuses = \apply_filters( 'loupe_search_indexable_post_statuses', array( 'publish' ), $post_type );
-		return array_values( array_filter( array_map( 'strval', (array) $statuses ) ) );
+		return WP_Loupe_Utils::get_indexable_post_statuses( $post_type );
 	}
 
 	/**

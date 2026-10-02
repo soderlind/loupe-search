@@ -174,7 +174,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 == Changelog ==
 
 = 1.3.8 =
-* Added: bbPress support. Forums, topics and replies are indexed only when their forum and all parent forums are public; changing a forum's visibility re-checks its sub-forums, topics and replies.
+* Added: bbPress support. Forums, topics and replies are indexed only when their forum and all parent forums are public; changing a forum's visibility or moving a forum or topic re-checks the affected sub-forums, topics and replies.
 * Added: `loupe_search_is_indexable` filter to keep individual posts out of the index.
 * Added: `loupe_search_indexable_post_statuses` filter to index extra publicly viewable statuses per post type.
 * Fixed: WP-CLI crashed on sites where Loupe Search is active because `wp loupe-search` was registered under the old namespace.

@@ -84,6 +84,33 @@ class WP_Loupe_Search_HooksTest extends TestCase {
 		);
 	}
 
+	public function test_result_hydration_loads_every_indexable_status(): void {
+		$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_indexable_post_statuses' ] = function ( $statuses ) {
+			$statuses[] = 'closed';
+			return $statuses;
+		};
+
+		$closed = new \WP_Post( [ 'ID' => 5, 'post_type' => 'topic', 'post_status' => 'closed' ] );
+		Functions\expect( 'get_posts' )
+			->once()
+			->with( \Mockery::on( function ( $args ) {
+				return [ 'publish', 'closed' ] === $args[ 'post_status' ] && [ 5 ] === $args[ 'post__in' ];
+			} ) )
+			->andReturn( [ $closed ] );
+
+		$engine = $this->getMockBuilder( WP_Loupe_Search_Engine::class )
+			->disableOriginalConstructor()
+			->getMock();
+		$engine->method( 'get_post_types' )->willReturn( [ 'topic' ] );
+
+		$hooks = new WP_Loupe_Search_Hooks( $engine );
+		$posts = ( new \ReflectionMethod( $hooks, 'create_post_objects' ) )
+			->invoke( $hooks, [ [ 'id' => 5, 'post_type' => 'topic' ] ] );
+
+		unset( $GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_indexable_post_statuses' ] );
+		$this->assertSame( [ 5 ], array_map( fn( $p ) => $p->ID, $posts ), 'a closed topic must survive hydration' );
+	}
+
 	public function test_highlight_content_block_skips_script_and_existing_marks(): void {
 		Functions\when( 'is_search' )->justReturn( true );
 

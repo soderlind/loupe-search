@@ -106,7 +106,8 @@ their content, which is usually not what a password is for.
 ### `loupe_search_indexable_post_statuses`
 
 Post statuses that are indexed for a post type. Defaults to `[ 'publish' ]`.
-Applies when a post is saved and during a full or CLI reindex.
+Applies when a post is saved, during a full or CLI reindex, and when front-end
+search results are loaded.
 
 ```php
 // Index closed bbPress topics, which stay publicly readable.
@@ -136,8 +137,9 @@ add_filter( 'loupe_search_is_indexable', function ( bool $indexable, WP_Post $po
 
 When bbPress is active, Loupe Search uses this filter itself: forums, topics
 and replies are only indexed when their forum and all of its parent forums are
-public. When a forum is made private, hidden or public again, its sub-forums,
-topics and replies are re-evaluated automatically.
+public. When a forum is made private, hidden or public again, or a forum or
+topic is moved, the affected sub-forums, topics and replies are re-evaluated
+automatically.
 
 ### `loupe_search_db_path`
 

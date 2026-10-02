@@ -141,10 +141,67 @@ namespace Soderlind\Plugin\LoupeSearch {
 			$private = new \WP_Post( [ 'ID' => 2, 'post_type' => 'forum', 'post_status' => 'private' ] );
 			$topic   = new \WP_Post( [ 'ID' => 20, 'post_type' => 'topic', 'post_status' => 'private' ] );
 
-			$bbp->maybe_reindex_forum_contents( 2, $public, true, $public );   // unchanged
-			$bbp->maybe_reindex_forum_contents( 2, $private, false, null );    // new forum
-			$bbp->maybe_reindex_forum_contents( 20, $topic, true, $public );   // not a forum
-			$bbp->maybe_reindex_forum_contents( 2, $private, true, $public );  // publish → private
+			$bbp->maybe_reindex_after_save( 2, $public, true, $public );   // unchanged
+			$bbp->maybe_reindex_after_save( 2, $private, false, null );    // new forum
+			$bbp->maybe_reindex_after_save( 20, $topic, true, $public );   // not a forum
+			$bbp->maybe_reindex_after_save( 2, $private, true, $public );  // publish → private
+		}
+
+		public function test_moving_a_forum_under_another_parent_reindexes_its_subtree() {
+			$bbp = $this->getMockBuilder( WP_Loupe_BBPress::class )
+				->setConstructorArgs( [ $this->recording_indexer() ] )
+				->onlyMethods( [ 'reindex_forum_contents' ] )
+				->getMock();
+			$bbp->expects( $this->once() )->method( 'reindex_forum_contents' )->with( 3 );
+
+			$before = new \WP_Post( [ 'ID' => 3, 'post_type' => 'forum', 'post_parent' => 1 ] );
+			$after  = new \WP_Post( [ 'ID' => 3, 'post_type' => 'forum', 'post_parent' => 2 ] );
+
+			$bbp->maybe_reindex_after_save( 3, $after, true, $before );
+		}
+
+		public function test_moving_a_topic_to_another_forum_reindexes_its_replies() {
+			$bbp = $this->getMockBuilder( WP_Loupe_BBPress::class )
+				->setConstructorArgs( [ $this->recording_indexer() ] )
+				->onlyMethods( [ 'reindex_topic_replies', 'reindex_forum_contents' ] )
+				->getMock();
+			$bbp->expects( $this->once() )->method( 'reindex_topic_replies' )->with( 10 );
+			$bbp->expects( $this->never() )->method( 'reindex_forum_contents' );
+
+			$before = new \WP_Post( [ 'ID' => 10, 'post_type' => 'topic', 'post_parent' => 1 ] );
+			$after  = new \WP_Post( [ 'ID' => 10, 'post_type' => 'topic', 'post_parent' => 2 ] );
+			$edited = new \WP_Post( [ 'ID' => 10, 'post_type' => 'topic', 'post_parent' => 2, 'post_title' => 'New' ] );
+
+			$bbp->maybe_reindex_after_save( 10, $after, true, $before );
+			$bbp->maybe_reindex_after_save( 10, $edited, true, $after ); // same forum: no reply refresh
+		}
+
+		public function test_topic_replies_are_looked_up_by_parent_and_reindexed() {
+			$GLOBALS[ 'wpdb' ] = new class {
+				public $posts = 'wp_posts';
+				public function prepare( $query, ...$args ) {
+					return [ $query, $args ];
+				}
+				public function get_col( $prepared ) {
+					[ $query, $args ] = $prepared;
+					return ( str_contains( $query, 'post_parent = %d' ) && [ 'reply', 10 ] === $args ) ? [ '11', '12' ] : [];
+				}
+			};
+
+			$indexer = $this->recording_indexer();
+			$this->integration( $indexer )->reindex_topic_replies( 10 );
+
+			$this->assertSame( [ 11, 12 ], $indexer->reindexed );
+		}
+
+		public function test_bbpress_save_actions_recheck_the_saved_post() {
+			$indexer = $this->recording_indexer();
+			$bbp     = $this->integration( $indexer );
+
+			$bbp->reindex_post( 20 );
+			$bbp->reindex_post( 0 );
+
+			$this->assertSame( [ 20 ], $indexer->reindexed );
 		}
 	}
 }
