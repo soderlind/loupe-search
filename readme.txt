@@ -1,6 +1,6 @@
 === Loupe Search ===
 Contributors: PerS
-Tags: search, full-text search, typo-tolerant, fast search, SQLite
+Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
