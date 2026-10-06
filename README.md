@@ -187,12 +187,16 @@ Developer documentation (schema + examples + Gutenberg block example): **[docs/s
 
 ## AI Agent Integration (WordPress Abilities API)
 
-Loupe Search registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/apis/abilities-api/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra configuration required:
+Loupe Search registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/apis/abilities-api/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra Loupe Search configuration required:
 
 - `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
 - `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
 
 Both abilities are discoverable through the standard WordPress Abilities registry and exposed via REST (`show_in_rest`).
+
+### Connecting an AI agent
+
+For an AI agent to use these abilities, install and activate the **[MCP Adapter](https://wordpress.org/plugins/mcp-adapter/)** plugin. It exposes registered abilities to agents over the Model Context Protocol (MCP).
 
 > The legacy `wp-loupe/*` abilities (category `wp-loupe`) still work as deprecated aliases. See **[Renamed from WP Loupe](docs/renamed-from-wp-loupe.md)**.
 >

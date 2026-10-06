@@ -65,7 +65,9 @@ Loupe Search registers two abilities via the WordPress Abilities API (WordPress 
 * `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
 * `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
 
-These abilities are discoverable through the standard WordPress Abilities registry and require no additional configuration. As of 1.2.0 the ability namespace is `loupe-search`; the legacy `wp-loupe/search` and `wp-loupe/get-post` abilities still work but are deprecated aliases.
+These abilities are discoverable through the standard WordPress Abilities registry and require no additional Loupe Search configuration. As of 1.2.0 the ability namespace is `loupe-search`; the legacy `wp-loupe/search` and `wp-loupe/get-post` abilities still work but are deprecated aliases.
+
+For an AI agent to use these abilities, install and activate the [MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) plugin. It exposes registered abilities to agents over the Model Context Protocol (MCP).
 
 [Upgrading from the experimental MCP server?](https://github.com/soderlind/loupe-search/blob/main/docs/migration-mcp-to-abilities.md) The MCP server, token service, and WP-CLI token commands were removed in 0.8.5. Use the Abilities API endpoints described above instead; no configuration migration is required.
 
