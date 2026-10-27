@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.8
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -42,6 +42,8 @@ Loupe Search improves WordPress core search by maintaining its own index for fas
 * Post type selection
 * Field configuration options
 * One-click reindexing
+* Exclude individual posts from search (post list column, Quick Edit, bulk actions, editor sidebar)
+* Opt-in Search insights: top searches and searches without results, stored as privacy-friendly daily totals (no IP, user or browser data)
 * Processing time monitoring
 
 = Developer Features =
@@ -55,6 +57,7 @@ See the [Search API documentation](https://github.com/soderlind/loupe-search/blo
 
 = Add-ons =
 
+* 🔍 [Loupe Search Block](https://github.com/soderlind/loupe-search-block) — A search block with live results as you type, a post type filter, category and tag facets, sorting and highlighted snippets. Falls back to a plain search form without JavaScript.
 * 🌐 [Loupe Cross-Site Search](https://github.com/soderlind/loupe-cross-site-search) — Search across every site in a WordPress multisite network from a single hub. Mirrors each site's public content into one combined index and ships a ready-to-use Cross-Site Search block with site and post-type facets, sorting, and highlighted snippets. Requires WordPress multisite 6.9+ and Loupe Search active on the network.
 * 📁 [VMFA Search](https://github.com/soderlind/vmfa-search) — Supercharges the native Media Library search field with fast, typo-tolerant search across title, filename, alt text, caption, and description. Requires the [Virtual Media Folders](https://wordpress.org/plugins/virtual-media-folders/) plugin.
 
@@ -146,7 +149,7 @@ No. Loupe Search uses a separate, optimized search index and doesn't impact your
 
 = Can I customize what content is searchable? =
 
-Yes, using filters you can control exactly what content gets indexed and how it's searched.
+Yes, using filters you can control exactly what content gets indexed and how it's searched. To hide a single post, mark it as excluded from the post list or the editor sidebar. Excluding a post only removes it from search results; it stays public at its URL.
 
 = Does it work with custom post types? =
 
@@ -174,6 +177,17 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.4.0 =
+* Added: Exclude individual posts from search, from the post list (Search column, Quick Edit, bulk actions) or the editor sidebar. The index updates immediately. This hides posts from search results only; it is not access control. Fixes #69.
+* Added: The Dashboard shows the number of excluded posts per post type, and the index-status REST response includes `excluded`.
+* Added: Search insights (opt-in, off by default): top searches, top searches without results and the average result count for the last 7, 30 or 90 days. Stores daily totals per query only — no IP address, user, user agent or time of day. 90-day retention by default, purged daily. Fixes #70.
+* Added: REST `countSearch` parameter on `GET` and `POST /search`.
+* Added: Public REST `GET /search-fields` route listing the searchable post types and the fields each one can filter, facet and sort on.
+* Added: `loupe_search_searched` action and `loupe_search_insights_should_count` filter.
+* Fixed: REST `POST /search` ignored `attributesToHighlight` and `attributesToCrop`, so `_formatted` was never returned.
+* Fixed: REST search `_formatted` values are filtered to inline highlight tags, so stored markup can't reach the page as HTML.
+* Fixed: The "reindex needed" admin notice now ignores excluded posts.
 
 = 1.3.8 =
 * Added: bbPress support. Forums, topics and replies are indexed only when their forum and all parent forums are public; changing a forum's visibility or moving a forum or topic re-checks the affected sub-forums, topics and replies.

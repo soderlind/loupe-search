@@ -52,6 +52,15 @@ function loupe_search_delete_site_data() {
 	delete_option( 'wp_loupe_fields' );
 	delete_option( 'wp_loupe_advanced' );
 
+	// Excluded-post flags.
+	delete_post_meta_by_key( '_loupe_search_exclude' );
+
+	// Search insights: table, settings and purge event.
+	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}loupe_search_insights" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- uninstall routine.
+	delete_option( 'loupe_search_insights' );
+	delete_option( 'loupe_search_insights_db_version' );
+	wp_clear_scheduled_hook( 'loupe_search_insights_purge' );
+
 	// Cached search results. Removed directly because the transient names are hashed.
 	$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- uninstall routine, no caching layer available.
 		$wpdb->prepare(

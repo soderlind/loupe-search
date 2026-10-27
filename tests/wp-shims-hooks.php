@@ -8,8 +8,14 @@
 global $wp_loupe_test_hooks;
 $wp_loupe_test_hooks = []; // [ tag => [ [ callback, priority ], … ] ]
 
+// Fired actions are recorded (tag + args) but never dispatched.
+global $wp_loupe_test_actions;
+$wp_loupe_test_actions = [];
 if ( ! function_exists( 'do_action' ) ) {
-	function do_action( $tag ) { /* no-op */ }
+	function do_action( $tag, ...$args ) {
+		global $wp_loupe_test_actions;
+		$wp_loupe_test_actions[] = array_merge( [ $tag ], $args );
+	}
 }
 if ( ! function_exists( 'add_action' ) ) {
 	function add_action( $tag, $callback, $priority = 10, $accepted_args = 1 ) {

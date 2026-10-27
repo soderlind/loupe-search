@@ -475,7 +475,7 @@ class WPLoupe_Settings_Page {
 		}
 
 		$current_tab = isset( $_GET[ 'tab' ] ) ? sanitize_key( $_GET[ 'tab' ] ) : 'dashboard';
-		$valid_tabs  = [ 'dashboard', 'fields', 'search-behavior' ];
+		$valid_tabs  = [ 'dashboard', 'fields', 'search-behavior', 'insights' ];
 		if ( ! in_array( $current_tab, $valid_tabs, true ) ) {
 			$current_tab = 'dashboard';
 		}
@@ -497,11 +497,17 @@ class WPLoupe_Settings_Page {
 					class="nav-tab <?php echo $current_tab === 'search-behavior' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Search Behavior', 'loupe-search' ); ?>
 				</a>
+				<a href="?page=loupe-search&tab=insights"
+					class="nav-tab <?php echo $current_tab === 'insights' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Search insights', 'loupe-search' ); ?>
+				</a>
 			</nav>
 
 			<?php
 			if ( 'dashboard' === $current_tab ) {
 				$this->render_dashboard_tab();
+			} elseif ( 'insights' === $current_tab ) {
+				WP_Loupe_Insights::render_tab();
 			} else {
 				?>
 				<form action="options.php" method="POST">

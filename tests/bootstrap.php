@@ -97,6 +97,14 @@ if ( ! function_exists( 'update_post_meta' ) ) {
 	}
 }
 
+if ( ! function_exists( 'delete_post_meta' ) ) {
+	function delete_post_meta( $post_id, $meta_key, $meta_value = '' ) {
+		global $wp_loupe_test_post_meta;
+		unset( $wp_loupe_test_post_meta[ $post_id ][ $meta_key ] );
+		return true;
+	}
+}
+
 if ( ! function_exists( 'get_post_meta' ) ) {
 	function get_post_meta( $post_id, $meta_key, $single = true ) {
 		global $wp_loupe_test_post_meta;
@@ -343,7 +351,19 @@ if ( ! function_exists( 'get_locale' ) ) {
 }
 if ( ! function_exists( 'current_user_can' ) ) {
 	function current_user_can( $cap ) {
-		return true;
+		// Tests may set $GLOBALS['wp_loupe_test_user_can'] to simulate a visitor.
+		return $GLOBALS[ 'wp_loupe_test_user_can' ] ?? true;
+	}
+}
+if ( ! function_exists( 'rest_sanitize_boolean' ) ) {
+	function rest_sanitize_boolean( $value ) {
+		if ( is_string( $value ) ) {
+			$value = strtolower( $value );
+			if ( in_array( $value, [ 'false', '0', '' ], true ) ) {
+				return false;
+			}
+		}
+		return (bool) $value;
 	}
 }
 if ( ! function_exists( 'rest_ensure_response' ) ) {
@@ -358,12 +378,13 @@ if ( ! function_exists( 'get_post' ) ) {
 		}
 		// Provide richer WP_Post-like stub so REST enrichment passes.
 		return (object) [
-			'ID'           => (int) $id,
-			'post_status'  => 'publish',
-			'post_type'    => ( (int) $id % 2 === 0 ) ? 'post' : 'page', // alternate types deterministically
-			'post_title'   => 'Title ' . $id,
-			'post_content' => 'Content for ' . $id,
-			'post_author'  => 1,
+			'ID'            => (int) $id,
+			'post_status'   => 'publish',
+			'post_type'     => ( (int) $id % 2 === 0 ) ? 'post' : 'page', // alternate types deterministically
+			'post_title'    => 'Title ' . $id,
+			'post_content'  => 'Content for ' . $id,
+			'post_author'   => 1,
+			'post_password' => '',
 		];
 	}
 }

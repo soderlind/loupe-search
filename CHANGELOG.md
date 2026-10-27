@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-10-27
+
+### Added
+- Exclude individual posts from search: a *Search* column, Quick Edit checkbox and *Exclude from search* / *Include in search* bulk actions on the post list, plus a *Loupe Search* panel in the editor sidebar. The index updates immediately. Exclusion hides a post from search results only; it is not access control. Fixes [#69](https://github.com/soderlind/loupe-search/issues/69).
+- The Dashboard health table shows the number of excluded posts per post type, and the index-status REST response includes `excluded`.
+- Search insights (opt-in, off by default): a new Settings tab with the top 20 searches, the top 20 searches without results and the average result count for the last 7, 30 or 90 days. Stores daily totals per normalized query only — no IP address, user, user agent or time of day. Counts front-end visitor searches (the search page, and REST searches that send `countSearch: true`); skips admins, bots, WP-CLI and admin screens, and discards email- or phone-like queries. 90-day retention by default, purged daily; Clear all data button; suggested privacy policy text. Uninstall removes the table, settings and cron event. Fixes [#70](https://github.com/soderlind/loupe-search/issues/70).
+- REST: `countSearch` parameter on `GET` and `POST /search`.
+- REST: public `GET /search-fields` route listing the searchable post types and the fields each one can filter, facet and sort on, so front ends can offer only allowed options.
+- `loupe_search_searched` action and `loupe_search_insights_should_count` filter.
+- Docs: recipes for excluding posts by rule and for honouring an SEO plugin's noindex via `loupe_search_is_indexable`.
+
+### Fixed
+- REST `POST /search`: `attributesToHighlight` and `attributesToCrop` were silently dropped for every field, so `_formatted` was never returned. The highlightable-field allowlist now reads the field names from the schema correctly.
+- REST search: `_formatted` values are now filtered to inline highlight tags (`mark`, `em`, `strong`, `span`, `b`, `i`), so stored markup can't reach the page as HTML.
+- The *reindex needed* admin notice now ignores excluded posts, matching the Dashboard health table.
+
 ## [1.3.8] - 2026-10-02
 
 ### Added

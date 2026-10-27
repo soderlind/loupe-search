@@ -70,9 +70,9 @@ class WP_Loupe_LoaderTest extends TestCase {
 
 		$loader = WP_Loupe_Loader::get_instance();
 
-		$this->assertSame(
+		$this->assertContains(
 			[ [ $loader, 'load_textdomain' ], 10 ],
-			$GLOBALS[ 'wp_loupe_test_hooks' ][ 'init' ][ 0 ] ?? null
+			$GLOBALS[ 'wp_loupe_test_hooks' ][ 'init' ] ?? []
 		);
 	}
 

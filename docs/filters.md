@@ -34,8 +34,11 @@ weighted, how results are returned, and how matches are highlighted.
    - [`loupe_search_highlight_crop_fields`](#loupe_search_highlight_crop_fields)
    - [`loupe_search_highlight_crop_length`](#loupe_search_highlight_crop_length)
    - [`loupe_search_highlight_crop_marker`](#loupe_search_highlight_crop_marker)
-9. [Recipes](#recipes)
-10. [After changing a filter](#after-changing-a-filter)
+9. [Search insights](#search-insights)
+   - [`loupe_search_insights_should_count`](#loupe_search_insights_should_count)
+   - [`loupe_search_searched` (action)](#loupe_search_searched-action)
+10. [Recipes](#recipes)
+11. [After changing a filter](#after-changing-a-filter)
 
 ## Where to put filter code
 
@@ -70,6 +73,9 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_highlight_crop_fields` | `array $fields` | Choose which fields become cropped snippets |
 | `loupe_search_highlight_crop_length` | `int $length` | Change snippet length (in words) |
 | `loupe_search_highlight_crop_marker` | `string $marker` | Change the ellipsis on cropped snippets |
+| `loupe_search_insights_should_count` | `bool $countable`, `string $source` | Decide whether a visitor search is counted by Search insights |
+
+Action: `loupe_search_searched` (`string $query`, `int $total_hits`, `string $source`) fires after each countable visitor search — see [Search insights](#search-insights).
 
 ## Indexing scope
 
@@ -134,6 +140,41 @@ add_filter( 'loupe_search_is_indexable', function ( bool $indexable, WP_Post $po
 	return $indexable && ! get_post_meta( $post->ID, 'noindex', true );
 }, 10, 2 );
 ```
+
+**Excluded posts.** Editors can exclude a single post without code: use the
+*Search* column, Quick Edit or the *Exclude from search* / *Include in search*
+bulk actions on the post list, or the *Loupe Search* panel in the editor
+sidebar. The flag is stored in the `_loupe_search_exclude` post meta and applied
+through this filter (priority 5), and the index is updated immediately.
+Exclusion only hides a post from search results — it is **not** access control;
+the post is still public at its URL.
+
+**Exclude by rule**, e.g. everything in a category:
+
+```php
+add_filter( 'loupe_search_is_indexable', function ( bool $indexable, WP_Post $post ): bool {
+	return $indexable && ! has_category( 'internal', $post );
+}, 10, 2 );
+```
+
+**Honour an SEO plugin's noindex**. Loupe Search does not read SEO plugin
+settings itself; opt in with a filter. Yoast SEO stores `1` in
+`_yoast_wpseo_meta-robots-noindex`, Rank Math stores `noindex` in the
+`rank_math_robots` array:
+
+```php
+add_filter( 'loupe_search_is_indexable', function ( bool $indexable, WP_Post $post ): bool {
+	if ( ! $indexable ) {
+		return false;
+	}
+	if ( '1' === get_post_meta( $post->ID, '_yoast_wpseo_meta-robots-noindex', true ) ) {
+		return false;
+	}
+	return ! in_array( 'noindex', (array) get_post_meta( $post->ID, 'rank_math_robots', true ), true );
+}, 10, 2 );
+```
+
+Run a reindex after adding or changing a rule so existing posts are re-evaluated.
 
 When bbPress is active, Loupe Search uses this filter itself: forums, topics
 and replies are only indexed when their forum and all of its parent forums are
@@ -429,6 +470,42 @@ The marker placed where text is trimmed. Default `…`.
 
 ```php
 add_filter( 'loupe_search_highlight_crop_marker', fn() => ' [&hellip;]' );
+```
+
+## Search insights
+
+Search insights (Settings → Loupe Search → Search insights) is off by default.
+When on, it stores daily totals per normalized query — searches, zero-result
+searches and total results — and nothing about the visitor. Searches are
+counted from the WordPress search page (first page only) and from REST requests
+that send `countSearch: true`. Admin screens, WP-CLI, cron, users who can
+`manage_options` and obvious bots are skipped; queries longer than 100
+characters or that look like an email address or phone number are discarded.
+
+### `loupe_search_insights_should_count`
+
+Final say on whether the current search is counted. `$source` is `main` (the
+WordPress search page) or `rest`.
+
+```php
+// Don't count searches from logged-in users.
+add_filter( 'loupe_search_insights_should_count', function ( bool $countable, string $source ): bool {
+	return $countable && ! is_user_logged_in();
+}, 10, 2 );
+```
+
+### `loupe_search_searched` (action)
+
+Fires after a visitor search that may be counted (before the insights checks
+above), with the query as typed, the total number of hits and the source. Use it
+to feed your own analytics; never store personal data from the request.
+
+```php
+add_action( 'loupe_search_searched', function ( string $query, int $total_hits, string $source ): void {
+	if ( 0 === $total_hits ) {
+		do_action( 'my_analytics_event', 'search_no_results' );
+	}
+}, 10, 3 );
 ```
 
 ## Recipes
