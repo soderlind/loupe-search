@@ -350,7 +350,7 @@ class WP_Loupe_Search_Engine {
 	 *
 	 * True when the index is missing/unreadable/needs-reindex, or when it exists with
 	 * a valid schema but holds zero documents while the site actually has published
-	 * posts of that type — the exact state left behind when a fresh empty index is
+	 * (non-excluded) posts of that type — the exact state left behind when a fresh empty index is
 	 * created at a new location (e.g. the multisite per-site path change, issue #56).
 	 *
 	 * @param string $post_type
@@ -393,6 +393,8 @@ class WP_Loupe_Search_Engine {
 	/**
 	 * Whether the post type has at least one published post worth indexing.
 	 *
+	 * Excluded posts are never indexed, so they don't count.
+	 *
 	 * @param string $post_type
 	 * @return bool
 	 */
@@ -400,8 +402,12 @@ class WP_Loupe_Search_Engine {
 		if ( ! function_exists( 'wp_count_posts' ) ) {
 			return false;
 		}
-		$counts = wp_count_posts( $post_type );
-		return is_object( $counts ) && ! empty( $counts->publish ) && (int) $counts->publish > 0;
+		$counts  = wp_count_posts( $post_type );
+		$publish = ( is_object( $counts ) && isset( $counts->publish ) ) ? (int) $counts->publish : 0;
+		if ( $publish <= 0 ) {
+			return false;
+		}
+		return $publish - WP_Loupe_Exclusion::count_excluded( $post_type ) > 0;
 	}
 
 	/**

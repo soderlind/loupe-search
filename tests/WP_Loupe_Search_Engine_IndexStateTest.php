@@ -1,6 +1,7 @@
 <?php
 namespace Soderlind\Plugin\LoupeSearch\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Soderlind\Plugin\LoupeSearch\WP_Loupe_Search_Engine;
 
@@ -57,5 +58,38 @@ class WP_Loupe_Search_Engine_IndexStateTest extends TestCase {
 	public function test_empty_index_without_content_does_not_need_rebuild(): void {
 		$GLOBALS[ 'wp_loupe_test_published_counts' ][ 'post' ] = 0;
 		$this->assertFalse( $this->engine( true, 0 )->index_needs_rebuild( 'post' ) );
+	}
+
+	#[DataProvider( 'excluded_provider' )]
+	public function test_empty_index_accounts_for_excluded_posts( int $excluded, bool $expected ): void {
+		$GLOBALS[ 'wp_loupe_test_published_counts' ][ 'post' ] = 2;
+		$previous          = $GLOBALS[ 'wpdb' ] ?? null;
+		$GLOBALS[ 'wpdb' ] = new class( $excluded ) {
+			public $posts    = 'wp_posts';
+			public $postmeta = 'wp_postmeta';
+			private int $excluded;
+			public function __construct( int $excluded ) {
+				$this->excluded = $excluded;
+			}
+			public function prepare( $query, ...$args ) {
+				return $query;
+			}
+			public function get_var( $query ) {
+				return (string) $this->excluded;
+			}
+		};
+
+		try {
+			$this->assertSame( $expected, $this->engine( true, 0 )->index_needs_rebuild( 'post' ) );
+		} finally {
+			$GLOBALS[ 'wpdb' ] = $previous;
+		}
+	}
+
+	public static function excluded_provider(): array {
+		return [
+			'all published posts excluded' => [ 2, false ],
+			'some published posts left'    => [ 1, true ],
+		];
 	}
 }

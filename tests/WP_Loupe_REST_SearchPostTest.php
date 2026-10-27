@@ -252,6 +252,35 @@ class WP_Loupe_REST_SearchPostTest extends TestCase {
 		$this->assertStringContainsString( '</mark>', $hit[ '_formatted' ][ 'post_title' ] );
 	}
 
+	public function test_post_search_formatted_strips_stored_markup() {
+		$this->seedIndex( 'post', [
+			[
+				'id'           => 1,
+				'post_title'   => 'Hello <script>alert(1)</script><img src=x onerror=alert(2)>',
+				'post_content' => 'Hello <a href="javascript:alert(3)">there</a>',
+			],
+		] );
+
+		$rest = new WP_Loupe_REST();
+		$this->setSchemaManagerStub( $rest, [], [], [ 'post_title', 'post_content' ] );
+
+		$response = $rest->handle_search_request_post(
+			$this->makeJsonRequest( [
+				'q'                     => 'hello',
+				'postTypes'             => [ 'post' ],
+				'attributesToHighlight' => [ 'post_title', 'post_content' ],
+				'highlightStartTag'     => '<mark>',
+				'highlightEndTag'       => '</mark>',
+			] )
+		);
+
+		$formatted = $response[ 'hits' ][ 0 ][ '_formatted' ];
+		foreach ( [ 'post_title', 'post_content' ] as $field ) {
+			$this->assertStringContainsString( '<mark>', $formatted[ $field ] );
+			$this->assertDoesNotMatchRegularExpression( '/<\s*(script|img|a)\b/i', $formatted[ $field ] );
+		}
+	}
+
 	public function test_search_fields_lists_public_types_with_their_allowlists() {
 		$GLOBALS[ 'wp_loupe_test_non_public_post_types' ] = [ 'page' ];
 

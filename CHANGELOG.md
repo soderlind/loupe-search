@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - REST `POST /search`: `attributesToHighlight` and `attributesToCrop` were silently dropped for every field, so `_formatted` was never returned. The highlightable-field allowlist now reads the field names from the schema correctly.
+- REST search: `_formatted` values are now filtered to inline highlight tags (`mark`, `em`, `strong`, `span`, `b`, `i`), so stored markup can't reach the page as HTML.
+- The *reindex needed* admin notice now ignores excluded posts, matching the Dashboard health table.
 
 ## [1.3.8] - 2026-10-02
 

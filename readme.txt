@@ -186,6 +186,8 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 * Added: Public REST `GET /search-fields` route listing the searchable post types and the fields each one can filter, facet and sort on.
 * Added: `loupe_search_searched` action and `loupe_search_insights_should_count` filter.
 * Fixed: REST `POST /search` ignored `attributesToHighlight` and `attributesToCrop`, so `_formatted` was never returned.
+* Fixed: REST search `_formatted` values are filtered to inline highlight tags, so stored markup can't reach the page as HTML.
+* Fixed: The "reindex needed" admin notice now ignores excluded posts.
 
 = 1.3.8 =
 * Added: bbPress support. Forums, topics and replies are indexed only when their forum and all parent forums are public; changing a forum's visibility or moving a forum or topic re-checks the affected sub-forums, topics and replies.

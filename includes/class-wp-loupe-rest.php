@@ -757,7 +757,7 @@ class WP_Loupe_REST {
 			// request opted in via attributesToHighlight / attributesToCrop. Keys are
 			// Loupe field names (e.g. post_title, post_content).
 			if ( isset( $hit[ '_formatted' ] ) && is_array( $hit[ '_formatted' ] ) ) {
-				$row[ '_formatted' ] = $hit[ '_formatted' ];
+				$row[ '_formatted' ] = self::sanitize_formatted( $hit[ '_formatted' ] );
 			}
 			$enriched[] = $row;
 		}
@@ -931,7 +931,16 @@ class WP_Loupe_REST {
 	 * @return string
 	 */
 	private function sanitize_highlight_tag( string $tag ) {
-		$allowed = [
+		return wp_kses( $tag, self::highlight_allowed_tags() );
+	}
+
+	/**
+	 * Inline tags allowed in highlight tags and in `_formatted` output.
+	 *
+	 * @return array<string,array<string,bool>>
+	 */
+	private static function highlight_allowed_tags(): array {
+		return [
 			'mark'   => [ 'class' => true ],
 			'em'     => [ 'class' => true ],
 			'strong' => [ 'class' => true ],
@@ -939,7 +948,26 @@ class WP_Loupe_REST {
 			'b'      => [ 'class' => true ],
 			'i'      => [ 'class' => true ],
 		];
-		return wp_kses( $tag, $allowed );
+	}
+
+	/**
+	 * Restrict every string in a `_formatted` hit to the inline-tag allowlist.
+	 *
+	 * Loupe does not HTML-escape indexed values when it highlights or crops them,
+	 * so stored markup (e.g. in a custom field) would otherwise reach clients that
+	 * render `_formatted` as HTML.
+	 *
+	 * @param mixed $value Formatted value.
+	 * @return mixed
+	 */
+	private static function sanitize_formatted( $value ) {
+		if ( is_string( $value ) ) {
+			return wp_kses( $value, self::highlight_allowed_tags() );
+		}
+		if ( is_array( $value ) ) {
+			return array_map( [ self::class, 'sanitize_formatted' ], $value );
+		}
+		return $value;
 	}
 
 	/**
@@ -1287,10 +1315,7 @@ class WP_Loupe_REST {
 			$ready         = ! empty( $status[ 'ready' ] );
 			$indexed       = $engine->count_documents( $pt );
 			$excluded      = WP_Loupe_Exclusion::count_excluded( $pt );
-			// An empty but valid index while searchable published content exists still
-			// needs a rebuild — Loupe creates a fresh empty db on load (issue: #56 path
-			// change). Excluded posts are never indexed, so they don't count.
-			$needs_rebuild = ! $ready || ( 0 === $indexed && $publish - $excluded > 0 );
+			$needs_rebuild = $engine->index_needs_rebuild( $pt );
 
 			$items[] = [
 				'postType'     => $pt,

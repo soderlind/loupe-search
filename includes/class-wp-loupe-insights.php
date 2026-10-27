@@ -13,7 +13,7 @@ namespace Soderlind\Plugin\LoupeSearch;
 class WP_Loupe_Insights {
 	public const OPTION            = 'loupe_search_insights';
 	public const DB_VERSION_OPTION = 'loupe_search_insights_db_version';
-	public const DB_VERSION        = '1';
+	public const DB_VERSION        = '2';
 	public const TABLE             = 'loupe_search_insights';
 	public const CRON_HOOK         = 'loupe_search_insights_purge';
 	public const MAX_QUERY_LENGTH  = 100;
@@ -317,9 +317,10 @@ class WP_Loupe_Insights {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$table   = self::table_name();
 		$charset = $wpdb->get_charset_collate();
+		// Binary so accent and case variants (cafe/café) are distinct keys; 400 bytes fits MAX_QUERY_LENGTH UTF-8 chars.
 		dbDelta( "CREATE TABLE {$table} (
   day date NOT NULL,
-  search_query varchar(100) NOT NULL,
+  search_query varbinary(400) NOT NULL,
   searches int(10) unsigned NOT NULL DEFAULT 0,
   zero_results int(10) unsigned NOT NULL DEFAULT 0,
   results_sum bigint(20) unsigned NOT NULL DEFAULT 0,
