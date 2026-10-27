@@ -175,7 +175,7 @@ Yes, you can select which post types to include in the Settings page or via filt
 **Loupe Search works out of the box with WordPress’s standard search.**
 If your theme uses the normal search flow (e.g. a search form that routes to the built-in search results page), Loupe Search will power the results automatically — no custom UI required.
 
-Loupe Search intentionally does **not** ship a front-end search block/shortcode UI.
+Loupe Search intentionally does **not** ship a front-end search block/shortcode UI. For a ready-made one, install the **[Loupe Search Block](https://github.com/soderlind/loupe-search-block)** add-on.
 If you want a custom search experience (autocomplete, filters/facets, geo, custom sorting, etc.), build the UI you want and query Loupe Search via the REST API.
 
 Start here: **[docs/search-api.md](docs/search-api.md)**
@@ -193,6 +193,7 @@ Developer documentation (schema + examples + Gutenberg block example): **[docs/s
 
 ## Add-ons
 
+- **[Loupe Search Block](https://github.com/soderlind/loupe-search-block)** — A search block with live results as you type, a post type filter, category and tag facets, sorting and highlighted snippets. Falls back to a plain search form without JavaScript. Requires Loupe Search 1.4.0+.
 - **[Loupe Cross-Site Search](https://github.com/soderlind/loupe-cross-site-search)** — Search across every site in a WordPress multisite network from a single hub. It mirrors each site's public content into one combined index and ships a ready-to-use Cross-Site Search block with site and post-type facets, sorting, and highlighted snippets. Requires WordPress multisite 6.9+ and Loupe Search active on the network.
 - **[VMFA Search](https://github.com/soderlind/vmfa-search)** — Supercharges the native Media Library search field with fast, typo-tolerant search across title, filename, alt text, caption, and description. Requires the [Virtual Media Folders](https://wordpress.org/plugins/virtual-media-folders/) plugin.
 
