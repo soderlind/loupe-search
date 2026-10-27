@@ -51,6 +51,8 @@ class WP_Loupe_Loader {
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-search-engine.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-search-hooks.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-indexer.php';
+		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-exclusion.php';
+		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-insights.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-bbpress.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-db.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-utils.php';
@@ -160,6 +162,9 @@ class WP_Loupe_Loader {
 			$this->search_hooks->register();
 		}
 		$this->indexer = new WP_Loupe_Indexer( $this->post_types );
+
+		( new WP_Loupe_Exclusion( $this->indexer, (array) $this->post_types ) )->register();
+		( new WP_Loupe_Insights() )->register();
 
 		if ( WP_Loupe_BBPress::is_active() ) {
 			( new WP_Loupe_BBPress( $this->indexer ) )->register();

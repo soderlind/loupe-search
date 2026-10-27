@@ -156,6 +156,21 @@ class WP_Loupe_REST_SearchPostTest extends TestCase {
 		$this->assertSame( 'wp_loupe_unallowlisted_field', $result->get_error_code() );
 	}
 
+	public function test_post_search_announces_only_when_count_search_is_true() {
+		$this->seedIndex( 'post', [
+			[ 'id' => 1, 'post_title' => 'Hello world' ],
+		] );
+		$rest = new WP_Loupe_REST();
+		$this->setSchemaManagerStub( $rest, [], [] );
+
+		$GLOBALS[ 'wp_loupe_test_actions' ] = [];
+		$rest->handle_search_request_post( $this->makeJsonRequest( [ 'q' => 'Hello', 'postTypes' => [ 'post' ] ] ) );
+		$this->assertSame( [], $GLOBALS[ 'wp_loupe_test_actions' ], 'Not counted without countSearch.' );
+
+		$rest->handle_search_request_post( $this->makeJsonRequest( [ 'q' => 'Hello', 'postTypes' => [ 'post' ], 'countSearch' => true ] ) );
+		$this->assertSame( [ [ 'loupe_search_searched', 'Hello', 1, 'rest' ] ], $GLOBALS[ 'wp_loupe_test_actions' ] );
+	}
+
 	public function test_post_search_happy_path_sorts_by_score_and_paginates() {
 		$this->seedIndex( 'post', [
 			[ 'id' => 1, 'post_title' => 'Hello world' ],
@@ -235,6 +250,44 @@ class WP_Loupe_REST_SearchPostTest extends TestCase {
 		$this->assertArrayHasKey( 'post_title', $hit[ '_formatted' ] );
 		$this->assertStringContainsString( '<mark>', $hit[ '_formatted' ][ 'post_title' ] );
 		$this->assertStringContainsString( '</mark>', $hit[ '_formatted' ][ 'post_title' ] );
+	}
+
+	public function test_search_fields_lists_public_types_with_their_allowlists() {
+		$GLOBALS[ 'wp_loupe_test_non_public_post_types' ] = [ 'page' ];
+
+		$rest = new WP_Loupe_REST();
+		$this->setSchemaManagerStub( $rest, [ 'post_date', 'taxonomy_category', 'bad field' ], [ 'post_date', 'post_title' ] );
+
+		$response = $rest->handle_search_fields_request();
+
+		unset( $GLOBALS[ 'wp_loupe_test_non_public_post_types' ] );
+
+		$this->assertSame( [ 'post' ], array_keys( $response[ 'post_types' ] ) );
+		$this->assertSame( [ 'post_date', 'taxonomy_category' ], $response[ 'post_types' ][ 'post' ][ 'filterable' ] );
+		$this->assertSame( [ 'post_date', 'post_title' ], $response[ 'post_types' ][ 'post' ][ 'sortable' ] );
+		$this->assertIsString( $response[ 'post_types' ][ 'post' ][ 'label' ] );
+	}
+
+	public function test_post_search_highlight_accepts_schema_manager_field_entries() {
+		$this->seedIndex( 'post', [
+			[ 'id' => 1, 'post_title' => 'Hello world' ],
+		] );
+
+		$rest = new WP_Loupe_REST();
+		// The real schema manager returns indexable fields as [ field, weight ] entries.
+		$this->setSchemaManagerStub( $rest, [], [], [ [ 'field' => 'post_title', 'weight' => 2.0 ] ] );
+
+		$response = $rest->handle_search_request_post(
+			$this->makeJsonRequest( [
+				'q'                     => 'hello',
+				'postTypes'             => [ 'post' ],
+				'attributesToHighlight' => [ 'post_title' ],
+				'highlightStartTag'     => '<mark>',
+				'highlightEndTag'       => '</mark>',
+			] )
+		);
+
+		$this->assertStringContainsString( '<mark>', $response[ 'hits' ][ 0 ][ '_formatted' ][ 'post_title' ] ?? '' );
 	}
 
 	public function test_post_search_highlight_unknown_field_is_dropped() {

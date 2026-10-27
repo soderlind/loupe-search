@@ -53,6 +53,37 @@ class WP_Loupe_Search_HooksTest extends TestCase {
 		$this->assertTrue( true );
 	}
 
+	#[\PHPUnit\Framework\Attributes\DataProvider( 'search_page_provider' )]
+	public function test_main_query_search_announces_only_the_first_page( int $paged, bool $expected ): void {
+		Functions\when( 'get_posts' )->justReturn( [ new \WP_Post( [ 'ID' => 7, 'post_type' => 'post' ] ) ] );
+
+		$engine = $this->getMockBuilder( WP_Loupe_Search_Engine::class )
+			->disableOriginalConstructor()
+			->getMock();
+		$engine->method( 'get_post_types' )->willReturn( [ 'post' ] );
+		$engine->method( 'search' )->willReturn( [ [ 'id' => 7, 'post_type' => 'post' ] ] );
+
+		$query = \Mockery::mock( \WP_Query::class );
+		$query->query_vars = [ 'search_terms' => [ 'Coffee' ] ];
+		$query->shouldReceive( 'is_search' )->andReturn( true );
+		$query->shouldReceive( 'is_main_query' )->andReturn( true );
+		$query->shouldReceive( 'set' );
+		$query->shouldReceive( 'get' )->andReturnUsing( fn( $key ) => [ 'post_type' => '', 'posts_per_page' => 10, 'paged' => $paged, 's' => 'Coffee' ][ $key ] ?? null );
+
+		$GLOBALS[ 'wp_loupe_test_actions' ] = [];
+		( new WP_Loupe_Search_Hooks( $engine ) )->posts_pre_query( null, $query );
+
+		$announced = array_values( array_filter( $GLOBALS[ 'wp_loupe_test_actions' ], fn( $a ) => 'loupe_search_searched' === $a[ 0 ] ) );
+		$this->assertSame( $expected ? [ [ 'loupe_search_searched', 'Coffee', 1, 'main' ] ] : [], $announced );
+	}
+
+	public static function search_page_provider(): array {
+		return [
+			'first page (no paged var)' => [ 0, true ],
+			'second page'               => [ 2, false ],
+		];
+	}
+
 	public function test_highlight_content_block_replaces_wrapper_body(): void {
 		// is_admin() defaults to false and wp_kses() are provided by the bootstrap shims;
 		// only the search context needs forcing on.

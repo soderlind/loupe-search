@@ -81,6 +81,12 @@ class WP_Loupe_Search_Hooks {
 		$this->max_num_pages     = (int) ceil( $this->total_found_posts / $posts_per_page );
 		$paged_posts             = array_slice( $all_posts, $offset, $posts_per_page );
 
+		// Count the search once: the first page of a main-query visitor search.
+		if ( 1 === (int) $paged && $query->is_main_query() && ! wp_doing_ajax() ) {
+			/** This action is documented in includes/class-wp-loupe-rest.php */
+			do_action( 'loupe_search_searched', (string) $query->get( 's' ), $this->total_found_posts, 'main' );
+		}
+
 		$query->found_posts   = $this->total_found_posts;
 		$query->max_num_pages = $this->max_num_pages;
 		$query->is_paged      = $paged > 1;

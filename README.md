@@ -23,10 +23,12 @@ Loupe Search replaces WordPress core search:
 
 - Fast index-backed search for configured post types
 - Typo-tolerant matching, phrase matching, and exclusion operators
+- Exclude individual posts from search from the post list (column, Quick Edit, bulk actions) or the editor sidebar — hides them from results, not access control
 - Per-field weighting, filterable fields, sortable fields (configured in Settings)
 - Opt-in match highlighting on the default search results (see [Filters](docs/filters.md#highlighting))
 - Developer-facing REST API for building custom UIs, with filters, facets, geo search, and result highlighting/snippets
 - Native AI agent integration via the WordPress Abilities API
+- Opt-in Search insights: top searches and searches without results, stored as privacy-friendly daily totals (no IP, user or browser data)
 
 ## Technical Requirements
 
@@ -124,6 +126,15 @@ Loupe Search provides advanced configuration options to fine-tune your search ex
 
 These advanced settings can be accessed in the WordPress admin under Settings > Loupe Search > Advanced tab.
 
+### Search insights
+
+Settings > Loupe Search > **Search insights** shows what visitors search for: the top 20 searches and the top 20 searches without results for the last 7, 30 or 90 days, plus the average number of results. It is **off by default**.
+
+- Only daily totals per search query are stored (how often it was searched and how many results it returned). No IP address, user, browser details or time of day.
+- Only front-end visitor searches are counted: the WordPress search page, and REST searches that send `countSearch: true`. Administrators, bots, WP-CLI and admin screens are skipped.
+- Queries that look like an email address or phone number, or are longer than 100 characters, are discarded.
+- Data is kept for 90 days by default (configurable) and purged daily. Turning the feature off keeps existing data; use **Clear all data** to delete it. Suggested privacy policy text is added under Settings > Privacy.
+
 ## Reindexing
 
 Reindexing rebuilds the index for your configured post types.
@@ -153,7 +164,7 @@ No. Loupe Search uses a separate, optimized search index and doesn't impact your
 
 ### Can I customize what content is searchable?
 
-Yes, using filters you can control exactly what content gets indexed and how it's searched.
+Yes, using filters you can control exactly what content gets indexed and how it's searched. To hide a single post, mark it as excluded from the post list or the editor sidebar; for rules (e.g. a category or an SEO plugin's noindex) see [`loupe_search_is_indexable`](docs/filters.md#loupe_search_is_indexable). Excluding a post only removes it from search results — it stays public at its URL.
 
 ### Does it work with custom post types?
 

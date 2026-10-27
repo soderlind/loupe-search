@@ -153,6 +153,10 @@ class WP_Loupe_REST {
 						'default'           => 1,
 						'sanitize_callback' => 'absint',
 					],
+					'countSearch' => [
+						'default'           => false,
+						'sanitize_callback' => 'rest_sanitize_boolean',
+					],
 				],
 			],
 			[
@@ -162,6 +166,14 @@ class WP_Loupe_REST {
 				// POST uses a JSON body and has a richer schema; validate in the handler.
 				'args'                => [],
 			],
+		] );
+
+		// Public discovery of what a search may filter and sort on, per post type.
+		register_rest_route( $namespace, '/search-fields', [
+			'methods'             => 'GET',
+			'callback'            => [ $this, 'handle_search_fields_request' ],
+			'permission_callback' => '__return_true',
+			'args'                => [],
 		] );
 
 		// Dynamic field discovery for settings UI.
@@ -750,6 +762,10 @@ class WP_Loupe_REST {
 			$enriched[] = $row;
 		}
 
+		if ( isset( $payload[ 'countSearch' ] ) && true === rest_sanitize_boolean( $payload[ 'countSearch' ] ) ) {
+			$this->announce_search( $q, $total_hits );
+		}
+
 		$response = [
 			'hits'       => $enriched,
 			'pagination' => [
@@ -797,6 +813,33 @@ class WP_Loupe_REST {
 	}
 
 	/**
+	 * Handle GET /search-fields: the searchable post types and the fields a search
+	 * may filter, facet and sort on for each of them.
+	 *
+	 * Fields allowed for several post types must be allowed for all of them in a
+	 * single search request (the intersection).
+	 *
+	 * @return array{post_types:array<string,array{label:string,filterable:array<int,string>,sortable:array<int,string>}>}
+	 */
+	public function handle_search_fields_request() {
+		$post_types = [];
+		foreach ( WP_Loupe_Utils::get_public_indexed_post_types() as $post_type ) {
+			$object = get_post_type_object( $post_type );
+			if ( ! $object ) {
+				continue;
+			}
+			$allow                    = $this->get_common_allows( [ $post_type ] );
+			$post_types[ $post_type ] = [
+				'label'      => (string) ( $object->labels->name ?? $post_type ),
+				'filterable' => $allow[ 'filterable' ],
+				'sortable'   => $allow[ 'sortable' ],
+			];
+		}
+
+		return [ 'post_types' => $post_types ];
+	}
+
+	/**
 	 * Compute the intersection of filterable/sortable fields across post types.
 	 *
 	 * @param array<int,string> $post_types
@@ -840,7 +883,13 @@ class WP_Loupe_REST {
 		$sets = [];
 		foreach ( $post_types as $pt ) {
 			$schema = $this->schema_manager->get_schema_for_post_type( $pt );
-			$sets[] = $this->schema_manager->get_indexable_fields( $schema );
+			// Indexable fields come back as [ 'field' => name, 'weight' => w ] entries.
+			$sets[] = array_map(
+				static function ( $entry ) {
+					return is_array( $entry ) ? ( $entry[ 'field' ] ?? null ) : $entry;
+				},
+				$this->schema_manager->get_indexable_fields( $schema )
+			);
 		}
 
 		$fields = $this->intersect_string_lists( $sets );
@@ -1237,9 +1286,11 @@ class WP_Loupe_REST {
 
 			$ready         = ! empty( $status[ 'ready' ] );
 			$indexed       = $engine->count_documents( $pt );
-			// An empty but valid index while published content exists still needs a
-			// rebuild — Loupe creates a fresh empty db on load (issue: #56 path change).
-			$needs_rebuild = ! $ready || ( 0 === $indexed && $publish > 0 );
+			$excluded      = WP_Loupe_Exclusion::count_excluded( $pt );
+			// An empty but valid index while searchable published content exists still
+			// needs a rebuild — Loupe creates a fresh empty db on load (issue: #56 path
+			// change). Excluded posts are never indexed, so they don't count.
+			$needs_rebuild = ! $ready || ( 0 === $indexed && $publish - $excluded > 0 );
 
 			$items[] = [
 				'postType'     => $pt,
@@ -1249,6 +1300,7 @@ class WP_Loupe_REST {
 				'reason'       => isset( $status[ 'reason' ] ) ? (string) $status[ 'reason' ] : null,
 				'indexed'      => $indexed >= 0 ? $indexed : null,
 				'published'    => $publish,
+				'excluded'     => $excluded,
 			];
 		}
 
@@ -1388,7 +1440,34 @@ class WP_Loupe_REST {
 		// No caching layer here on purpose. This route is unauthenticated, so caching every
 		// query/parameter combination would let visitors grow the options table without bound.
 		// The expensive part (the Loupe query) is already cached inside WP_Loupe_Search_Engine.
-		return rest_ensure_response( $this->perform_search( $query, $post_type, $per_page, $page ) );
+		$result = $this->perform_search( $query, $post_type, $per_page, $page );
+		if ( true === $request->get_param( 'countSearch' ) ) {
+			$this->announce_search( (string) $query, (int) ( $result[ 'pagination' ][ 'total' ] ?? 0 ) );
+		}
+		return rest_ensure_response( $result );
+	}
+
+	/**
+	 * Announce a settled visitor search so Search insights can count it.
+	 *
+	 * Only fired when the client sends `countSearch: true`, so live
+	 * search-as-you-type clients count the settled query, not every keystroke.
+	 *
+	 * @since 1.4.0
+	 * @param string $query      The search query as typed.
+	 * @param int    $total_hits Number of matching documents.
+	 * @return void
+	 */
+	private function announce_search( string $query, int $total_hits ): void {
+		/**
+		 * Fires after a visitor search that should be counted by Search insights.
+		 *
+		 * @since 1.4.0
+		 * @param string $query      The search query as typed.
+		 * @param int    $total_hits Number of matching documents.
+		 * @param string $source     'main' (the WordPress search page) or 'rest'.
+		 */
+		do_action( 'loupe_search_searched', $query, $total_hits, 'rest' );
 	}
 
 	/**

@@ -2,10 +2,44 @@
 
 Loupe Search is a WordPress plugin that maintains a dedicated, typo-tolerant
 search index (backed by Loupe/SQLite) and powers WordPress search, a REST API,
-and WordPress Abilities. This context covers the plugin's **admin UI**; for the
+and WordPress Abilities. This context covers indexing scope, the plugin's
+**admin UI**, and the search API's result vocabulary; for the
 system structure see [docs/architecture.md](docs/architecture.md).
 
 ## Language
+
+### Indexing scope
+
+**Excluded post**:
+A post its editor has chosen to keep out of the search index, even though its
+type and status would otherwise make it indexable. A discoverability choice,
+not access control: the post stays reachable by URL.
+_Avoid_: hidden post, noindex (an SEO signal for external engines), private
+(a post status)
+
+### Search insights
+
+**Search insights**:
+The opt-in, off-by-default analytics feature, and the Settings screen tab that
+reports it: most common queries, zero-result searches, and average result
+count, kept only as daily totals.
+_Avoid_: search log, search history, tracking, statistics
+
+**Counted search**:
+A front-end visitor search that Search insights records. Admin, WP-CLI, and
+Abilities searches, and searches by site managers, are never counted.
+_Avoid_: logged search, tracked query
+
+**Settled query**:
+The query a visitor stops on during search-as-you-type, as opposed to the
+partial queries typed on the way there. Only settled queries become counted
+searches.
+_Avoid_: final query, committed query
+
+**Zero-result search**:
+A counted search that returned no hits; the main signal for missing content or
+synonyms.
+_Avoid_: failed search, empty search, no-hit query
 
 ### Admin UI
 

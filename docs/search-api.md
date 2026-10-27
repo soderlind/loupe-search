@@ -8,7 +8,7 @@ This guide is written to be read top-to-bottom the first time: start with **Quic
 
 1. [Quick start](#quick-start) — first working request in a few minutes
 2. [Core concepts](#core-concepts) — endpoints, permissions, index readiness, allowlisting
-3. [Building up a search](#building-up-a-search) — pagination, filters, sorting, facets, highlighting, geo
+3. [Building up a search](#building-up-a-search) — pagination, filters, sorting, facets, highlighting, search insights, geo
 4. [Worked examples](#worked-examples) — Gutenberg block and server-side PHP
 5. [Preparing fields](#preparing-fields-schema-hooks) — schema hooks for filter/sort/facet/geo fields
 6. [Reference](#reference) — full request/response schema, filter AST, errors
@@ -241,6 +241,22 @@ Details:
 - Use `["*"]` to cover every indexed field. Unknown field names are dropped silently.
 - Start/end tags are sanitized to an allowlist of inline tags (`mark`, `em`, `strong`, `span`, `b`, `i`, each allowing `class`), so the API never emits script-capable markup. Indexed content is stored as plain text, so `_formatted` contains only those tags plus matched text — safe to render.
 - `cropLength` defaults to 50 and is clamped to 10–500. `cropMarker` defaults to `…`.
+
+### Count searches in Search insights
+
+When the site owner turns on **Search insights** (Settings → Loupe Search →
+Search insights), searches on the WordPress search page are counted
+automatically. REST searches are counted only when the request opts in:
+
+```json
+{ "q": "opening hours", "countSearch": true }
+```
+
+A search-as-you-type UI should send `countSearch: true` only for the settled
+query (for example after ~1.5 s without typing, or on Enter), so partial words
+like `ope`, `open`, `openi` are not counted. Searches by administrators, bots,
+WP-CLI and admin screens are never counted, and nothing is stored unless the
+feature is on.
 
 ### Search by location
 
@@ -544,6 +560,7 @@ Note: if you already have data in meta, you typically only need the schema hook 
 - `attributesToCrop` (string[], optional): field names to return as a short snippet around the match. Use `["*"]` for every indexed field.
 - `cropLength` (int, optional, default 50, clamped 10–500): approximate snippet length in words.
 - `cropMarker` (string, optional, default `…`): marker inserted where text is cropped.
+- `countSearch` (bool, optional, default `false`): count this search in [Search insights](#count-searches-in-search-insights). Send `true` only for the *settled* query — when the visitor pauses typing or presses Enter — not for every keystroke.
 
 Notes:
 
@@ -651,6 +668,7 @@ curl -s 'https://example.test/wp-json/loupe-search/v1/search?q=wordpress&post_ty
 | `post_type` | string | `all` | A single post type slug, or `all`. |
 | `per_page` | int | 10 | Results per page. |
 | `page` | int | 1 | 1-based page number. |
+| `countSearch` | bool | `false` | Count this search in [Search insights](#count-searches-in-search-insights). |
 
 The response contains `hits` and `pagination` with the same shape as POST, but never `facets`, `tookMs`, `_distanceMeters`, or `_formatted`.
 
