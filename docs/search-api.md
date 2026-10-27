@@ -85,6 +85,7 @@ That is enough to render a results list: loop `hits`, link `url`, print `title`.
 | --- | --- | --- | --- |
 | POST | `/wp-json/loupe-search/v1/search` | Public | **Recommended.** JSON filters, facets, geo, sorting, highlighting |
 | GET | `/wp-json/loupe-search/v1/search?q=…` | Public | Legacy. Query only, no filters/facets/geo |
+| GET | `/wp-json/loupe-search/v1/search-fields` | Public | Searchable post types and the fields each one can filter, facet and sort on |
 | GET | `/wp-json/loupe-search/v1/index-status` | `manage_options` | Per-post-type index health |
 
 ### Authentication & permissions
@@ -114,6 +115,19 @@ Filtering, sorting, facets, and geo operations are restricted to fields that are
   - Geo distance sorting (`geo.sort`) requires the field to be **Sortable**
 
 If you request an operation on a non-allowlisted field, the API returns **HTTP 400** (`wp_loupe_unallowlisted_field`) with the offending field in `data.details.field`.
+
+To build a UI that only offers allowed options, read them from the public `GET /search-fields` route:
+
+```json
+{
+  "post_types": {
+    "post": { "label": "Posts", "filterable": [ "post_date", "taxonomy_category", "taxonomy_post_tag" ], "sortable": [ "post_date", "post_title" ] },
+    "page": { "label": "Pages", "filterable": [ "post_date" ], "sortable": [ "post_date", "post_title" ] }
+  }
+}
+```
+
+When a search covers several post types, a field is only allowed if it is allowed for **every** one of them, so use the intersection.
 
 > Need to enable a field that is not in the UI, or set this up in code? See [Preparing fields](#preparing-fields-schema-hooks).
 

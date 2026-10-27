@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Dashboard health table shows the number of excluded posts per post type, and the index-status REST response includes `excluded`.
 - Search insights (opt-in, off by default): a new Settings tab with the top 20 searches, the top 20 searches without results and the average result count for the last 7, 30 or 90 days. Stores daily totals per normalized query only — no IP address, user, user agent or time of day. Counts front-end visitor searches (the search page, and REST searches that send `countSearch: true`); skips admins, bots, WP-CLI and admin screens, and discards email- or phone-like queries. 90-day retention by default, purged daily; Clear all data button; suggested privacy policy text. Uninstall removes the table, settings and cron event. Fixes [#70](https://github.com/soderlind/loupe-search/issues/70).
 - REST: `countSearch` parameter on `GET` and `POST /search`.
+- REST: public `GET /search-fields` route listing the searchable post types and the fields each one can filter, facet and sort on, so front ends can offer only allowed options.
 - `loupe_search_searched` action and `loupe_search_insights_should_count` filter.
 - Docs: recipes for excluding posts by rule and for honouring an SEO plugin's noindex via `loupe_search_is_indexable`.
 

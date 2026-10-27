@@ -182,6 +182,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 * Added: The Dashboard shows the number of excluded posts per post type, and the index-status REST response includes `excluded`.
 * Added: Search insights (opt-in, off by default): top searches, top searches without results and the average result count for the last 7, 30 or 90 days. Stores daily totals per query only — no IP address, user, user agent or time of day. 90-day retention by default, purged daily. Fixes #70.
 * Added: REST `countSearch` parameter on `GET` and `POST /search`.
+* Added: Public REST `GET /search-fields` route listing the searchable post types and the fields each one can filter, facet and sort on.
 * Added: `loupe_search_searched` action and `loupe_search_insights_should_count` filter.
 * Fixed: REST `POST /search` ignored `attributesToHighlight` and `attributesToCrop`, so `_formatted` was never returned.
 
