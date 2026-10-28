@@ -10,3 +10,6 @@ bin/strauss.phar
 loupe.db
 tickets.db
 state_set.bin
+
+# Playwright MCP browser logs and snapshots.
+.playwright-mcp/
