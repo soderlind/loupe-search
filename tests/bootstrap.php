@@ -67,10 +67,10 @@ if ( ! function_exists( 'delete_option' ) ) {
 	}
 }
 if ( ! function_exists( 'apply_filters' ) ) {
-	function apply_filters( $tag, $value ) {
+	function apply_filters( $tag, $value, ...$args ) {
 		global $wp_loupe_test_filters;
 		if ( isset( $wp_loupe_test_filters[ $tag ] ) ) {
-			return call_user_func( $wp_loupe_test_filters[ $tag ], $value );
+			return call_user_func( $wp_loupe_test_filters[ $tag ], $value, ...$args );
 		}
 		return $value;
 	}

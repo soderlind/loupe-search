@@ -17,7 +17,7 @@ This guide is written to be read top-to-bottom the first time: start with **Quic
 
 ### Step 1 — Prerequisites
 
-- WordPress 6.9+ and Loupe Search activated.
+- WordPress 7.0+ and Loupe Search activated.
 - At least one post type selected in **Settings → Loupe Search**.
 - A built index. If you have never indexed, run:
 

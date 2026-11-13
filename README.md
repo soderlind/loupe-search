@@ -35,7 +35,7 @@ Loupe Search replaces WordPress core search:
 - PHP 8.3 or higher
 - SQLite 3.35+ (required by Loupe 0.13.x)
 - PHP extensions: `pdo_sqlite`, `intl`, `mbstring`
-- WordPress 6.9+
+- WordPress 7.0+
 
 > **About the PHP extensions:** `pdo_sqlite` provides the SQLite driver Loupe uses to store and query the search index; `intl` powers locale-aware tokenizing, collation, and typo tolerance; and `mbstring` ensures multibyte (UTF-8) text is handled correctly during indexing and search. All three are required, but **they are enabled by default on most modern PHP installations and shared hosts**, so no action is usually needed. If your host is missing one, contact them or enable it in your PHP configuration.
 

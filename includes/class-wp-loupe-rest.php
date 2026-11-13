@@ -86,6 +86,21 @@ class WP_Loupe_REST {
 	}
 
 	/**
+	 * Resolve the public search scope again once post types are registered.
+	 *
+	 * This class is built on `plugins_loaded`, before post types registered on `init`
+	 * (bbPress, CPT UI, most themes) exist, so they were dropped as non-public.
+	 */
+	private function refresh_public_post_types(): void {
+		$public = WP_Loupe_Utils::get_public_indexed_post_types();
+		if ( $public === $this->public_post_types ) {
+			return;
+		}
+		$this->public_post_types = $public;
+		$this->search_service    = new WP_Loupe_Search_Engine( $public, $this->db );
+	}
+
+	/**
 	 * Initialize Loupe instances for selected post types
 	 */
 	private function init_loupe_instances() {
@@ -116,6 +131,7 @@ class WP_Loupe_REST {
 	 * Hook callback to actually register routes (avoids anonymous closure for easier introspection/testing).
 	 */
 	public function on_rest_api_init() {
+		$this->refresh_public_post_types();
 		$this->log( 'Registering routes.' );
 		// Primary namespace since 1.1.0. The legacy `wp-loupe/v1` namespace is kept as a
 		// deprecated alias for backward compatibility and will be removed in a future major release.
@@ -728,6 +744,49 @@ class WP_Loupe_REST {
 		$raw_hits = $this->sort_raw_hits( $raw_hits, $payload, $geo_field );
 
 		$total_hits = isset( $raw[ 'totalHits' ] ) ? (int) $raw[ 'totalHits' ] : count( $raw_hits );
+
+		$hits_before = count( $raw_hits );
+		/**
+		 * Filters the merged, sorted raw hits of an advanced search before pagination.
+		 *
+		 * Lets add-ons rerank hits or add hits from other retrievers. Hits are arrays with
+		 * at least `id`, `post_type` and `_score`. Added hits are checked for post type
+		 * and public visibility like any other hit, and raise `totalHits` accordingly.
+		 *
+		 * @since 1.5.0
+		 * @param array<int,array<string,mixed>> $raw_hits Raw hits (offset 0 to offset + page size).
+		 * @param string                         $query    Search query.
+		 * @param array<string,mixed>            $context  {
+		 *     @type string[] $post_types     Post types searched.
+		 *     @type string   $filter         Loupe filter string ('' when none).
+		 *     @type string[] $sort           Loupe sort strings.
+		 *     @type array    $payload        Request payload.
+		 *     @type int      $limit          Number of hits needed (offset + page size).
+		 *     @type callable $matches_filter Callback taking post IDs, returning those matching the request's filter.
+		 * }
+		 */
+		$filtered_hits = apply_filters(
+			'loupe_search_advanced_hits',
+			$raw_hits,
+			(string) $q,
+			[
+				'post_types'     => $post_types_to_search,
+				'filter'         => (string) $filter_str,
+				'sort'           => $sort_strings,
+				'payload'        => $payload,
+				'limit'          => $fetch_count,
+				'matches_filter' => function ( array $ids ) use ( $engine, $filter_str ): array {
+					return self::ids_matching_filter( $engine, (string) $filter_str, $ids );
+				},
+			]
+		);
+		if ( is_array( $filtered_hits ) ) {
+			$raw_hits = array_values( array_filter( $filtered_hits, function ( $hit ) use ( $allowed ) {
+				return is_array( $hit ) && isset( $hit[ 'post_type' ] ) && isset( $allowed[ $hit[ 'post_type' ] ] );
+			} ) );
+			$total_hits += max( 0, count( $raw_hits ) - $hits_before );
+		}
+
 		$paged_raw  = array_slice( $raw_hits, $offset, $page_size );
 
 		$enriched = [];
@@ -1121,6 +1180,37 @@ class WP_Loupe_REST {
 		}
 		// Dates are ISO-8601 strings and are treated as strings in filters.
 		return "'" . str_replace( "'", "''", (string) $value ) . "'";
+	}
+
+	/**
+	 * Return the subset of post IDs whose indexed documents match a Loupe filter.
+	 *
+	 * Runs an empty-query filtered search. Loupe caps a result set at 1000 hits, so with
+	 * a very broad filter some candidates may be dropped; that only makes callers add fewer
+	 * hits, never hits outside the filter.
+	 *
+	 * @param WP_Loupe_Search_Engine $engine Engine for the searched post types.
+	 * @param string                 $filter Loupe filter string.
+	 * @param array<int,mixed>       $ids    Candidate post IDs.
+	 * @return array<int,int>
+	 */
+	private static function ids_matching_filter( $engine, string $filter, array $ids ): array {
+		$ids = array_values( array_unique( array_filter( array_map( 'intval', $ids ) ) ) );
+		if ( empty( $ids ) || '' === trim( $filter ) ) {
+			return $ids;
+		}
+		$result  = $engine->search_advanced( '', [
+			'filter'               => $filter,
+			'limit'                => 1000,
+			'attributesToRetrieve' => [ 'id' ],
+		] );
+		$matched = [];
+		foreach ( (array) ( $result[ 'hits' ] ?? [] ) as $hit ) {
+			if ( is_array( $hit ) && isset( $hit[ 'id' ] ) ) {
+				$matched[ (int) $hit[ 'id' ] ] = true;
+			}
+		}
+		return array_values( array_filter( $ids, static fn ( int $id ): bool => isset( $matched[ $id ] ) ) );
 	}
 
 	/**

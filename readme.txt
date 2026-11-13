@@ -1,10 +1,10 @@
 === Loupe Search ===
 Contributors: PerS
 Tags: search, full-text search, typo-tolerant, bbpress, SQLite
-Requires at least: 6.9
+Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -177,6 +177,14 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.5.0 =
+* Changed: Requires WordPress 7.0 or later.
+* Added: `loupe_search_advanced_hits` filter, so add-ons can rerank or add hits in REST `POST /search` before pagination. Its context includes a `matches_filter` callback that keeps added hits within the request's filters.
+* Added: `loupe_search_order_results` now also receives the searched post types and the applied field sort.
+* Added: `loupe_search_settings_tabs` filter, so add-ons can add a tab to Settings → Loupe Search.
+* Added: `loupe_search_is_post_indexable()` function, telling add-ons whether Loupe Search indexes a post.
+* Fixed: REST search skipped post types registered on `init`, such as bbPress forums, topics and replies and custom post types from CPT UI or a theme.
 
 = 1.4.0 =
 * Added: Exclude individual posts from search, from the post list (Search column, Quick Edit, bulk actions) or the editor sidebar. The index updates immediately. This hides posts from search results only; it is not access control. Fixes #69.

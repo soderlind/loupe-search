@@ -464,6 +464,37 @@ class WPLoupe_Settings_Page {
 	}
 
 	/**
+	 * Settings tabs added by add-ons.
+	 *
+	 * @param string[] $reserved Built-in tab slugs, which add-ons cannot replace.
+	 * @return array<string,array{label:string,render:callable}>
+	 */
+	public static function get_addon_tabs( array $reserved ): array {
+		/**
+		 * Filters the add-on tabs on the Loupe Search settings page.
+		 *
+		 * Each tab is shown after the built-in tabs at `?page=loupe-search&tab=<slug>`. The
+		 * callback prints the tab body; a form in it can post to options.php as usual.
+		 *
+		 * @since 1.5.0
+		 * @param array<string,array{label:string,render:callable}> $tabs Tabs keyed by slug.
+		 */
+		$tabs = apply_filters( 'loupe_search_settings_tabs', [] );
+		$out  = [];
+		foreach ( is_array( $tabs ) ? $tabs : [] as $slug => $tab ) {
+			$slug = sanitize_key( (string) $slug );
+			if ( '' === $slug || in_array( $slug, $reserved, true ) || ! is_array( $tab ) ) {
+				continue;
+			}
+			if ( empty( $tab[ 'label' ] ) || ! isset( $tab[ 'render' ] ) || ! is_callable( $tab[ 'render' ] ) ) {
+				continue;
+			}
+			$out[ $slug ] = [ 'label' => (string) $tab[ 'label' ], 'render' => $tab[ 'render' ] ];
+		}
+		return $out;
+	}
+
+	/**
 	 * Settings page content.
 	 *
 	 * @return void
@@ -474,9 +505,16 @@ class WPLoupe_Settings_Page {
 			return;
 		}
 
+		$tabs        = [
+			'dashboard'       => __( 'Dashboard', 'loupe-search' ),
+			'fields'          => __( 'Fields', 'loupe-search' ),
+			'search-behavior' => __( 'Search Behavior', 'loupe-search' ),
+			'insights'        => __( 'Search insights', 'loupe-search' ),
+		];
+		$addon_tabs  = self::get_addon_tabs( array_keys( $tabs ) );
+		$tabs       += array_map( static fn( $tab ) => $tab[ 'label' ], $addon_tabs );
 		$current_tab = isset( $_GET[ 'tab' ] ) ? sanitize_key( $_GET[ 'tab' ] ) : 'dashboard';
-		$valid_tabs  = [ 'dashboard', 'fields', 'search-behavior', 'insights' ];
-		if ( ! in_array( $current_tab, $valid_tabs, true ) ) {
+		if ( ! isset( $tabs[ $current_tab ] ) ) {
 			$current_tab = 'dashboard';
 		}
 
@@ -485,26 +523,18 @@ class WPLoupe_Settings_Page {
 			<h2><?php echo esc_html( get_admin_page_title() ); ?></h2>
 
 			<nav class="nav-tab-wrapper">
-				<a href="?page=loupe-search&tab=dashboard"
-					class="nav-tab <?php echo $current_tab === 'dashboard' ? 'nav-tab-active' : ''; ?>">
-					<?php esc_html_e( 'Dashboard', 'loupe-search' ); ?>
-				</a>
-				<a href="?page=loupe-search&tab=fields"
-					class="nav-tab <?php echo $current_tab === 'fields' ? 'nav-tab-active' : ''; ?>">
-					<?php esc_html_e( 'Fields', 'loupe-search' ); ?>
-				</a>
-				<a href="?page=loupe-search&tab=search-behavior"
-					class="nav-tab <?php echo $current_tab === 'search-behavior' ? 'nav-tab-active' : ''; ?>">
-					<?php esc_html_e( 'Search Behavior', 'loupe-search' ); ?>
-				</a>
-				<a href="?page=loupe-search&tab=insights"
-					class="nav-tab <?php echo $current_tab === 'insights' ? 'nav-tab-active' : ''; ?>">
-					<?php esc_html_e( 'Search insights', 'loupe-search' ); ?>
-				</a>
+				<?php foreach ( $tabs as $slug => $label ) : ?>
+					<a href="?page=loupe-search&tab=<?php echo esc_attr( $slug ); ?>"
+						class="nav-tab <?php echo $current_tab === $slug ? 'nav-tab-active' : ''; ?>">
+						<?php echo esc_html( $label ); ?>
+					</a>
+				<?php endforeach; ?>
 			</nav>
 
 			<?php
-			if ( 'dashboard' === $current_tab ) {
+			if ( isset( $addon_tabs[ $current_tab ] ) ) {
+				call_user_func( $addon_tabs[ $current_tab ][ 'render' ] );
+			} elseif ( 'dashboard' === $current_tab ) {
 				$this->render_dashboard_tab();
 			} elseif ( 'insights' === $current_tab ) {
 				WP_Loupe_Insights::render_tab();

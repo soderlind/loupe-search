@@ -10,6 +10,24 @@ require_once __DIR__ . '/bootstrap.php';
 
 class WP_Loupe_SettingsTest extends TestCase {
 
+	public function test_addon_tabs_keep_valid_tabs_and_cannot_replace_built_in_ones() {
+		global $wp_loupe_test_filters;
+		$render                                               = static function () {};
+		$wp_loupe_test_filters[ 'loupe_search_settings_tabs' ] = static fn() => [
+			'semantic'  => [ 'label' => 'Semantic search', 'render' => $render ],
+			'dashboard' => [ 'label' => 'Hijack', 'render' => $render ],
+			'no-label'  => [ 'render' => $render ],
+			'no-render' => [ 'label' => 'Broken', 'render' => 'not_a_function_xyz' ],
+		];
+		try {
+			$tabs = WPLoupe_Settings_Page::get_addon_tabs( [ 'dashboard', 'fields' ] );
+		} finally {
+			unset( $wp_loupe_test_filters[ 'loupe_search_settings_tabs' ] );
+		}
+		$this->assertSame( [ 'semantic' ], array_keys( $tabs ) );
+		$this->assertSame( 'Semantic search', $tabs[ 'semantic' ][ 'label' ] );
+	}
+
 	public function test_sanitize_advanced_settings_numeric_and_boolean() {
 		$settings_page = $this->make_settings_page();
 		$input         = [

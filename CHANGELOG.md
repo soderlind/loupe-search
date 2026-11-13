@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-11-13
+
+### Changed
+- Requires WordPress 7.0 or later.
+
+### Added
+- `loupe_search_advanced_hits` filter: rerank or add hits in REST `POST /search` after the merge-level sort and before pagination. The context carries the searched post types, filter and sort strings, the payload, the hit limit and a `matches_filter` callback that returns the candidate post IDs matching the request's filter. Added hits must be of a searched post type, pass the public-visibility check and raise `totalHits`.
+- `loupe_search_order_results` now also receives the searched post types and the applied field sort (backwards compatible).
+- `loupe_search_settings_tabs` filter: add-ons can add their own tab to Settings → Loupe Search, after the built-in tabs (which they cannot replace). Loupe Semantic Search uses it.
+- `loupe_search_is_post_indexable( $post )` function: the indexer's own indexability check (post type, status, password, `loupe_search_is_indexable` including exclusions) for add-ons that keep their own index.
+
+### Fixed
+- REST `GET` and `POST /search` skipped post types registered on `init`, such as bbPress forums, topics and replies and post types from CPT UI or a theme. The public search scope was resolved on `plugins_loaded`, before those types existed, so they counted as non-public. The scope is now resolved again on `rest_api_init`.
+
 ## [1.4.0] - 2026-10-27
 
 ### Added

@@ -870,6 +870,32 @@ class WP_Loupe_Indexer {
 	 * @return bool
 	 */
 	private function is_indexable( int $post_id, \WP_Post $post ): bool {
+		return self::passes_index_checks( $post_id, $post, $this->post_types );
+	}
+
+	/**
+	 * Whether a post belongs in the search index, using the indexed post types from settings.
+	 *
+	 * Public counterpart of the indexer's own check, for add-ons that must index exactly
+	 * the posts Loupe Search indexes.
+	 *
+	 * @since 1.5.0
+	 * @param \WP_Post $post Post object.
+	 * @return bool
+	 */
+	public static function is_post_indexable( \WP_Post $post ): bool {
+		return self::passes_index_checks( (int) $post->ID, $post, WP_Loupe_Utils::get_indexed_post_types() );
+	}
+
+	/**
+	 * Run the indexability checks against a given list of indexed post types.
+	 *
+	 * @param int               $post_id    Post ID.
+	 * @param \WP_Post          $post       Post object.
+	 * @param array<int,string> $post_types Indexed post types.
+	 * @return bool
+	 */
+	private static function passes_index_checks( int $post_id, \WP_Post $post, array $post_types ): bool {
 		// Check if the post is a revision.
 		if ( wp_is_post_revision( $post_id ) ) {
 			return false;
@@ -881,11 +907,11 @@ class WP_Loupe_Indexer {
 		}
 
 		// Check if the post type is in the list of post types to be indexed.
-		if ( ! \in_array( $post->post_type, $this->post_types, true ) ) {
+		if ( ! \in_array( $post->post_type, $post_types, true ) ) {
 			return false;
 		}
 
-		if ( ! \in_array( $post->post_status, $this->get_indexable_statuses( $post->post_type ), true ) ) {
+		if ( ! \in_array( $post->post_status, WP_Loupe_Utils::get_indexable_post_statuses( $post->post_type ), true ) ) {
 			return false;
 		}
 

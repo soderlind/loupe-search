@@ -171,6 +171,80 @@ class WP_Loupe_REST_SearchPostTest extends TestCase {
 		$this->assertSame( [ [ 'loupe_search_searched', 'Hello', 1, 'rest' ] ], $GLOBALS[ 'wp_loupe_test_actions' ] );
 	}
 
+	public function test_advanced_hits_filter_can_add_hits_and_raises_total() {
+		global $wp_loupe_test_filters;
+		$this->seedIndex( 'post', [
+			[ 'id' => 2, 'post_title' => 'Hello world' ],
+		] );
+
+		$received = null;
+		$wp_loupe_test_filters[ 'loupe_search_advanced_hits' ] = function ( array $hits, string $query, array $context ) use ( &$received ) {
+			$received   = [ $query, $context ];
+			$hits[]     = [ 'id' => 4, 'post_type' => 'post', '_score' => 0.5 ];
+			$hits[]     = [ 'id' => 6, 'post_type' => 'not_searched', '_score' => 0.4 ];
+			return $hits;
+		};
+
+		try {
+			$rest = new WP_Loupe_REST();
+			$this->setSchemaManagerStub( $rest, [], [] );
+			$response = $rest->handle_search_request_post(
+				$this->makeJsonRequest( [ 'q' => 'hello', 'postTypes' => [ 'post' ] ] )
+			);
+		} finally {
+			unset( $wp_loupe_test_filters[ 'loupe_search_advanced_hits' ] );
+		}
+
+		$this->assertSame( 'hello', $received[ 0 ] );
+		$this->assertSame( [ 'post' ], $received[ 1 ][ 'post_types' ] );
+		$this->assertSame( '', $received[ 1 ][ 'filter' ] );
+		$this->assertIsCallable( $received[ 1 ][ 'matches_filter' ] );
+		$this->assertSame( [ 4, 2 ], ( $received[ 1 ][ 'matches_filter' ] )( [ '4', 2, 4 ] ) );
+
+		$this->assertSame( [ 2, 4 ], array_column( $response[ 'hits' ], 'id' ) );
+		$this->assertSame( 2, $response[ 'pagination' ][ 'total' ] );
+	}
+
+	public function test_advanced_hits_matches_filter_keeps_only_ids_matching_request_filter() {
+		global $wp_loupe_test_filters;
+		update_option( 'loupe_search_fields', [
+			'post' => [
+				'post_title' => [ 'indexable' => true, 'weight' => 1 ],
+				'category'   => [ 'indexable' => true, 'filterable' => true ],
+			],
+		] );
+		WP_Loupe_Factory::clear_instance_cache();
+		$this->seedIndex( 'post', [
+			[ 'id' => 2, 'post_title' => 'Hello world', 'category' => 'news' ],
+			[ 'id' => 4, 'post_title' => 'Unrelated', 'category' => 'news' ],
+			[ 'id' => 6, 'post_title' => 'Other', 'category' => 'sport' ],
+		] );
+
+		$matched = null;
+		$wp_loupe_test_filters[ 'loupe_search_advanced_hits' ] = function ( array $hits, string $query, array $context ) use ( &$matched ) {
+			$matched = ( $context[ 'matches_filter' ] )( [ 4, 6, 99 ] );
+			return $hits;
+		};
+
+		try {
+			$rest = new WP_Loupe_REST();
+			$this->setSchemaManagerStub( $rest, [ 'category' ], [] );
+			$rest->handle_search_request_post(
+				$this->makeJsonRequest( [
+					'q'         => 'hello',
+					'postTypes' => [ 'post' ],
+					'filter'    => [ 'type' => 'pred', 'field' => 'category', 'op' => 'eq', 'value' => 'news' ],
+				] )
+			);
+		} finally {
+			unset( $wp_loupe_test_filters[ 'loupe_search_advanced_hits' ] );
+			update_option( 'loupe_search_fields', [] );
+			WP_Loupe_Factory::clear_instance_cache();
+		}
+
+		$this->assertSame( [ 4 ], $matched );
+	}
+
 	public function test_post_search_happy_path_sorts_by_score_and_paginates() {
 		$this->seedIndex( 'post', [
 			[ 'id' => 1, 'post_title' => 'Hello world' ],

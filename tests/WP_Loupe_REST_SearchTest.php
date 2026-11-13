@@ -133,4 +133,24 @@ class WP_Loupe_REST_SearchTest extends TestCase {
 		sort( $postTypes );
 		$this->assertSame( [ 'page', 'post' ], $postTypes );
 	}
+
+	public function test_public_scope_includes_post_types_registered_after_construction() {
+		update_option( 'loupe_search_custom_post_types', [ 'loupe_search_post_type_field' => [ 'post', 'book' ] ] );
+		// Built on plugins_loaded: 'book' isn't registered yet, so it looks non-public.
+		$GLOBALS[ 'wp_loupe_test_non_public_post_types' ] = [ 'book' ];
+		$rest = new WP_Loupe_REST();
+		$refl = new ReflectionClass( $rest );
+		$scope = $refl->getProperty( 'public_post_types' );
+		$scope->setAccessible( true );
+		$this->assertSame( [ 'post' ], $scope->getValue( $rest ) );
+
+		// By rest_api_init the type is registered.
+		$GLOBALS[ 'wp_loupe_test_non_public_post_types' ] = [];
+		$refresh = $refl->getMethod( 'refresh_public_post_types' );
+		$refresh->setAccessible( true );
+		$refresh->invoke( $rest );
+
+		$this->assertSame( [ 'post', 'book' ], $scope->getValue( $rest ) );
+		update_option( 'loupe_search_custom_post_types', [] );
+	}
 }
