@@ -10,14 +10,14 @@
  * Plugin Name:       Loupe Search
  * Plugin URI:        https://github.com/soderlind/loupe-search
  * Description:       Fast, index-backed WordPress search with typo tolerance, phrase matching, exclusions, custom post types, real-time indexing, and a developer-friendly REST API.
- * Version:           1.4.0
+ * Version:           1.5.0
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       loupe-search
  * Domain Path:       /languages
- * Requires at least: 6.9
+ * Requires at least: 7.0
  * Requires PHP:      8.3
  */
 
@@ -58,6 +58,7 @@ define( 'LOUPE_SEARCH_PATH', plugin_dir_path( LOUPE_SEARCH_FILE ) );
 define( 'LOUPE_SEARCH_URL', plugin_dir_url( LOUPE_SEARCH_FILE ) );
 
 require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-loader.php';
+require_once LOUPE_SEARCH_PATH . 'includes/functions.php';
 // Load CLI commands if in WP-CLI context
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-cli.php';

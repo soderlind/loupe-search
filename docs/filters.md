@@ -27,6 +27,8 @@ weighted, how results are returned, and how matches are highlighted.
    - [`loupe_search_posts_per_page`](#loupe_search_posts_per_page)
    - [`loupe_search_max_cacheable_query_length`](#loupe_search_max_cacheable_query_length)
    - [`loupe_search_order_results`](#loupe_search_order_results)
+   - [`loupe_search_advanced_hits`](#loupe_search_advanced_hits)
+   - [`loupe_search_is_post_indexable()` (function)](#loupe_search_is_post_indexable-function)
 8. [Highlighting](#highlighting)
    - [`loupe_search_highlight`](#loupe_search_highlight)
    - [`loupe_search_highlight_fields`](#loupe_search_highlight_fields)
@@ -37,8 +39,10 @@ weighted, how results are returned, and how matches are highlighted.
 9. [Search insights](#search-insights)
    - [`loupe_search_insights_should_count`](#loupe_search_insights_should_count)
    - [`loupe_search_searched` (action)](#loupe_search_searched-action)
-10. [Recipes](#recipes)
-11. [After changing a filter](#after-changing-a-filter)
+10. [Settings page](#settings-page)
+   - [`loupe_search_settings_tabs`](#loupe_search_settings_tabs)
+11. [Recipes](#recipes)
+12. [After changing a filter](#after-changing-a-filter)
 
 ## Where to put filter code
 
@@ -66,7 +70,8 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_is_safely_sortable_meta_{$post_type}` | `bool $sortable`, `string $field_name` | Correct meta-field sortability detection |
 | `loupe_search_posts_per_page` | `int $per_page` | Change results per page |
 | `loupe_search_max_cacheable_query_length` | `int $max_length` | Change which queries are written to the result cache |
-| `loupe_search_order_results` | `array $hits`, `string $query` | Reorder or regroup results merged across post types |
+| `loupe_search_order_results` | `array $hits`, `string $query`, `array $post_types`, `array $sort` | Reorder or regroup results merged across post types |
+| `loupe_search_advanced_hits` | `array $hits`, `string $query`, `array $context` | Rerank or add hits in REST `POST /search` before pagination |
 | `loupe_search_highlight` | `bool $enabled` | Turn match highlighting on for the default search |
 | `loupe_search_highlight_fields` | `array $fields` | Choose which fields are highlighted |
 | `loupe_search_highlight_start_tag` / `_end_tag` | `string $tag` | Change the tags wrapped around matches |
@@ -74,6 +79,7 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_highlight_crop_length` | `int $length` | Change snippet length (in words) |
 | `loupe_search_highlight_crop_marker` | `string $marker` | Change the ellipsis on cropped snippets |
 | `loupe_search_insights_should_count` | `bool $countable`, `string $source` | Decide whether a visitor search is counted by Search insights |
+| `loupe_search_settings_tabs` | `array $tabs` | Add a tab to Settings → Loupe Search |
 
 Action: `loupe_search_searched` (`string $query`, `int $total_hits`, `string $source`) fires after each countable visitor search — see [Search insights](#search-insights).
 
@@ -394,6 +400,55 @@ Scores from separate indexes are only approximately comparable, so the default
 relevance merge is a heuristic; use this filter when a site needs a stricter or
 different ordering.
 
+Since 1.5.0 the filter also receives the searched post types and the applied
+field sort (a list of `field`/`direction` pairs, empty when sorted by
+relevance). Hits returned for a post that is not in the index are shown like
+any other result, provided the post is a published post of a searched type.
+
+### `loupe_search_advanced_hits`
+
+Since 1.5.0. Filters the merged and sorted hits of REST `POST /search` before
+pagination, so an add-on can rerank them or add hits from another retriever
+(Loupe Semantic Search uses it for hybrid search). Each hit is an array with at
+least `id`, `post_type` and `_score`. Added hits of a post type that was not
+searched are dropped, every hit still passes the public-visibility check, and
+`totalHits` is raised by the number of hits added.
+
+`$context` holds:
+
+| Key | Type | Description |
+| --- | --- | --- |
+| `post_types` | `string[]` | Post types searched |
+| `filter` | `string` | Loupe filter string built from the request (`''` when none) |
+| `sort` | `string[]` | Loupe sort strings |
+| `payload` | `array` | The request payload |
+| `limit` | `int` | Hits needed for the requested page (offset + page size) |
+| `matches_filter` | `callable` | Takes post IDs, returns those whose indexed documents match the request's filter |
+
+Use `matches_filter` before adding a hit, so added hits respect the request's
+filters. It runs a filtered search, which Loupe caps at 1000 matches.
+
+```php
+add_filter( 'loupe_search_advanced_hits', function ( array $hits, string $query, array $context ): array {
+	$extra = my_retriever( $query, $context['post_types'] ); // [ [ 'id' => 12, 'post_type' => 'post', '_score' => 0.4 ], … ]
+	$ok    = array_flip( ( $context['matches_filter'] )( array_column( $extra, 'id' ) ) );
+	foreach ( $extra as $hit ) {
+		if ( isset( $ok[ $hit['id'] ] ) && ! in_array( $hit['id'], array_column( $hits, 'id' ), true ) ) {
+			$hits[] = $hit;
+		}
+	}
+	return $hits;
+}, 10, 3 );
+```
+
+### `loupe_search_is_post_indexable()` (function)
+
+Since 1.5.0. `loupe_search_is_post_indexable( WP_Post|int $post ): bool` tells
+whether Loupe Search indexes a post: indexed post type, indexable status,
+password protection and the `loupe_search_is_indexable` filter (which covers
+posts excluded from search). Add-ons that keep their own index can use it to
+index exactly the same posts. Returns `false` until Loupe Search has loaded.
+
 ## Highlighting
 
 By default the WordPress search results page shows plain titles and excerpts.
@@ -506,6 +561,30 @@ add_action( 'loupe_search_searched', function ( string $query, int $total_hits, 
 		do_action( 'my_analytics_event', 'search_no_results' );
 	}
 }, 10, 3 );
+```
+
+## Settings page
+
+### `loupe_search_settings_tabs`
+
+Since 1.5.0. Adds tabs to Settings → Loupe Search, after the built-in ones. Each
+tab is keyed by its slug (`?page=loupe-search&tab=<slug>`) and needs a `label`
+and a `render` callback that prints the tab body. The built-in slugs
+(`dashboard`, `fields`, `search-behavior`, `insights`) cannot be replaced, and
+tabs without a label or a callable `render` are ignored.
+
+A form in the tab can post to `options.php` with its own settings group;
+WordPress returns to the same tab after saving. Check capabilities in your own
+handlers: the page itself requires `manage_options`.
+
+```php
+add_filter( 'loupe_search_settings_tabs', function ( array $tabs ): array {
+	$tabs['my-addon'] = [
+		'label'  => __( 'My add-on', 'my-addon' ),
+		'render' => 'my_addon_render_settings',
+	];
+	return $tabs;
+} );
 ```
 
 ## Recipes

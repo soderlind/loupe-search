@@ -137,6 +137,32 @@ class WP_Loupe_IndexerTest extends TestCase {
 		$this->assertFalse( $this->invoke( $indexer, 'is_indexable', 11, $private ) );
 	}
 
+	// -------------------------------------------------------------- is_post_indexable
+
+	public function test_is_post_indexable_uses_the_post_types_from_settings() {
+		update_option( 'loupe_search_custom_post_types', [ 'loupe_search_post_type_field' => [ 'book' ] ] );
+
+		$book = new \WP_Post( [ 'ID' => 12, 'post_type' => 'book' ] );
+		$post = new \WP_Post( [ 'ID' => 13, 'post_type' => 'post' ] );
+
+		try {
+			$this->assertTrue( WP_Loupe_Indexer::is_post_indexable( $book ) );
+			$this->assertFalse( WP_Loupe_Indexer::is_post_indexable( $post ), 'post is not an indexed type here' );
+		} finally {
+			update_option( 'loupe_search_custom_post_types', [] );
+		}
+	}
+
+	public function test_global_helper_resolves_ids_and_honours_the_exclusion_veto() {
+		require_once dirname( __DIR__ ) . '/includes/functions.php';
+		$GLOBALS[ 'wp_loupe_test_posts' ][ 14 ] = new \WP_Post( [ 'ID' => 14 ] );
+
+		$this->assertTrue( \loupe_search_is_post_indexable( 14 ) );
+
+		$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_is_indexable' ] = static fn () => false;
+		$this->assertFalse( \loupe_search_is_post_indexable( 14 ) );
+	}
+
 	// ------------------------------------------------------------------------- add
 
 	/**

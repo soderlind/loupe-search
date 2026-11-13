@@ -240,10 +240,13 @@ class WP_Loupe_Search_Engine {
 		 * `_score`, and `post_type`.
 		 *
 		 * @since 1.3.5
-		 * @param array  $hits  Hits sorted by relevance score (descending).
-		 * @param string $query The search query.
+		 * @since 1.5.0 Added the `$post_types` and `$sort` parameters.
+		 * @param array    $hits       Hits sorted by relevance score (descending), or by `$sort`.
+		 * @param string   $query      The search query.
+		 * @param string[] $post_types Post types searched.
+		 * @param array    $sort       Applied field sort, as a list of `field`/`direction` pairs; empty when sorted by relevance.
 		 */
-		$hits = apply_filters( 'loupe_search_order_results', $hits, (string) $query );
+		$hits = apply_filters( 'loupe_search_order_results', $hits, (string) $query, $this->post_types, $effective_sort );
 
 		$this->log = sprintf( 'WP Loupe processing time: %s ms', (string) $processing_time_sum );
 		if ( $cacheable ) {
