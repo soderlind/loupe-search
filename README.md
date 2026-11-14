@@ -248,7 +248,7 @@ are returned:
 | `loupe_search_insights_should_count` | Decide whether a visitor search is counted by Search insights |
 | `loupe_search_settings_tabs` | Add a tab to Settings → Loupe Search |
 
-Action: `loupe_search_searched` fires after each countable visitor search, with the query, total hits and source.
+Action: `loupe_search_searched` fires after a visitor search (first results page, or REST with `countSearch: true`), with the query, total hits and source. It fires before the Search insights checks, so searches rejected by `loupe_search_insights_should_count` still trigger it.
 
 ```php
 add_filter( 'loupe_search_post_types', function ( array $post_types ): array {

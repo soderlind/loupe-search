@@ -103,7 +103,7 @@ These filters allow developers to customize Loupe Search's behavior. As of 1.1.0
 * `loupe_search_insights_should_count`: Decide whether a visitor search is counted by Search insights.
 * `loupe_search_settings_tabs`: Add a tab to Settings → Loupe Search.
 
-Action: `loupe_search_searched` fires after each countable visitor search, with the query, total hits and source.
+Action: `loupe_search_searched` fires after a visitor search (first results page, or REST with `countSearch: true`), with the query, total hits and source. It fires before the Search insights checks, so searches rejected by `loupe_search_insights_should_count` still trigger it.
 
 For signatures, defaults, and usage examples, see the [filter documentation](https://github.com/soderlind/loupe-search/blob/main/docs/filters.md).
 

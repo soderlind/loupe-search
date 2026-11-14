@@ -1576,7 +1576,9 @@ class WP_Loupe_REST {
 	 */
 	private function announce_search( string $query, int $total_hits ): void {
 		/**
-		 * Fires after a visitor search that should be counted by Search insights.
+		 * Fires after a visitor search that Search insights may count. Fires before the
+		 * insights checks (`loupe_search_insights_should_count`), so listeners also see
+		 * searches that are not counted.
 		 *
 		 * @since 1.4.0
 		 * @param string $query      The search query as typed.
