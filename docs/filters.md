@@ -85,7 +85,7 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_insights_should_count` | `bool $countable`, `string $source` | Decide whether a visitor search is counted by Search insights |
 | `loupe_search_settings_tabs` | `array $tabs` | Add a tab to Settings → Loupe Search |
 
-Action: `loupe_search_searched` (`string $query`, `int $total_hits`, `string $source`) fires after each countable visitor search — see [Search insights](#search-insights).
+Action: `loupe_search_searched` (`string $query`, `int $total_hits`, `string $source`) fires after a visitor search, before the Search insights checks — see [Search insights](#search-insights).
 
 ## Indexing scope
 
