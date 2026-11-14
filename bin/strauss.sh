@@ -42,6 +42,29 @@ if [ "$ACTUAL_SHA256" != "$STRAUSS_SHA256" ]; then
 	exit 1
 fi
 
+# Apply local patches to bundled packages before Strauss copies them. Patches
+# live in patches/<vendor>/<package>/*.patch (paths relative to the package
+# root). A patch that is already in the package (fixed upstream) is skipped;
+# one that no longer applies fails the build so it is reviewed, not dropped.
+for PATCH in patches/*/*/*.patch; do
+	[ -f "$PATCH" ] || continue
+	PKG="$(dirname "$PATCH")"
+	PKG="vendor/${PKG#patches/}"
+	if [ ! -d "$PKG" ]; then
+		echo "Error: $PATCH targets $PKG, which is not installed" >&2
+		exit 1
+	fi
+	if patch -d "$PKG" -p1 -s -f --dry-run -R < "$PATCH" >/dev/null 2>&1; then
+		echo "Skipping $PATCH (already applied)"
+	elif patch -d "$PKG" -p1 -s -f --dry-run < "$PATCH" >/dev/null 2>&1; then
+		patch -d "$PKG" -p1 -s -f < "$PATCH"
+		echo "Applied $PATCH"
+	else
+		echo "Error: $PATCH does not apply to $PKG; update or remove it" >&2
+		exit 1
+	fi
+done
+
 # Strauss tokenises every file to build its symbol table. The bundled language
 # detector ships 60+ MB of ngram data arrays (no PHP symbols) that exhaust
 # memory, so move its resources aside for the scan and relocate the runtime data

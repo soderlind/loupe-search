@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.5.3
+Stable tag: 1.5.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -178,6 +178,9 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.5.4 =
+* Fixed: Search terms are now stemmed like indexed content, so inflected forms find each other (for example "plager" also finds "plagene"). Exact matches still rank first.
 
 = 1.5.3 =
 * Fixed: REST search and the search block no longer fail with "Rebuild required" after updating to 1.5.2; the old index is used until it has been rebuilt.

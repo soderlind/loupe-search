@@ -20,6 +20,8 @@ package.json
 package-lock.json
 # Strauss build tooling (scopes vendor/ into vendor-prefixed/ at build time).
 bin/
+# Patches for bundled packages, applied by bin/strauss.sh.
+patches/
 # composer.json should be included when vendor dependencies are committed, but excluded when they are not.
 composer.lock
 
