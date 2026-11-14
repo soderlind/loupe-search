@@ -16,6 +16,7 @@ weighted, how results are returned, and how matches are highlighted.
    - [`loupe_search_indexable_post_statuses`](#loupe_search_indexable_post_statuses)
    - [`loupe_search_is_indexable`](#loupe_search_is_indexable)
    - [`loupe_search_db_path`](#loupe_search_db_path)
+   - [`loupe_search_language`](#loupe_search_language)
 4. [Field content](#field-content)
    - [`loupe_search_field_{$field_name}`](#loupe_search_field_field_name)
 5. [Schema](#schema)
@@ -64,6 +65,7 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_indexable_post_statuses` | `array $statuses`, `string $post_type` | Index extra publicly viewable statuses |
 | `loupe_search_is_indexable` | `bool $indexable`, `WP_Post $post` | Veto individual posts from the index |
 | `loupe_search_db_path` | `string $path` | Move the index directory |
+| `loupe_search_language` | `string $language`, `string $locale` | Override the stemming language |
 | `loupe_search_field_{$field_name}` | `mixed $value` | Clean a core post field before indexing |
 | `loupe_search_schema_{$post_type}` | `array $schema` | Add/remove fields, set weights and sorting |
 | `loupe_search_is_safely_sortable_{$post_type}` | `bool $sortable`, `string $field_name` | Force a core field to be sortable |
@@ -201,6 +203,25 @@ add_filter( 'loupe_search_db_path', function ( string $path ): string {
 Use an absolute path that PHP can write to, and exclude it from version control.
 Changing this after indexing points the plugin at an empty directory — reindex
 afterwards.
+
+### `loupe_search_language`
+
+The language Loupe uses for stemming and tokenization. By default it is derived
+from the site locale and mapped onto the stemmer's language codes, so `nb_NO` and
+`nn_NO` become `no`, and `pt_BR` becomes `pt`. Loupe has stemmers for Catalan,
+Danish, Dutch, English, Finnish, French, German, Italian, Norwegian, Portuguese,
+Romanian, Russian, Spanish and Swedish; other languages are indexed without
+stemming.
+
+```php
+add_filter( 'loupe_search_language', function ( string $language, string $locale ): string {
+	return 'sv_SE' === $locale ? 'sv' : $language;
+}, 10, 2 );
+```
+
+The `languages` key of the `loupe_search_advanced` option takes precedence and
+can list several languages for multilingual content. Stems are stored when posts
+are indexed, so reindex after changing the language.
 
 ## Field content
 

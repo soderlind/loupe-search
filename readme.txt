@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -178,6 +178,11 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.5.1 =
+* Fixed: Stemming now works for Norwegian (nb_NO, nn_NO) and other locales whose code the stemmer did not recognise, and three-letter locales no longer get the wrong language (e.g. Filipino was stemmed as Finnish). Reindex after updating.
+* Added: `loupe_search_language` filter to override the stemming language.
+* Changed: Docs list the Loupe Semantic Search add-on.
 
 = 1.5.0 =
 * Changed: Requires WordPress 7.0 or later.

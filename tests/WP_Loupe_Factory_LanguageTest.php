@@ -32,4 +32,29 @@ class WP_Loupe_Factory_LanguageTest extends TestCase {
 		update_option( 'loupe_search_advanced', [ 'languages' => [ 'fr' ] ] );
 		$this->assertSame( [ 'fr' ], $this->languages_for( 'de' ) );
 	}
+
+	public function test_explicit_languages_setting_is_resolved(): void {
+		update_option( 'loupe_search_advanced', [ 'languages' => [ 'nb', 'nn', 'en' ] ] );
+		$this->assertSame( [ 'en', 'no' ], $this->languages_for( 'de' ) );
+	}
+
+	/**
+	 * @return array<string,array{string,string}>
+	 */
+	public static function locale_provider(): array {
+		return [
+			'Norwegian Bokmål'   => [ 'nb_NO', 'no' ],
+			'Norwegian Nynorsk'  => [ 'nn_NO', 'no' ],
+			'regional variant'   => [ 'pt_BR', 'pt' ],
+			'formal variant'     => [ 'de_CH_informal', 'de' ],
+			'no stemmer, 3 char' => [ 'fil', 'fil' ],
+			'no stemmer, region' => [ 'zh_CN', 'zh' ],
+			'empty'              => [ '', 'en' ],
+		];
+	}
+
+	#[\PHPUnit\Framework\Attributes\DataProvider( 'locale_provider' )]
+	public function test_resolve_language( string $locale, string $expected ): void {
+		$this->assertSame( $expected, WP_Loupe_Factory::resolve_language( $locale ) );
+	}
 }

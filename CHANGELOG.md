@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-11-14
+
+### Fixed
+- Stemming now works for locales whose code the stemmer does not recognise. The language was the first two letters of the locale, so `nb_NO` and `nn_NO` (`nb`, `nn`) were never stemmed and three-letter locales got the wrong language, e.g. Filipino (`fil`) was stemmed as Finnish (`fi`). Locales are now mapped onto the stemmer's language codes. Reindex after updating.
+
+### Added
+- `loupe_search_language` filter to override the language used for stemming.
+
+### Changed
+- Docs: list the Loupe Semantic Search add-on.
+
 ## [1.5.0] - 2026-11-13
 
 ### Changed

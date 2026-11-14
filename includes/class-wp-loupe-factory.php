@@ -4,6 +4,7 @@ namespace Soderlind\Plugin\LoupeSearch;
 use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Config\TypoTolerance;
 use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Configuration;
 use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\LoupeFactory;
+use Soderlind\Plugin\LoupeSearch\Vendor\Wamania\Snowball\StemmerFactory;
 
 /**
  * Factory class for creating Loupe instances
@@ -197,6 +198,78 @@ class WP_Loupe_Factory {
 	}
 
 	/**
+	 * Get the Loupe language for the current site locale.
+	 *
+	 * @since 1.5.1
+	 * @return string Language code, see resolve_language().
+	 */
+	public static function get_site_language(): string {
+		$locale   = (string) get_locale();
+		$language = self::resolve_language( $locale );
+
+		/**
+		 * Filters the language Loupe uses for stemming and tokenization.
+		 *
+		 * @since 1.5.1
+		 * @param string $language Resolved language code, e.g. "no" for nb_NO.
+		 * @param string $locale   The WordPress locale.
+		 */
+		$filtered = apply_filters( 'loupe_search_language', $language, $locale );
+
+		return is_string( $filtered ) && '' !== $filtered ? $filtered : $language;
+	}
+
+	/**
+	 * Resolve a WordPress locale (or language code) to the code Loupe expects.
+	 *
+	 * Loupe passes the code straight to its Snowball stemmer, which silently skips
+	 * stemming for codes it does not know. Locales are therefore mapped onto the
+	 * stemmer's own codes: first by the primary language subtag ("pt_BR" → "pt"),
+	 * then by its English name, so "nb_NO" (Norwegian Bokmål) and "nn_NO"
+	 * (Norwegian Nynorsk) both become "no". Languages without a stemmer keep their
+	 * full primary subtag ("fil", not "fi", which would apply Finnish stemming).
+	 *
+	 * @since 1.5.1
+	 * @param string $locale WordPress locale such as "nb_NO", or a language code.
+	 * @return string Language code; "en" when the locale is empty.
+	 */
+	public static function resolve_language( string $locale ): string {
+		$locale = trim( $locale );
+		if ( '' === $locale ) {
+			return 'en';
+		}
+
+		$primary = class_exists( \Locale::class ) ? (string) \Locale::getPrimaryLanguage( $locale ) : '';
+		if ( '' === $primary ) {
+			$primary = (string) strtok( str_replace( '-', '_', $locale ), '_' );
+		}
+		$primary = strtolower( $primary );
+
+		if ( ! class_exists( StemmerFactory::class ) ) {
+			return $primary;
+		}
+
+		$candidates = [ $primary ];
+		if ( class_exists( \Locale::class ) ) {
+			$name = strtolower( (string) \Locale::getDisplayLanguage( $primary, 'en' ) );
+			if ( '' !== $name && $name !== $primary ) {
+				$candidates[] = $name;
+				$candidates[] = (string) strtok( $name, ' ' );
+			}
+		}
+
+		foreach ( $candidates as $candidate ) {
+			foreach ( StemmerFactory::LANGS as $codes ) {
+				if ( in_array( $candidate, $codes, true ) ) {
+					return $codes[ 0 ];
+				}
+			}
+		}
+
+		return $primary;
+	}
+
+	/**
 	 * Build the Loupe configuration object
 	 * 
 	 * @param array  $attributes Attributes for configuration
@@ -209,7 +282,13 @@ class WP_Loupe_Factory {
 		// Use the site locale for stemming/stopwords instead of hardcoding English
 		// (issue #57). An explicit `languages` advanced setting still wins if present.
 		$languages = $advanced_settings[ 'languages' ] ?? [];
-		if ( ! is_array( $languages ) || [] === $languages ) {
+		$languages = is_array( $languages )
+			? array_values( array_unique( array_filter( array_map(
+				static fn( $code ) => is_string( $code ) ? self::resolve_language( $code ) : '',
+				$languages
+			) ) ) )
+			: [];
+		if ( [] === $languages ) {
 			$languages = [ '' !== $lang ? $lang : 'en' ];
 		}
 
