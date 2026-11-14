@@ -280,6 +280,13 @@ stays searchable and the admin notice keeps asking for a manual reindex.
 - **Front-end only interception.** `WP_Loupe_Search_Hooks` is never constructed
   during REST, WP-CLI or non-AJAX admin requests, so admin list tables keep
   WordPress' own search.
+- **Bundled, patched Loupe.** Loupe and its dependencies are scoped into
+  `vendor-prefixed/` (namespace `Soderlind\Plugin\LoupeSearch\Vendor\`) by
+  [bin/strauss.sh](../bin/strauss.sh) at build time. Before scoping, it applies
+  `patches/<vendor>/<package>/*.patch`; it skips a patch already in the package
+  and fails the build when one no longer applies. Currently
+  [stem-query-terms.patch](../patches/loupe/loupe/stem-query-terms.patch) stems
+  query terms (loupe-php/loupe#384).
 - **Persistence boundary.** Index data lives in SQLite files outside MySQL and
   is accessed only through `Loupe\Loupe\Loupe`, except for two deliberate `PDO`
   escapes: `ensure_required_columns()` in the indexer and the version probe in

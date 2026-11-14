@@ -2,6 +2,7 @@
 namespace Soderlind\Plugin\LoupeSearch\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\SearchParameters;
 use Soderlind\Plugin\LoupeSearch\WP_Loupe_Factory;
 
 class WP_Loupe_Factory_LanguageTest extends TestCase {
@@ -56,5 +57,31 @@ class WP_Loupe_Factory_LanguageTest extends TestCase {
 	#[\PHPUnit\Framework\Attributes\DataProvider( 'locale_provider' )]
 	public function test_resolve_language( string $locale, string $expected ): void {
 		$this->assertSame( $expected, WP_Loupe_Factory::resolve_language( $locale ) );
+	}
+
+	/**
+	 * Query terms are stemmed like document terms (patches/loupe/loupe/stem-query-terms.patch),
+	 * so inflected forms find each other and the exact form ranks first.
+	 */
+	public function test_query_terms_are_stemmed(): void {
+		$path  = sys_get_temp_dir() . '/loupe-search-query-stemming-' . uniqid();
+		$loupe = WP_Loupe_Factory::create_loupe_instance_at( 'post', 'no', $path );
+		$loupe->addDocuments( [
+			[ 'id' => 1, 'post_title' => 'Plagene kom tilbake' ],
+			[ 'id' => 2, 'post_title' => 'Plager og smerter' ],
+		] );
+
+		$ids = static fn( string $q ): array => array_map(
+			'intval',
+			array_column( $loupe->search( SearchParameters::create()->withQuery( $q ) )->toArray()[ 'hits' ], 'id' )
+		);
+
+		try {
+			$this->assertSame( [ 2, 1 ], $ids( 'plager' ) );
+			$this->assertSame( [ 1, 2 ], $ids( 'plagene' ) );
+		} finally {
+			unset( $loupe );
+			exec( 'rm -rf ' . escapeshellarg( $path ) );
+		}
 	}
 }

@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2026-11-14
+
+### Fixed
+- Search terms are now stemmed like indexed content, so inflected forms find each other (for example Norwegian "plager" also finds "plagene"). Exact matches still rank first. This patches the bundled Loupe library until [loupe-php/loupe#384](https://github.com/loupe-php/loupe/pull/384) is released.
+
 ## [1.5.3] - 2026-11-14
 
 ### Fixed

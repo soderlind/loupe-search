@@ -1,0 +1,32 @@
+Stem query terms like document terms, so e.g. Norwegian "plager" also finds
+"plagene" (both stem to "plag"). Exact matches still rank higher.
+Upstream: https://github.com/loupe-php/loupe/pull/384 (remove once released).
+
+diff --git a/src/Internal/Tokenizer/Tokenizer.php b/src/Internal/Tokenizer/Tokenizer.php
+index 4029a9fe..25577471 100644
+--- a/src/Internal/Tokenizer/Tokenizer.php
++++ b/src/Internal/Tokenizer/Tokenizer.php
+@@ -131,7 +131,9 @@ public function tokenizeQuery(string $query, int|null $maxTokens = null): TokenC
+     {
+         $language = $this->languageDetector->detectForQuery($query);
+ 
+-        return $this->tokenizeWithoutVariants($query, $language, $maxTokens);
++        // Queries are not decomposed, but they are stemmed (just like documents) so that e.g. "administrator" also
++        // finds "administrative" as both stem to "administr". Exact matches still rank higher.
++        return $this->addStemVariants($this->tokenizeWithoutVariants($query, $language, $maxTokens), $language);
+     }
+ 
+     private function getLanguageTokenizer(string|null $language): LoupeMatcherTokenizer
+@@ -179,7 +181,11 @@ private function tokenizeWithoutVariants(string $string, string|null $language,
+ 
+     private function tokenizeWithVariants(string $string, string|null $language, int|null $maxTokens = null): TokenCollection
+     {
+-        $tokenCollection = $this->getLanguageTokenizer($language)->tokenize($string, true, $maxTokens);
++        return $this->addStemVariants($this->getLanguageTokenizer($language)->tokenize($string, true, $maxTokens), $language);
++    }
++
++    private function addStemVariants(TokenCollection $tokenCollection, string|null $language): TokenCollection
++    {
+         $tokenCollectionWithVariants = new TokenCollection();
+ 
+         foreach ($tokenCollection->all() as $token) {
