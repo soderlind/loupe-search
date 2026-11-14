@@ -5,6 +5,10 @@
          colors="true"
          cacheDirectory=".phpunit.cache"
 >
+    <php>
+        <!-- Loupe >= 1.1 builds FastSet tokenizer data in memory; the suite peaks above PHP's 128M default. -->
+        <ini name="memory_limit" value="512M"/>
+    </php>
     <testsuites>
         <testsuite name="WP Loupe Test Suite">
             <directory suffix="Test.php">tests</directory>
