@@ -108,114 +108,121 @@ class WP_Loupe_Search_Engine {
 			];
 		}
 
-		foreach ( $this->post_types as $post_type ) {
-			$post_type_fields = $this->saved_fields[ $post_type ] ?? [];
-			if ( empty( $post_type_fields ) ) {
-				continue;
+		// Require every query word first; widen to any word only when that finds nothing.
+		foreach ( self::matching_strategies( $query ) as $strategy ) {
+			foreach ( $this->post_types as $post_type ) {
+				$post_type_fields = $this->saved_fields[ $post_type ] ?? [];
+				if ( empty( $post_type_fields ) ) {
+					continue;
+				}
+
+				try {
+					$indexable_fields   = [];
+					$filterable_fields  = [];
+					$sortable_allowlist = [];
+					$retrievable_fields = [ 'id' ];
+
+					foreach ( $post_type_fields as $field_name => $settings ) {
+						if ( ! empty( $settings[ 'indexable' ] ) ) {
+							$indexable_fields[] = [
+								'field'  => $field_name,
+								'weight' => $settings[ 'weight' ] ?? 1.0,
+							];
+						}
+
+						if ( ! empty( $settings[ 'filterable' ] ) ) {
+							$filterable_fields[] = $field_name;
+						}
+
+						// sortable only marks a field as eligible for sorting; it is not applied
+						// unless the caller explicitly requests it (issue #64).
+						if ( ! empty( $settings[ 'sortable' ] ) ) {
+							$sortable_allowlist[ $field_name ] = $settings[ 'sort_direction' ] ?? 'desc';
+						}
+					}
+
+					// Apply the validated sort, keeping only fields this type can sort by.
+					$type_sort = [];
+					foreach ( $effective_sort as $rs ) {
+						if ( ! isset( $sortable_allowlist[ $rs[ 'field' ] ] ) ) {
+							continue;
+						}
+						$type_sort[]         = "{$rs[ 'field' ]}:{$rs[ 'direction' ]}";
+						$filterable_fields[] = $rs[ 'field' ]; // ensure the value is retrieved for the cross-type merge.
+					}
+
+					$retrievable_fields = array_unique( array_merge(
+						$retrievable_fields,
+						array_map( function ( $field ) {
+							return $field[ 'field' ];
+						}, $indexable_fields ),
+						$filterable_fields
+					) );
+
+					$search_params = SearchParameters::create()
+						->withQuery( (string) $query )
+						->withAttributesToRetrieve( $retrievable_fields )
+						->withShowRankingScore( true )
+						->withMatchingStrategy( $strategy )
+						->withLimit( 1000 );
+
+					if ( ! empty( $type_sort ) ) {
+						try {
+							$search_params = $search_params->withSort( $type_sort );
+						} catch (\Throwable $e) {
+							WP_Loupe_Utils::debug_log( "Sort error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
+						}
+					}
+
+					// Opt-in highlighting/cropping for the front-end search path. Requested
+					// fields are intersected with this post type's indexable fields so an
+					// unknown field never makes Loupe throw and drop the whole type.
+					if ( ! empty( $highlight[ 'fields' ] ) || ! empty( $highlight[ 'crop_fields' ] ) ) {
+						$indexable_names = array_column( $indexable_fields, 'field' );
+						$type_highlight  = ! empty( $highlight[ 'fields' ] ) ? array_values( array_intersect( $highlight[ 'fields' ], $indexable_names ) ) : [];
+						$type_crop       = ! empty( $highlight[ 'crop_fields' ] ) ? array_values( array_intersect( $highlight[ 'crop_fields' ], $indexable_names ) ) : [];
+						if ( ! empty( $type_highlight ) ) {
+							$search_params = $search_params->withAttributesToHighlight(
+								$type_highlight,
+								isset( $highlight[ 'start_tag' ] ) ? (string) $highlight[ 'start_tag' ] : '<em>',
+								isset( $highlight[ 'end_tag' ] ) ? (string) $highlight[ 'end_tag' ] : '</em>'
+							);
+						}
+						if ( ! empty( $type_crop ) ) {
+							$search_params = $search_params->withAttributesToCrop(
+								$type_crop,
+								isset( $highlight[ 'crop_length' ] ) ? (int) $highlight[ 'crop_length' ] : 50,
+								isset( $highlight[ 'crop_marker' ] ) ? (string) $highlight[ 'crop_marker' ] : '…'
+							);
+						}
+					}
+
+					$result = $this->loupe[ $post_type ]->search( $search_params );
+					$arr    = $result->toArray();
+
+					if ( isset( $arr[ 'processingTimeMs' ] ) ) {
+						$processing_time_sum += (int) $arr[ 'processingTimeMs' ];
+					}
+
+					$tmp_hits = isset( $arr[ 'hits' ] ) && is_array( $arr[ 'hits' ] ) ? $arr[ 'hits' ] : [];
+					foreach ( $tmp_hits as $hit ) {
+						if ( ! is_array( $hit ) ) {
+							continue;
+						}
+						// Normalize Loupe's ranking score into the plugin's historic `_score` field.
+						if ( isset( $hit[ '_rankingScore' ] ) && ! isset( $hit[ '_score' ] ) ) {
+							$hit[ '_score' ] = $hit[ '_rankingScore' ];
+						}
+						$hit[ 'post_type' ] = $post_type;
+						$hits[]             = $hit;
+					}
+				} catch (\Throwable $e) {
+					WP_Loupe_Utils::debug_log( "Search error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
+					continue;
+				}
 			}
-
-			try {
-				$indexable_fields   = [];
-				$filterable_fields  = [];
-				$sortable_allowlist = [];
-				$retrievable_fields = [ 'id' ];
-
-				foreach ( $post_type_fields as $field_name => $settings ) {
-					if ( ! empty( $settings[ 'indexable' ] ) ) {
-						$indexable_fields[] = [
-							'field'  => $field_name,
-							'weight' => $settings[ 'weight' ] ?? 1.0,
-						];
-					}
-
-					if ( ! empty( $settings[ 'filterable' ] ) ) {
-						$filterable_fields[] = $field_name;
-					}
-
-					// sortable only marks a field as eligible for sorting; it is not applied
-					// unless the caller explicitly requests it (issue #64).
-					if ( ! empty( $settings[ 'sortable' ] ) ) {
-						$sortable_allowlist[ $field_name ] = $settings[ 'sort_direction' ] ?? 'desc';
-					}
-				}
-
-				// Apply the validated sort, keeping only fields this type can sort by.
-				$type_sort = [];
-				foreach ( $effective_sort as $rs ) {
-					if ( ! isset( $sortable_allowlist[ $rs[ 'field' ] ] ) ) {
-						continue;
-					}
-					$type_sort[]         = "{$rs[ 'field' ]}:{$rs[ 'direction' ]}";
-					$filterable_fields[] = $rs[ 'field' ]; // ensure the value is retrieved for the cross-type merge.
-				}
-
-				$retrievable_fields = array_unique( array_merge(
-					$retrievable_fields,
-					array_map( function ( $field ) {
-						return $field[ 'field' ];
-					}, $indexable_fields ),
-					$filterable_fields
-				) );
-
-				$search_params = SearchParameters::create()
-					->withQuery( (string) $query )
-					->withAttributesToRetrieve( $retrievable_fields )
-					->withShowRankingScore( true )
-					->withLimit( 1000 );
-
-				if ( ! empty( $type_sort ) ) {
-					try {
-						$search_params = $search_params->withSort( $type_sort );
-					} catch (\Throwable $e) {
-						WP_Loupe_Utils::debug_log( "Sort error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
-					}
-				}
-
-				// Opt-in highlighting/cropping for the front-end search path. Requested
-				// fields are intersected with this post type's indexable fields so an
-				// unknown field never makes Loupe throw and drop the whole type.
-				if ( ! empty( $highlight[ 'fields' ] ) || ! empty( $highlight[ 'crop_fields' ] ) ) {
-					$indexable_names = array_column( $indexable_fields, 'field' );
-					$type_highlight  = ! empty( $highlight[ 'fields' ] ) ? array_values( array_intersect( $highlight[ 'fields' ], $indexable_names ) ) : [];
-					$type_crop       = ! empty( $highlight[ 'crop_fields' ] ) ? array_values( array_intersect( $highlight[ 'crop_fields' ], $indexable_names ) ) : [];
-					if ( ! empty( $type_highlight ) ) {
-						$search_params = $search_params->withAttributesToHighlight(
-							$type_highlight,
-							isset( $highlight[ 'start_tag' ] ) ? (string) $highlight[ 'start_tag' ] : '<em>',
-							isset( $highlight[ 'end_tag' ] ) ? (string) $highlight[ 'end_tag' ] : '</em>'
-						);
-					}
-					if ( ! empty( $type_crop ) ) {
-						$search_params = $search_params->withAttributesToCrop(
-							$type_crop,
-							isset( $highlight[ 'crop_length' ] ) ? (int) $highlight[ 'crop_length' ] : 50,
-							isset( $highlight[ 'crop_marker' ] ) ? (string) $highlight[ 'crop_marker' ] : '…'
-						);
-					}
-				}
-
-				$result = $this->loupe[ $post_type ]->search( $search_params );
-				$arr    = $result->toArray();
-
-				if ( isset( $arr[ 'processingTimeMs' ] ) ) {
-					$processing_time_sum += (int) $arr[ 'processingTimeMs' ];
-				}
-
-				$tmp_hits = isset( $arr[ 'hits' ] ) && is_array( $arr[ 'hits' ] ) ? $arr[ 'hits' ] : [];
-				foreach ( $tmp_hits as $hit ) {
-					if ( ! is_array( $hit ) ) {
-						continue;
-					}
-					// Normalize Loupe's ranking score into the plugin's historic `_score` field.
-					if ( isset( $hit[ '_rankingScore' ] ) && ! isset( $hit[ '_score' ] ) ) {
-						$hit[ '_score' ] = $hit[ '_rankingScore' ];
-					}
-					$hit[ 'post_type' ] = $post_type;
-					$hits[]             = $hit;
-				}
-			} catch (\Throwable $e) {
-				WP_Loupe_Utils::debug_log( "Search error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
-				continue;
+			if ( ! empty( $hits ) ) {
+				break;
 			}
 		}
 
@@ -486,69 +493,75 @@ class WP_Loupe_Search_Engine {
 		$facet_distribution  = [];
 		$hits                = [];
 
-		foreach ( $this->post_types as $post_type ) {
-			try {
-				$search_params = SearchParameters::create()
-					->withQuery( $query )
-					->withShowRankingScore( true );
+		foreach ( self::matching_strategies( $query ) as $strategy ) {
+			foreach ( $this->post_types as $post_type ) {
+				try {
+					$search_params = SearchParameters::create()
+						->withQuery( $query )
+						->withShowRankingScore( true )
+						->withMatchingStrategy( $strategy );
 
-				if ( ! empty( $attrs ) ) {
-					$search_params = $search_params->withAttributesToRetrieve( array_values( array_unique( $attrs ) ) );
-				}
-				if ( ! empty( $filter ) ) {
-					$search_params = $search_params->withFilter( $filter );
-				}
-				if ( ! empty( $facets ) ) {
-					$search_params = $search_params->withFacets( $facets );
-				}
-				if ( ! empty( $sort ) ) {
-					$search_params = $search_params->withSort( $sort );
-				}
-				if ( $limit > 0 ) {
-					$search_params = $search_params->withLimit( $limit );
-				}
+					if ( ! empty( $attrs ) ) {
+						$search_params = $search_params->withAttributesToRetrieve( array_values( array_unique( $attrs ) ) );
+					}
+					if ( ! empty( $filter ) ) {
+						$search_params = $search_params->withFilter( $filter );
+					}
+					if ( ! empty( $facets ) ) {
+						$search_params = $search_params->withFacets( $facets );
+					}
+					if ( ! empty( $sort ) ) {
+						$search_params = $search_params->withSort( $sort );
+					}
+					if ( $limit > 0 ) {
+						$search_params = $search_params->withLimit( $limit );
+					}
 
-				if ( ! empty( $highlight ) ) {
-					$search_params = $search_params->withAttributesToHighlight( $highlight, $highlight_start, $highlight_end );
-				}
-				if ( ! empty( $crop ) ) {
-					$search_params = $search_params->withAttributesToCrop( $crop, $crop_length, $crop_marker );
-				}
+					if ( ! empty( $highlight ) ) {
+						$search_params = $search_params->withAttributesToHighlight( $highlight, $highlight_start, $highlight_end );
+					}
+					if ( ! empty( $crop ) ) {
+						$search_params = $search_params->withAttributesToCrop( $crop, $crop_length, $crop_marker );
+					}
 
-				$result = $this->loupe[ $post_type ]->search( $search_params );
-				$arr    = $result->toArray();
+					$result = $this->loupe[ $post_type ]->search( $search_params );
+					$arr    = $result->toArray();
 
-				$total_hits          += isset( $arr[ 'totalHits' ] ) ? (int) $arr[ 'totalHits' ] : 0;
-				$processing_time_sum += isset( $arr[ 'processingTimeMs' ] ) ? (int) $arr[ 'processingTimeMs' ] : 0;
+					$total_hits          += isset( $arr[ 'totalHits' ] ) ? (int) $arr[ 'totalHits' ] : 0;
+					$processing_time_sum += isset( $arr[ 'processingTimeMs' ] ) ? (int) $arr[ 'processingTimeMs' ] : 0;
 
-				if ( isset( $arr[ 'facetDistribution' ] ) && is_array( $arr[ 'facetDistribution' ] ) ) {
-					foreach ( $arr[ 'facetDistribution' ] as $facet_field => $dist ) {
-						if ( ! is_array( $dist ) ) {
+					if ( isset( $arr[ 'facetDistribution' ] ) && is_array( $arr[ 'facetDistribution' ] ) ) {
+						foreach ( $arr[ 'facetDistribution' ] as $facet_field => $dist ) {
+							if ( ! is_array( $dist ) ) {
+								continue;
+							}
+							if ( ! isset( $facet_distribution[ $facet_field ] ) ) {
+								$facet_distribution[ $facet_field ] = [];
+							}
+							foreach ( $dist as $val => $cnt ) {
+								$facet_distribution[ $facet_field ][ (string) $val ] = ( $facet_distribution[ $facet_field ][ (string) $val ] ?? 0 ) + (int) $cnt;
+							}
+						}
+					}
+
+					$tmp_hits = isset( $arr[ 'hits' ] ) && is_array( $arr[ 'hits' ] ) ? $arr[ 'hits' ] : [];
+					foreach ( $tmp_hits as $hit ) {
+						if ( ! is_array( $hit ) ) {
 							continue;
 						}
-						if ( ! isset( $facet_distribution[ $facet_field ] ) ) {
-							$facet_distribution[ $facet_field ] = [];
+						if ( isset( $hit[ '_rankingScore' ] ) && ! isset( $hit[ '_score' ] ) ) {
+							$hit[ '_score' ] = $hit[ '_rankingScore' ];
 						}
-						foreach ( $dist as $val => $cnt ) {
-							$facet_distribution[ $facet_field ][ (string) $val ] = ( $facet_distribution[ $facet_field ][ (string) $val ] ?? 0 ) + (int) $cnt;
-						}
+						$hit[ 'post_type' ] = $post_type;
+						$hits[]             = $hit;
 					}
+				} catch (\Throwable $e) {
+					WP_Loupe_Utils::debug_log( "Advanced search error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
+					continue;
 				}
-
-				$tmp_hits = isset( $arr[ 'hits' ] ) && is_array( $arr[ 'hits' ] ) ? $arr[ 'hits' ] : [];
-				foreach ( $tmp_hits as $hit ) {
-					if ( ! is_array( $hit ) ) {
-						continue;
-					}
-					if ( isset( $hit[ '_rankingScore' ] ) && ! isset( $hit[ '_score' ] ) ) {
-						$hit[ '_score' ] = $hit[ '_rankingScore' ];
-					}
-					$hit[ 'post_type' ] = $post_type;
-					$hits[]             = $hit;
-				}
-			} catch (\Throwable $e) {
-				WP_Loupe_Utils::debug_log( "Advanced search error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
-				continue;
+			}
+			if ( $total_hits > 0 ) {
+				break;
 			}
 		}
 
@@ -563,6 +576,20 @@ class WP_Loupe_Search_Engine {
 		}
 		return $out;
 	}
+	/**
+	 * Loupe matching strategies to try, in order.
+	 *
+	 * Multi-word queries first require every word ("all"), so common words such as
+	 * "en" or "er" cannot pull in most of the site. If that finds nothing, the search
+	 * is retried with "any" so a single unmatched word does not empty the results.
+	 *
+	 * @param string $query
+	 * @return string[]
+	 */
+	private static function matching_strategies( $query ): array {
+		return '' === trim( (string) $query ) ? [ 'any' ] : [ 'all', 'any' ];
+	}
+
 	/**
 	 * Helper: validate that a field name is a Loupe-compatible attribute name.
 	 *

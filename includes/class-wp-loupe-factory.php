@@ -4,6 +4,8 @@ namespace Soderlind\Plugin\LoupeSearch;
 use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Config\TypoTolerance;
 use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Configuration;
 use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\LoupeFactory;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Matcher\Tokenizer\LocaleConfiguration\German\GermanNormalizer;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Matcher\Tokenizer\Normalizer\Normalizer;
 use Soderlind\Plugin\LoupeSearch\Vendor\Wamania\Snowball\StemmerFactory;
 
 /**
@@ -305,9 +307,67 @@ class WP_Loupe_Factory {
 			->withMaxQueryTokens( $advanced_settings[ 'max_query_tokens' ] ?? 12 )
 			->withMinTokenLengthForPrefixSearch( $advanced_settings[ 'min_prefix_length' ] ?? 3 )
 			->withLanguages( $languages )
+			->withStopWords( self::get_stop_words( $languages ) )
 			->withTypoTolerance( self::configure_typo_tolerance( $advanced_settings ) );
 
 		return $configuration;
+	}
+
+	/**
+	 * Stop words for the index languages: common words such as "the" or "er" that
+	 * Loupe drops from search queries (not from the index). A query made up only of
+	 * stop words is searched as typed.
+	 *
+	 * Bundled lists (includes/stop-words/<code>.php) come from the Snowball project.
+	 * The list is part of Loupe's index configuration, so changing it marks the
+	 * indexes as needing a rebuild.
+	 *
+	 * @since 1.5.5
+	 * @param string[] $languages Loupe language codes, see resolve_language().
+	 * @return string[] Lowercase, unique stop words, including their ASCII-folded spelling.
+	 */
+	public static function get_stop_words( array $languages ): array {
+		$words = [];
+		foreach ( $languages as $code ) {
+			$file = __DIR__ . '/stop-words/' . $code . '.php';
+			if ( is_string( $code ) && preg_match( '/^[a-z]{2,3}$/', $code ) && is_readable( $file ) ) {
+				$list  = include $file;
+				$words = array_merge( $words, is_array( $list ) ? $list : [] );
+			}
+		}
+
+		/**
+		 * Filters the stop words dropped from search queries.
+		 *
+		 * Return an empty array to disable stop words. Changing the list requires
+		 * the indexes to be rebuilt.
+		 *
+		 * @since 1.5.5
+		 * @param string[] $words     Stop words for the index languages.
+		 * @param string[] $languages Loupe language codes.
+		 */
+		$words = apply_filters( 'loupe_search_stop_words', $words, $languages );
+
+		$words = array_map(
+			static fn( $word ) => mb_strtolower( trim( (string) $word ) ),
+			array_filter( is_array( $words ) ? $words : [], 'is_scalar' )
+		);
+
+		$words = array_filter( $words, static fn( string $word ): bool => '' !== $word );
+
+		// Loupe folds query terms to ASCII before the stop word check ("på" becomes
+		// "pa"), so add the folded spelling of each word as well.
+		$normalizers = [ new Normalizer() ];
+		if ( in_array( 'de', $languages, true ) ) {
+			$normalizers[] = new GermanNormalizer( new Normalizer() );
+		}
+		foreach ( $words as $word ) {
+			foreach ( $normalizers as $normalizer ) {
+				$words[] = $normalizer->normalize( $word );
+			}
+		}
+
+		return array_values( array_unique( array_filter( $words, static fn( string $word ): bool => '' !== $word ) ) );
 	}
 
 	/**

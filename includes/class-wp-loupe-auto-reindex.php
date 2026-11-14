@@ -65,6 +65,9 @@ class WP_Loupe_Auto_Reindex {
 		}
 		update_option( self::VERSION_OPTION, $version );
 
+		// Cached results may come from the previous version's query handling.
+		WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
+
 		$stale = $this->get_stale_post_types( $this->post_types );
 		if ( empty( $stale ) ) {
 			return;

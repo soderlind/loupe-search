@@ -149,7 +149,11 @@ Trigger: a front-end `WP_Query` search.
    quotes for phrase matching.
 4. `WP_Loupe_Search_Engine::search()` checks the `loupe_search_cache_<md5>`
    transient, then queries every configured post type's Loupe instance and
-   merges the hits. Loupe's `_rankingScore` is copied to `_score`, and
+   merges the hits. Loupe first runs with matching strategy `all` (every query
+   word must match); only if no post type returns a hit does it retry with
+   `any` (`matching_strategies()`). Stop words for the index languages
+   (`WP_Loupe_Factory::get_stop_words()`, `includes/stop-words/`) are dropped
+   from the query first. `search_advanced()` (REST) does the same. Loupe's `_rankingScore` is copied to `_score`, and
    `post_type` is stamped on each hit. Results are cached for one hour
    (`CACHE_TTL`), but only when the query is at most 128 bytes
    (`loupe_search_max_cacheable_query_length`) — search is reachable
