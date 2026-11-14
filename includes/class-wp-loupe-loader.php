@@ -57,6 +57,7 @@ class WP_Loupe_Loader {
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-db.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-utils.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-index-notice.php';
+		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-auto-reindex.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-settings.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-rest.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-abilities.php';
@@ -176,6 +177,9 @@ class WP_Loupe_Loader {
 		if ( is_admin() && ! wp_doing_ajax() ) {
 			( new WP_Loupe_Index_Notice( $this->search_engine, $this->post_types ) )->register();
 		}
+
+		// Rebuild indexes made stale by a plugin update in the background.
+		( new WP_Loupe_Auto_Reindex( $this->search_engine, (array) $this->post_types ) )->register();
 
 		// Initialize REST API handler
 		new WP_Loupe_REST();

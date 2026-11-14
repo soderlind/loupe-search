@@ -57,26 +57,30 @@ class WP_Loupe_Factory {
 			return self::$instance_cache[ $cache_key ];
 		}
 
-		// Get field configuration for this post type
-		$field_config = self::get_field_configuration( $post_type );
-
-		// Extract attributes from field configuration
-		$attributes = self::extract_attributes_from_fields( $field_config );
-
-		// Get advanced configuration
-		$configuration = self::build_configuration( $attributes, $lang );
-
-		// Create and cache the Loupe instance
-		$loupe_factory = new LoupeFactory();
-		$instance      = $loupe_factory->create(
-			$db->get_db_path( $post_type ),
-			$configuration
-		);
+		$instance = self::create_loupe_instance_at( $post_type, $lang, $db->get_db_path( $post_type ) );
 
 		// Cache the instance
 		self::$instance_cache[ $cache_key ] = $instance;
 
 		return $instance;
+	}
+
+	/**
+	 * Create an uncached Loupe instance for a post type at an explicit directory,
+	 * e.g. a shadow index that is built before replacing the live one.
+	 *
+	 * @since 1.5.3
+	 * @param string $post_type Post type whose field configuration to use.
+	 * @param string $lang      Language code.
+	 * @param string $path      Index directory.
+	 * @return \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe
+	 */
+	public static function create_loupe_instance_at( string $post_type, string $lang, string $path ): \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe {
+		$field_config  = self::get_field_configuration( $post_type );
+		$attributes    = self::extract_attributes_from_fields( $field_config );
+		$configuration = self::build_configuration( $attributes, $lang );
+
+		return ( new LoupeFactory() )->create( $path, $configuration );
 	}
 
 	/**

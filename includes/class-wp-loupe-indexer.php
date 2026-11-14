@@ -116,7 +116,8 @@ class WP_Loupe_Indexer {
 
 		$document = $this->prepare_document( $post );
 		$loupe    = $this->loupe[ $post->post_type ];
-		// $loupe->deleteDocument( $post_id );
+		// Lets a background rebuild mirror the change into its shadow index.
+		do_action( 'loupe_search_internal_document_added', $post->post_type, $document );
 		$loupe->addDocument( $document );
 	}
 
@@ -221,6 +222,7 @@ class WP_Loupe_Indexer {
 		if ( ! in_array( $post_type, $this->post_types, true ) ) {
 			return;
 		}
+		do_action( 'loupe_search_internal_documents_deleted', $post_type, [ $post_id ] );
 		$loupe = $this->loupe[ $post_type ];
 		$this->maybe_migrate_loupe_before_delete( $loupe, $post_id );
 		try {
@@ -250,6 +252,7 @@ class WP_Loupe_Indexer {
 		if ( ! in_array( $post_type, $this->post_types, true ) ) {
 			return;
 		}
+		do_action( 'loupe_search_internal_documents_deleted', $post_type, $post_ids );
 		$loupe = $this->loupe[ $post_type ];
 		$this->maybe_migrate_loupe_before_delete( $loupe, $post_ids[ 0 ] );
 		try {
@@ -502,6 +505,47 @@ class WP_Loupe_Indexer {
 			return ( $idx >= count( $post_types ) ) ? [ 'done' => true ] + $state : $state;
 		}
 
+		$this->index_post_ids( $this->loupe[ $post_type ], $post_type, $ids );
+
+		$processed    += count( $ids );
+		$processed_pt += count( $ids );
+		$last_id       = max( $ids );
+
+		$state[ 'idx' ]          = $idx;
+		$state[ 'last_id' ]      = $last_id;
+		$state[ 'cleared' ]      = $cleared;
+		$state[ 'processed' ]    = $processed;
+		$state[ 'processed_pt' ] = $processed_pt;
+		$state[ 'post_types' ]   = $post_types;
+		return $state;
+	}
+
+	/**
+	 * Index the next batch of posts (ID greater than $after_id) into a given Loupe
+	 * instance, e.g. a shadow index built by WP_Loupe_Auto_Reindex.
+	 *
+	 * @since 1.5.3
+	 * @param \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe $loupe
+	 * @param string $post_type
+	 * @param int    $after_id
+	 * @param int    $batch_size
+	 * @return int Highest post ID processed, or 0 when there are no more posts.
+	 */
+	public function index_batch_into( $loupe, string $post_type, int $after_id, int $batch_size ): int {
+		$ids = $this->get_published_post_ids_after( $post_type, $after_id, max( 1, $batch_size ) );
+		if ( empty( $ids ) ) {
+			return 0;
+		}
+		$this->index_post_ids( $loupe, $post_type, $ids );
+		return max( $ids );
+	}
+
+	/**
+	 * @param \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe $loupe
+	 * @param string $post_type
+	 * @param int[]  $ids
+	 */
+	private function index_post_ids( $loupe, string $post_type, array $ids ): void {
 		$posts = get_posts( [
 			'post_type'      => $post_type,
 			'post_status'    => $this->get_indexable_statuses( $post_type ),
@@ -518,20 +562,8 @@ class WP_Loupe_Indexer {
 		}
 
 		if ( ! empty( $documents ) ) {
-			$this->loupe[ $post_type ]->addDocuments( $documents );
+			$loupe->addDocuments( $documents );
 		}
-
-		$processed    += count( $ids );
-		$processed_pt += count( $ids );
-		$last_id       = max( $ids );
-
-		$state[ 'idx' ]          = $idx;
-		$state[ 'last_id' ]      = $last_id;
-		$state[ 'cleared' ]      = $cleared;
-		$state[ 'processed' ]    = $processed;
-		$state[ 'processed_pt' ] = $processed_pt;
-		$state[ 'post_types' ]   = $post_types;
-		return $state;
 	}
 
 	/**

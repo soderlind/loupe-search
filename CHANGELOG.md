@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.3] - 2026-11-14
+
+### Fixed
+- REST search (and the Loupe Search block) no longer returns HTTP 400 when an index is out of date. After updating to 1.5.2, every existing index needed a reindex because the bundled Loupe library changed. The old index is now searched until it has been rebuilt.
+
+### Added
+- Indexes made stale by a plugin update are rebuilt automatically in the background (WP-Cron) on the first admin page load after the update.
+
 ## [1.5.2] - 2026-11-14
 
 ### Changed

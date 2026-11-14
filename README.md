@@ -152,6 +152,8 @@ Reindexing rebuilds the index for your configured post types.
 	wp loupe-search reindex --post-types=post,page --batch-size=1000
 	```
 
+After a plugin update that makes existing indexes out of date (for example a new bundled Loupe version), Loupe Search rebuilds them automatically in the background with WP-Cron. Search keeps using the old index until the rebuild finishes.
+
 ## FAQ
 
 ### How does it handle updates to posts?

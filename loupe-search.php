@@ -10,7 +10,7 @@
  * Plugin Name:       Loupe Search
  * Plugin URI:        https://github.com/soderlind/loupe-search
  * Description:       Fast, index-backed WordPress search with typo tolerance, phrase matching, exclusions, custom post types, real-time indexing, and a developer-friendly REST API.
- * Version:           1.5.2
+ * Version:           1.5.3
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
  * License:           GPL-2.0+
@@ -111,10 +111,37 @@ function activate( $network_wide = false ) {
 }
 
 /**
- * Deactivation hook: flush rewrite rules to remove custom endpoints.
+ * Deactivation hook: flush rewrite rules and drop queued background reindexes,
+ * on every site when network deactivated.
+ *
+ * @param bool $network_wide Whether the plugin is being network deactivated.
  */
-function deactivate() {
-	flush_rewrite_rules();
+function deactivate( $network_wide = false ) {
+	if ( is_multisite() && $network_wide ) {
+		global $wpdb;
+		$blog_ids = $wpdb->get_col( "SELECT blog_id FROM {$wpdb->blogs}" );
+		foreach ( $blog_ids as $blog_id ) {
+			switch_to_blog( (int) $blog_id );
+			// flush_rewrite_rules() after switch_to_blog() would write this site's
+			// rules; let each site regenerate its own on the next request instead.
+			delete_option( 'rewrite_rules' );
+			clear_auto_reindex();
+			restore_current_blog();
+		}
+	} else {
+		flush_rewrite_rules();
+		clear_auto_reindex();
+	}
+}
+
+/**
+ * Per-site cleanup of the background reindex on deactivation.
+ */
+function clear_auto_reindex() {
+	// Drop any queued background reindex; reactivation re-checks the indexes.
+	wp_clear_scheduled_hook( 'loupe_search_auto_reindex' );
+	delete_option( 'loupe_search_auto_reindex_state' );
+	delete_option( 'loupe_search_version' );
 }
 
 register_activation_hook( LOUPE_SEARCH_FILE, __NAMESPACE__ . '\\activate' );
