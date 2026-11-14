@@ -12,6 +12,7 @@ below is traceable to a named symbol in `includes/`.
 - [Flow: front-end search](#flow-front-end-search)
 - [Flow: indexing a saved post](#flow-indexing-a-saved-post)
 - [Flow: batched reindex](#flow-batched-reindex)
+- [Flow: background rebuild](#flow-background-rebuild)
 - [Boundaries and constraints](#boundaries-and-constraints)
 - [Invariants](#invariants)
 - [Persistent state](#persistent-state)
@@ -68,7 +69,7 @@ Not included:
 | REST controller | Route registration in two namespaces, request validation, allowlisting, response shaping | [includes/class-wp-loupe-rest.php](../includes/class-wp-loupe-rest.php) | search engine, schema manager, indexer |
 | Abilities | Registers `loupe-search/search` and `loupe-search/get-post` (plus deprecated aliases) | [includes/class-wp-loupe-abilities.php](../includes/class-wp-loupe-abilities.php) | search engine |
 | Settings screen | Settings → Loupe Search page, option registration and sanitization, admin assets | [includes/class-wp-loupe-settings.php](../includes/class-wp-loupe-settings.php) | factory, REST controller (via admin JS) |
-| Auto reindex | Once per plugin version (on `admin_init`), queues post types whose index reports `needsReindex()` and rebuilds them with the batched reindex in a self-rescheduling WP-Cron event | [includes/class-wp-loupe-auto-reindex.php](../includes/class-wp-loupe-auto-reindex.php) | search engine, indexer |
+| Auto reindex | Once per plugin version (on `admin_init`), queues post types whose index reports `needsReindex()` and rebuilds each into a shadow directory in a self-rescheduling WP-Cron event, then swaps it in (see [Flow: background rebuild](#flow-background-rebuild)) | [includes/class-wp-loupe-auto-reindex.php](../includes/class-wp-loupe-auto-reindex.php) | search engine, indexer, factory, DB |
 | CLI | `wp loupe-search reindex` | [includes/class-wp-loupe-cli.php](../includes/class-wp-loupe-cli.php) | indexer |
 | Utilities | Post-type resolution, environment checks, debug logging, transient purging | [includes/class-wp-loupe-utils.php](../includes/class-wp-loupe-utils.php) | — |
 
@@ -208,10 +209,8 @@ and swallowed.
 ## Flow: batched reindex
 
 Trigger: `POST /wp-json/loupe-search/v1/reindex-batch` from the Dashboard's
-reindex panel, `wp loupe-search reindex`, or the `loupe_search_auto_reindex`
-cron event (`WP_Loupe_Auto_Reindex`, after a plugin update leaves an index stale;
-it runs steps for up to 20 seconds per event and stores the state in the
-`loupe_search_auto_reindex_state` option).
+reindex panel or `wp loupe-search reindex`. This flow clears the live index
+first, so searches see partial results until it finishes.
 
 1. `WP_Loupe_Indexer::reindex_batch_init()` repairs missing columns
    (`ensure_required_columns()`), purges search transients, writes default field
@@ -246,6 +245,32 @@ Failure behavior:
 | Cursor tampered with or stale version | Cursor rejected, a fresh run is initialized | system |
 | `ensure_required_columns()` cannot open the SQLite file | Silently ignored; the index is rebuilt from scratch on schema mismatch | system |
 
+## Flow: background rebuild
+
+Trigger: the `loupe_search_auto_reindex` cron event, queued by
+`WP_Loupe_Auto_Reindex::maybe_schedule()` on the first `admin_init` after a
+plugin update when an index reports `needsReindex()` (new bundled Loupe version
+or changed language). State lives in the `loupe_search_auto_reindex_state`
+option (`queue`, `post_type`, `after`).
+
+1. `run()` takes the next post type, deletes any leftover `<post_type>.rebuild`
+   directory, and opens a shadow Loupe instance there with
+   `WP_Loupe_Factory::create_loupe_instance_at()` (uncached).
+2. `WP_Loupe_Indexer::index_batch_into()` adds 200 posts at a time (keyset
+   pagination by ID) for up to 20 seconds, then the event reschedules itself.
+3. Meanwhile the live (stale) index keeps serving searches. Post saves and
+   deletes still go to the live index; the indexer fires the internal
+   `loupe_search_internal_document_added` / `_documents_deleted` actions, which
+   `mirror_add()` / `mirror_delete()` replay into the shadow.
+4. When the post type is complete, `swap()` renames live → `.old`,
+   shadow → live, deletes `.old`, and clears the factory cache for the type.
+5. At most one post type completes per request, because Loupe keeps every
+   opened index (and its tokenizer cache, ~130 MB for English/German) in
+   memory until the request ends.
+
+On failure the shadow is deleted and the queue is dropped. The stale live index
+stays searchable and the admin notice keeps asking for a manual reindex.
+
 ## Boundaries and constraints
 
 - **Query vs. engine.** `WP_Loupe_Search_Engine` registers no hooks and must
@@ -268,7 +293,8 @@ Failure behavior:
   results afterwards, so hit totals and facet counts are derived from public
   content alone. Untrusted input becomes trusted in
   `handle_search_request_post()`, which:
-  - rejects post types not in the configured list and not index-ready;
+  - rejects post types not in the configured list or without a readable index
+    (a stale index that only needs a reindex is still searched);
   - validates every attribute name against
     `WP_Loupe_Search_Engine::is_valid_loupe_attribute_name()`;
   - requires filter, facet and geo fields to be filterable in **every**
