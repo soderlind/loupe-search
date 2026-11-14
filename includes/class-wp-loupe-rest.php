@@ -68,7 +68,7 @@ class WP_Loupe_REST {
 	public function __construct() {
 		$this->db             = WP_Loupe_DB::get_instance();
 		$this->schema_manager = new WP_Loupe_Schema_Manager();
-		$this->iso6391_lang   = ( '' === get_locale() ) ? 'en' : strtolower( substr( get_locale(), 0, 2 ) );
+		$this->iso6391_lang   = WP_Loupe_Factory::get_site_language();
 
 		$this->set_post_types();
 		$this->init_loupe_instances();

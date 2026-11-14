@@ -28,7 +28,7 @@ class WP_Loupe_Search_Engine {
 		$this->db           = $db ?: WP_Loupe_DB::get_instance();
 		$this->saved_fields = get_option( 'loupe_search_fields', [] );
 
-		$iso6391_lang = ( '' === get_locale() ) ? 'en' : strtolower( substr( get_locale(), 0, 2 ) );
+		$iso6391_lang = WP_Loupe_Factory::get_site_language();
 		foreach ( $this->post_types as $post_type ) {
 			$this->loupe[ $post_type ] = WP_Loupe_Factory::create_loupe_instance( $post_type, $iso6391_lang, $this->db );
 		}
