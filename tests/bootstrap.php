@@ -5,15 +5,13 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Load the Strauss-scoped dependencies when a production build is present.
+// Otherwise (dev checkout, no Strauss build) only the unscoped classes exist, so
+// alias them to the prefixed names the plugin source references. Mirrors
+// WP_Loupe_Loader: never probe the unscoped names in a real build, because
+// Strauss's alias autoloader would try to extend final prefixed classes.
 if ( file_exists( __DIR__ . '/../vendor-prefixed/autoload.php' ) ) {
 	require_once __DIR__ . '/../vendor-prefixed/autoload.php';
-}
-
-// The plugin source references Loupe under its Strauss-prefixed namespace. In a
-// dev checkout (no Strauss build) only the unscoped classes exist, so alias them
-// to the prefixed names the code expects. A real build defines the prefixed
-// classes for real, so these aliases are skipped.
-foreach ( array(
+} else foreach ( array(
 	'Loupe\\Loupe\\Config\\TypoTolerance',
 	'Loupe\\Loupe\\Configuration',
 	'Loupe\\Loupe\\Loupe',
