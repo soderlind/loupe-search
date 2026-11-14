@@ -79,41 +79,31 @@ For an AI agent to use these abilities, install and activate the [MCP Adapter](h
 
 These filters allow developers to customize Loupe Search's behavior. As of 1.1.0 they use the `loupe_search_*` prefix; the old `wp_loupe_*` names still work but are deprecated and will be removed in a future major release.
 
-`loupe_search_db_path`
+* `loupe_search_post_types`: Choose which post types are indexed.
+* `loupe_search_index_protected`: Index password-protected posts.
+* `loupe_search_indexable_post_statuses`: Index extra publicly viewable statuses.
+* `loupe_search_is_indexable`: Keep individual posts out of the index.
+* `loupe_search_db_path`: Move the index directory.
+* `loupe_search_language`: Override the stemming language.
+* `loupe_search_stop_words`: Change the common words ignored in searches.
+* `loupe_search_field_{$field_name}`: Clean a core post field before indexing.
+* `loupe_search_schema_{$post_type}`: Add/remove fields, set weights and sorting.
+* `loupe_search_is_safely_sortable_{$post_type}`: Force a core field to be sortable.
+* `loupe_search_is_safely_sortable_meta_{$post_type}`: Correct meta-field sortability detection.
+* `loupe_search_posts_per_page`: Change results per page.
+* `loupe_search_max_cacheable_query_length`: Change which queries are written to the result cache.
+* `loupe_search_order_results`: Reorder or regroup results merged across post types.
+* `loupe_search_advanced_hits`: Rerank or add hits in REST `POST /search` before pagination.
+* `loupe_search_highlight`: Turn match highlighting on for the default search.
+* `loupe_search_highlight_fields`: Choose which fields are highlighted.
+* `loupe_search_highlight_start_tag` / `loupe_search_highlight_end_tag`: Change the tags wrapped around matches.
+* `loupe_search_highlight_crop_fields`: Choose which fields become cropped snippets.
+* `loupe_search_highlight_crop_length`: Change snippet length (in words).
+* `loupe_search_highlight_crop_marker`: Change the ellipsis on cropped snippets.
+* `loupe_search_insights_should_count`: Decide whether a visitor search is counted by Search insights.
+* `loupe_search_settings_tabs`: Add a tab to Settings → Loupe Search.
 
-Controls where the search index is stored.
-Default: WP_CONTENT_DIR . '/loupe-search-db'
-
-`loupe_search_post_types`
-
-Modifies which post types are included in search.
-Default: the post types selected on the settings screen, falling back to ['post', 'page']
-
-`loupe_search_posts_per_page`
-
-Controls search results per page.
-Default: WordPress "Blog pages show at most" setting
-
-`loupe_search_index_protected`
-
-Controls indexing of password-protected posts. Receives false for protected posts and true for everything else; return true to index them anyway.
-
-`loupe_search_field_{$field_name}`
-
-Modifies a core post field before indexing. Does not fire for custom fields.
-Example: The plugin uses `loupe_search_field_post_content` to strip HTML tags from content
-
-`loupe_search_schema_{$post_type}`
-
-Customizes the schema for a post type: which fields are indexed, their weight, and whether they are filterable or sortable.
-
-`loupe_search_is_safely_sortable_{$post_type}`
-
-Overrides whether a core post field may be used for sorting.
-
-`loupe_search_is_safely_sortable_meta_{$post_type}`
-
-Overrides whether a custom field may be used for sorting.
+Action: `loupe_search_searched` fires after each countable visitor search, with the query, total hits and source.
 
 For signatures, defaults, and usage examples, see the [filter documentation](https://github.com/soderlind/loupe-search/blob/main/docs/filters.md).
 

@@ -219,19 +219,36 @@ For an AI agent to use these abilities, install and activate the **[MCP Adapter]
 
 ## Filters
 
-Eight filters let you change what gets indexed, how it is weighted, and how
-results are returned:
+Filters let you change what gets indexed, how it is searched, and how results
+are returned:
 
 | Filter | Use it to |
 | --- | --- |
 | `loupe_search_post_types` | Choose which post types are indexed |
 | `loupe_search_index_protected` | Index password-protected posts |
+| `loupe_search_indexable_post_statuses` | Index extra publicly viewable statuses |
+| `loupe_search_is_indexable` | Keep individual posts out of the index |
 | `loupe_search_db_path` | Move the index directory |
+| `loupe_search_language` | Override the stemming language |
+| `loupe_search_stop_words` | Change the common words ignored in searches |
 | `loupe_search_field_{$field_name}` | Clean a core post field before indexing |
 | `loupe_search_schema_{$post_type}` | Add/remove fields, set weights and sorting |
 | `loupe_search_is_safely_sortable_{$post_type}` | Force a core field to be sortable |
 | `loupe_search_is_safely_sortable_meta_{$post_type}` | Correct meta-field sortability detection |
 | `loupe_search_posts_per_page` | Change results per page |
+| `loupe_search_max_cacheable_query_length` | Change which queries are written to the result cache |
+| `loupe_search_order_results` | Reorder or regroup results merged across post types |
+| `loupe_search_advanced_hits` | Rerank or add hits in REST `POST /search` before pagination |
+| `loupe_search_highlight` | Turn match highlighting on for the default search |
+| `loupe_search_highlight_fields` | Choose which fields are highlighted |
+| `loupe_search_highlight_start_tag` / `loupe_search_highlight_end_tag` | Change the tags wrapped around matches |
+| `loupe_search_highlight_crop_fields` | Choose which fields become cropped snippets |
+| `loupe_search_highlight_crop_length` | Change snippet length (in words) |
+| `loupe_search_highlight_crop_marker` | Change the ellipsis on cropped snippets |
+| `loupe_search_insights_should_count` | Decide whether a visitor search is counted by Search insights |
+| `loupe_search_settings_tabs` | Add a tab to Settings → Loupe Search |
+
+Action: `loupe_search_searched` fires after each countable visitor search, with the query, total hits and source.
 
 ```php
 add_filter( 'loupe_search_post_types', function ( array $post_types ): array {
