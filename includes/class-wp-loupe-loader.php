@@ -80,6 +80,7 @@ class WP_Loupe_Loader {
 			'Loupe\\Loupe\\Loupe',
 			'Loupe\\Loupe\\LoupeFactory',
 			'Loupe\\Loupe\\SearchParameters',
+			'Wamania\\Snowball\\StemmerFactory',
 		);
 		foreach ( $classes as $class ) {
 			$prefixed = 'Soderlind\\Plugin\\LoupeSearch\\Vendor\\' . $class;

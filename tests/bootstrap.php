@@ -19,6 +19,7 @@ foreach ( array(
 	'Loupe\\Loupe\\Loupe',
 	'Loupe\\Loupe\\LoupeFactory',
 	'Loupe\\Loupe\\SearchParameters',
+	'Wamania\\Snowball\\StemmerFactory',
 ) as $loupe_class ) {
 	$prefixed = 'Soderlind\\Plugin\\LoupeSearch\\Vendor\\' . $loupe_class;
 	if ( ! class_exists( $prefixed, false ) && class_exists( $loupe_class ) ) {
