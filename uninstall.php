@@ -46,6 +46,9 @@ function loupe_search_delete_site_data() {
 	delete_option( 'loupe_search_fields' );
 	delete_option( 'loupe_search_advanced' );
 	delete_option( 'loupe_search_prefix_migrated' );
+	delete_option( 'loupe_search_version' );
+	delete_option( 'loupe_search_auto_reindex_state' );
+	wp_clear_scheduled_hook( 'loupe_search_auto_reindex' );
 
 	// Options used before the reserved `wp_` prefix was dropped in 1.2.4.
 	delete_option( 'wp_loupe_custom_post_types' );

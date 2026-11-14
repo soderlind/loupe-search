@@ -99,9 +99,10 @@ That is enough to render a results list: loop `hits`, link `url`, print `title`.
 
 Search requires a ready index per post type.
 
-- When `postTypes: "all"` is used, Loupe Search only searches post types that have a ready index.
-- If **no** configured post type has a ready index, the API returns **HTTP 400** (`wp_loupe_no_indexed_post_types`).
-- If you name a post type explicitly and its index is missing or stale, you get `wp_loupe_index_missing` or `wp_loupe_index_needs_reindex`.
+- When `postTypes: "all"` is used, Loupe Search only searches post types that have an index.
+- If **no** configured post type has an index, the API returns **HTTP 400** (`wp_loupe_no_indexed_post_types`).
+- If you name a post type explicitly and its index is missing, you get `wp_loupe_index_missing`.
+- A stale index (built by an older Loupe version or with a different language) is still searched while it is rebuilt. After a plugin update, stale indexes are rebuilt automatically in the background (WP-Cron).
 
 ### Allowlisted fields
 
@@ -724,7 +725,6 @@ Some errors add a `data.details` object naming the offending value — for examp
 | `wp_loupe_pagination_limit` | Page too deep (offset + size > 1000) | Lower `page.number`/`page.size`, or narrow the query |
 | `wp_loupe_no_indexed_post_types` | No post type has a ready index | Run `wp loupe-search reindex` |
 | `wp_loupe_index_missing` | Named post type has no index | Index that post type; see `details.postType` |
-| `wp_loupe_index_needs_reindex` | Index schema is stale after a settings change | Reindex the post type |
 | `wp_loupe_invalid_post_types` | `postTypes` not `"all"` or a non-empty array | Send `"all"` or an array of slugs |
 | `wp_loupe_invalid_post_type` | Unknown slug in `postTypes` | Check `details.unknown` |
 | `wp_loupe_unallowlisted_field` | Field not enabled as Filterable/Sortable | Enable it in Settings or via schema hooks; see `details.field` |

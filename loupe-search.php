@@ -10,7 +10,7 @@
  * Plugin Name:       Loupe Search
  * Plugin URI:        https://github.com/soderlind/loupe-search
  * Description:       Fast, index-backed WordPress search with typo tolerance, phrase matching, exclusions, custom post types, real-time indexing, and a developer-friendly REST API.
- * Version:           1.5.2
+ * Version:           1.5.3
  * Author:            Per Soderlind
  * Author URI:        https://soderlind.no
  * License:           GPL-2.0+
@@ -115,6 +115,10 @@ function activate( $network_wide = false ) {
  */
 function deactivate() {
 	flush_rewrite_rules();
+	// Drop any queued background reindex; reactivation re-checks the indexes.
+	wp_clear_scheduled_hook( 'loupe_search_auto_reindex' );
+	delete_option( 'loupe_search_auto_reindex_state' );
+	delete_option( 'loupe_search_version' );
 }
 
 register_activation_hook( LOUPE_SEARCH_FILE, __NAMESPACE__ . '\\activate' );

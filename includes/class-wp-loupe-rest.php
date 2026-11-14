@@ -453,12 +453,17 @@ class WP_Loupe_REST {
 		// This endpoint is unauthenticated, so non-public post types are never in scope:
 		// keeping them out of the query means totals and facet counts cannot leak them.
 		// Do not rely on an injected search service (tests may stub it).
+		// A stale index (needs reindex) is still searched, as front-end search does,
+		// while WP_Loupe_Auto_Reindex or an admin rebuilds it.
 		$base_engine = new WP_Loupe_Search_Engine( $this->public_post_types, $this->db );
+		$searchable  = static function ( array $status ): bool {
+			return ! empty( $status[ 'ready' ] ) || 'index_needs_reindex' === ( $status[ 'reason' ] ?? null );
+		};
 
 		if ( 'all' === $post_types_raw ) {
 			foreach ( $this->public_post_types as $pt ) {
 				$status = $base_engine->is_index_ready( $pt );
-				if ( ! empty( $status[ 'ready' ] ) ) {
+				if ( $searchable( $status ) ) {
 					$post_types_to_search[] = $pt;
 				}
 			}
@@ -480,12 +485,8 @@ class WP_Loupe_REST {
 
 			foreach ( $post_types_raw as $pt ) {
 				$status = $base_engine->is_index_ready( $pt );
-				if ( empty( $status[ 'ready' ] ) ) {
+				if ( ! $searchable( $status ) ) {
 					$reason = $status[ 'reason' ] ?? 'index_missing';
-					if ( 'index_needs_reindex' === $reason ) {
-						/* translators: %s: post type name */
-						return new \WP_Error( 'wp_loupe_index_needs_reindex', sprintf( __( 'Search index schema is out of date for post type "%s". Rebuild required.', 'loupe-search' ), $pt ), [ 'status' => 400, 'details' => [ 'postType' => $pt, 'reason' => $reason ] ] );
-					}
 					/* translators: %s: post type name */
 					return new \WP_Error( 'wp_loupe_index_missing', sprintf( __( 'Search index not found for post type "%s".', 'loupe-search' ), $pt ), [ 'status' => 400, 'details' => [ 'postType' => $pt, 'reason' => $reason ] ] );
 				}

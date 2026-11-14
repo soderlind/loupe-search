@@ -279,6 +279,28 @@ class WP_Loupe_REST_SearchPostTest extends TestCase {
 		$this->assertSame( 2, $response[ 'pagination' ][ 'total_pages' ] );
 	}
 
+	public function test_post_search_serves_a_stale_index_instead_of_erroring() {
+		// Built with another language, so the site's configuration sees it as needing a reindex.
+		$db    = WP_Loupe_DB::get_instance();
+		$loupe = WP_Loupe_Factory::create_loupe_instance( 'post', 'sv', $db );
+		$loupe->deleteAllDocuments();
+		$loupe->addDocuments( [ [ 'id' => 1, 'post_title' => 'Hello world' ] ] );
+		WP_Loupe_Factory::clear_instance_cache();
+
+		$rest = new WP_Loupe_REST();
+		$this->setSchemaManagerStub( $rest, [], [] );
+
+		foreach ( [ [ 'post' ], 'all' ] as $post_types ) {
+			$response = $rest->handle_search_request_post(
+				$this->makeJsonRequest( [ 'q' => 'hello', 'postTypes' => $post_types ] )
+			);
+			$this->assertIsArray( $response );
+			$this->assertSame( 1, $response[ 'pagination' ][ 'total' ] );
+		}
+
+		WP_Loupe_Factory::clear_instance_cache();
+	}
+
 	public function test_post_search_without_highlight_has_no_formatted_key() {
 		$this->seedIndex( 'post', [
 			[ 'id' => 1, 'post_title' => 'Hello world' ],

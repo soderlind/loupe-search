@@ -68,6 +68,7 @@ Not included:
 | REST controller | Route registration in two namespaces, request validation, allowlisting, response shaping | [includes/class-wp-loupe-rest.php](../includes/class-wp-loupe-rest.php) | search engine, schema manager, indexer |
 | Abilities | Registers `loupe-search/search` and `loupe-search/get-post` (plus deprecated aliases) | [includes/class-wp-loupe-abilities.php](../includes/class-wp-loupe-abilities.php) | search engine |
 | Settings screen | Settings → Loupe Search page, option registration and sanitization, admin assets | [includes/class-wp-loupe-settings.php](../includes/class-wp-loupe-settings.php) | factory, REST controller (via admin JS) |
+| Auto reindex | Once per plugin version (on `admin_init`), queues post types whose index reports `needsReindex()` and rebuilds them with the batched reindex in a self-rescheduling WP-Cron event | [includes/class-wp-loupe-auto-reindex.php](../includes/class-wp-loupe-auto-reindex.php) | search engine, indexer |
 | CLI | `wp loupe-search reindex` | [includes/class-wp-loupe-cli.php](../includes/class-wp-loupe-cli.php) | indexer |
 | Utilities | Post-type resolution, environment checks, debug logging, transient purging | [includes/class-wp-loupe-utils.php](../includes/class-wp-loupe-utils.php) | — |
 
@@ -207,7 +208,10 @@ and swallowed.
 ## Flow: batched reindex
 
 Trigger: `POST /wp-json/loupe-search/v1/reindex-batch` from the Dashboard's
-reindex panel, or `wp loupe-search reindex`.
+reindex panel, `wp loupe-search reindex`, or the `loupe_search_auto_reindex`
+cron event (`WP_Loupe_Auto_Reindex`, after a plugin update leaves an index stale;
+it runs steps for up to 20 seconds per event and stores the state in the
+`loupe_search_auto_reindex_state` option).
 
 1. `WP_Loupe_Indexer::reindex_batch_init()` repairs missing columns
    (`ensure_required_columns()`), purges search transients, writes default field
