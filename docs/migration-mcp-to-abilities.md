@@ -78,7 +78,8 @@ publicly accessible (`permission_callback` returns true) and exposed via REST
 ### `loupe-search/search`
 
 Typo-tolerant full-text search across indexed post types. Supports phrase
-matching (`"..."`), exclusion (`-term`), and OR operators.
+matching (`"..."`) and exclusion (`-term`). All words must match; when
+nothing does, posts matching any word are returned.
 
 Input:
 

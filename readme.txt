@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.5.4
+Stable tag: 1.5.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -30,7 +30,7 @@ Loupe Search improves WordPress core search by maintaining its own index for fas
 * 🔍 Typo-tolerant searching - find results even with misspellings
 * 💬 Phrase matching with quotation marks: `"exact phrase"`
 * ➖ Exclusion operator support (e.g., `term -excluded`)
-* 🔀 OR search: `term1 term2` finds content with either term
+* 🔀 Multi-word search: `term1 term2` finds content with both terms, or with either term when nothing contains both
 * 📖 Pagination support
 * Stemming support
 * Stop words recognition
@@ -178,6 +178,10 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.5.5 =
+* Added: Common words (stop words) such as "the", "er" or "på" are ignored in searches, so they no longer make most posts match. Lists for 12 languages are bundled; change them with the `loupe_search_stop_words` filter. Indexes are rebuilt automatically after updating.
+* Changed: Multi-word searches now return posts that contain every word. If no post contains every word, posts that contain any of them are returned.
 
 = 1.5.4 =
 * Fixed: Search terms are now stemmed like indexed content, so inflected forms find each other (for example "plager" also finds "plagene"). Exact matches still rank first.
