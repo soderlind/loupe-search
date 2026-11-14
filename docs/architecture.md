@@ -157,7 +157,9 @@ Trigger: a front-end `WP_Query` search.
    `post_type` is stamped on each hit. Results are cached for one hour
    (`CACHE_TTL`), but only when the query is at most 128 bytes
    (`loupe_search_max_cacheable_query_length`) — search is reachable
-   unauthenticated, so the cache must not be growable at will.
+   unauthenticated, so the cache must not be growable at will. Cache keys
+   include the plugin version (`cache_version()`), so an update never serves
+   results cached by the previous version.
 5. `create_post_objects()` loads the matching `WP_Post` objects with
    `orderby => post__in` to preserve relevance order, and attaches every
    filterable or sortable field as a dynamic property.

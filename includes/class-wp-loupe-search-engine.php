@@ -74,7 +74,7 @@ class WP_Loupe_Search_Engine {
 	public function search( $query, array $highlight = [], array $sort = [] ) {
 		$requested_sort = $this->parse_requested_sort( $sort );
 		$cacheable     = $this->is_cacheable_query( $query );
-		$cache_key     = md5( (string) $query . serialize( $this->post_types ) . serialize( $highlight ) . serialize( $requested_sort ) );
+		$cache_key     = md5( self::cache_version() . (string) $query . serialize( $this->post_types ) . serialize( $highlight ) . serialize( $requested_sort ) );
 		$transient_key = "loupe_search_cache_{$cache_key}";
 		$cached_result = $cacheable ? get_transient( $transient_key ) : false;
 		if ( false !== $cached_result ) {
@@ -467,6 +467,7 @@ class WP_Loupe_Search_Engine {
 		}
 
 		$cache_key     = md5( wp_json_encode( [
+			'v'          => self::cache_version(),
 			'q'          => $query,
 			'post_types' => $this->post_types,
 			'filter'     => $filter,
@@ -576,6 +577,24 @@ class WP_Loupe_Search_Engine {
 		}
 		return $out;
 	}
+	/**
+	 * Plugin version, part of every search cache key so results cached by an
+	 * earlier version (different matching or stop words) are never reused, even
+	 * when they live in a persistent object cache.
+	 *
+	 * @return string
+	 */
+	private static function cache_version(): string {
+		static $version = null;
+		if ( null === $version ) {
+			$data    = function_exists( 'get_file_data' ) && defined( 'LOUPE_SEARCH_FILE' )
+				? get_file_data( LOUPE_SEARCH_FILE, [ 'Version' => 'Version' ] )
+				: [];
+			$version = (string) ( $data[ 'Version' ] ?? '' );
+		}
+		return $version;
+	}
+
 	/**
 	 * Loupe matching strategies to try, in order.
 	 *
