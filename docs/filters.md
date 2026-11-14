@@ -17,6 +17,7 @@ weighted, how results are returned, and how matches are highlighted.
    - [`loupe_search_is_indexable`](#loupe_search_is_indexable)
    - [`loupe_search_db_path`](#loupe_search_db_path)
    - [`loupe_search_language`](#loupe_search_language)
+   - [`loupe_search_stop_words`](#loupe_search_stop_words)
 4. [Field content](#field-content)
    - [`loupe_search_field_{$field_name}`](#loupe_search_field_field_name)
 5. [Schema](#schema)
@@ -66,6 +67,7 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_is_indexable` | `bool $indexable`, `WP_Post $post` | Veto individual posts from the index |
 | `loupe_search_db_path` | `string $path` | Move the index directory |
 | `loupe_search_language` | `string $language`, `string $locale` | Override the stemming language |
+| `loupe_search_stop_words` | `array $words`, `array $languages` | Change the common words ignored in searches |
 | `loupe_search_field_{$field_name}` | `mixed $value` | Clean a core post field before indexing |
 | `loupe_search_schema_{$post_type}` | `array $schema` | Add/remove fields, set weights and sorting |
 | `loupe_search_is_safely_sortable_{$post_type}` | `bool $sortable`, `string $field_name` | Force a core field to be sortable |
@@ -222,6 +224,29 @@ add_filter( 'loupe_search_language', function ( string $language, string $locale
 The `languages` key of the `loupe_search_advanced` option takes precedence and
 can list several languages for multilingual content. Stems are stored when posts
 are indexed, so reindex after changing the language.
+
+### `loupe_search_stop_words`
+
+Common words such as "the", "er" or "på" that are ignored in search queries, so
+they do not make every post match. They are still indexed, and a query made up
+only of stop words is searched as typed. The plugin bundles the
+[Snowball](https://snowballstem.org/) stop word lists (BSD-3-Clause) for Danish,
+Dutch, English, Finnish, French, German, Italian, Norwegian, Portuguese, Russian,
+Spanish and Swedish, and uses the lists for the index languages. Words are
+lowercased, and spellings with diacritics are also added in ASCII form ("på"
+becomes "pa"), matching how Loupe folds query terms.
+
+```php
+add_filter( 'loupe_search_stop_words', function ( array $words, array $languages ): array {
+	// Keep "ikke" (not) searchable, and ignore a site-specific word.
+	$words   = array_diff( $words, [ 'ikke' ] );
+	$words[] = 'forum';
+	return $words;
+}, 10, 2 );
+```
+
+Return an empty array to turn stop words off. The list is part of the index
+configuration, so reindex after changing it.
 
 ## Field content
 

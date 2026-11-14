@@ -204,7 +204,7 @@ Developer documentation (schema + examples + Gutenberg block example): **[docs/s
 
 Loupe Search registers two abilities via the [WordPress Abilities API](https://developer.wordpress.org/apis/abilities-api/) (WordPress 6.9+) so AI agents and automation tools can discover and use search functionality natively — no extra Loupe Search configuration required:
 
-- `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching, exclusion, and OR operators. Publicly accessible.
+- `loupe-search/search` — Typo-tolerant full-text search across indexed post types. Supports phrase matching and exclusion; all words must match, falling back to any word when nothing does. Publicly accessible.
 - `loupe-search/get-post` — Retrieve a single published post by ID. Publicly accessible.
 
 Both abilities are discoverable through the standard WordPress Abilities registry and exposed via REST (`show_in_rest`).

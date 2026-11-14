@@ -60,6 +60,56 @@ class WP_Loupe_Factory_LanguageTest extends TestCase {
 	}
 
 	/**
+	 * Stop words come from the bundled list for each index language and can be filtered.
+	 */
+	public function test_stop_words_for_languages(): void {
+		global $wp_loupe_test_filters;
+		$words = WP_Loupe_Factory::get_stop_words( [ 'no', 'en' ] );
+		$this->assertContains( 'er', $words );
+		$this->assertContains( 'the', $words );
+		$this->assertContains( 'på', $words );
+		$this->assertContains( 'pa', $words );
+		$this->assertSame( [], WP_Loupe_Factory::get_stop_words( [ 'xx', '../en' ] ) );
+
+		$wp_loupe_test_filters[ 'loupe_search_stop_words' ] = static fn( array $w ): array => [ ' Treg ', 'treg', '' ];
+		try {
+			$this->assertSame( [ 'treg' ], WP_Loupe_Factory::get_stop_words( [ 'no' ] ) );
+		} finally {
+			unset( $wp_loupe_test_filters[ 'loupe_search_stop_words' ] );
+		}
+	}
+
+	/**
+	 * Stop words are dropped from queries, so common words no longer match on their own.
+	 */
+	public function test_stop_words_are_ignored_in_queries(): void {
+		$path  = sys_get_temp_dir() . '/loupe-search-stop-words-' . uniqid();
+		$loupe = WP_Loupe_Factory::create_loupe_instance_at( 'post', 'no', $path );
+		$loupe->addDocuments( [
+			[ 'id' => 1, 'post_title' => 'Treg pc' ],
+			[ 'id' => 2, 'post_title' => 'Det er en fin dag' ],
+			[ 'id' => 3, 'post_title' => 'Ut på tur' ],
+		] );
+
+		$ids = static fn( string $q, string $strategy ): array => array_map(
+			'intval',
+			array_column( $loupe->search( SearchParameters::create()->withQuery( $q )->withMatchingStrategy( $strategy ) )->toArray()[ 'hits' ], 'id' )
+		);
+
+		try {
+			$this->assertSame( [ 1 ], $ids( 'pc-en er treg', 'any' ) );
+			$this->assertSame( [ 1 ], $ids( 'pc-en er treg', 'all' ) );
+			// Only stop words: searched as typed.
+			$this->assertSame( [ 2 ], $ids( 'er en', 'all' ) );
+			// Stop words with diacritics are matched after Loupe folds them to ASCII.
+			$this->assertSame( [ 1 ], $ids( 'treg på pc', 'all' ) );
+		} finally {
+			unset( $loupe );
+			exec( 'rm -rf ' . escapeshellarg( $path ) );
+		}
+	}
+
+	/**
 	 * Query terms are stemmed like document terms (patches/loupe/loupe/stem-query-terms.patch),
 	 * so inflected forms find each other and the exact form ranks first.
 	 */

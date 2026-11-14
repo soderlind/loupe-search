@@ -72,7 +72,7 @@ class WP_Loupe_Abilities {
 	 * @return array<string,mixed>
 	 */
 	private static function get_search_ability_args( string $category, bool $deprecated = false ): array {
-		$description = __( 'Search WordPress content using Loupe Search\'s typo-tolerant full-text search engine. Supports phrase matching with quotes, exclusion with -, and OR searches.', 'loupe-search' );
+		$description = __( 'Search WordPress content using Loupe Search\'s typo-tolerant full-text search engine. Supports phrase matching with quotes and exclusion with -. Results must contain every word; if none do, posts matching any word are returned.', 'loupe-search' );
 		if ( $deprecated ) {
 			$description = __( 'Deprecated "wp-loupe/search" ability. Use "loupe-search/search" instead.', 'loupe-search' ) . ' ' . $description;
 		}
@@ -87,7 +87,7 @@ class WP_Loupe_Abilities {
 				'properties' => [
 					'query'      => [
 						'type'        => 'string',
-						'description' => __( 'The search query. Supports phrases ("hello world"), exclusions (-term), and OR searches.', 'loupe-search' ),
+						'description' => __( 'The search query. Supports phrases ("hello world") and exclusions (-term). All words must match; falls back to any word when nothing matches.', 'loupe-search' ),
 					],
 					'post_types' => [
 						'type'        => 'array',
