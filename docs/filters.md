@@ -1,7 +1,9 @@
 # Filters
 
-Loupe Search exposes sixteen filters for changing what gets indexed, how it is
-weighted, how results are returned, and how matches are highlighted.
+Loupe Search exposes filters for changing what gets indexed, how it is searched
+and weighted, how results are returned and highlighted, and which searches Search
+insights counts, plus one action, `loupe_search_searched`. The
+[quick reference](#quick-reference) lists them all.
 
 > Filters use the `loupe_search_*` prefix. The old `wp_loupe_*` names still work
 > as deprecated aliases — see [Renamed from WP Loupe](renamed-from-wp-loupe.md).
@@ -597,8 +599,11 @@ add_filter( 'loupe_search_insights_should_count', function ( bool $countable, st
 
 ### `loupe_search_searched` (action)
 
-Fires after a visitor search that may be counted (before the insights checks
-above), with the query as typed, the total number of hits and the source. Use it
+Fires after a visitor search, with the query as typed, the total number of hits
+and the source (`main` or `rest`). On the search page it fires for the first
+results page of the main query; over REST only when the client sends
+`countSearch: true`. It fires before the insights checks above, so searches
+rejected by `loupe_search_insights_should_count` still trigger it. Use it
 to feed your own analytics; never store personal data from the request.
 
 ```php
