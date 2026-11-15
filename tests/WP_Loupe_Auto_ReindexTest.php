@@ -83,7 +83,7 @@ namespace Soderlind\Plugin\LoupeSearch\Tests {
 		private const PT = 'auto_reindex_test';
 
 		protected function tearDown(): void {
-			unset( $GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_language' ] );
+			unset( $GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_language' ], $GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_partitions' ] );
 			WP_Loupe_Factory::clear_instance_cache();
 			$dirs = [];
 			foreach ( [ $this->livePath(), $this->livePath() . '2' ] as $live ) {
@@ -206,6 +206,34 @@ namespace Soderlind\Plugin\LoupeSearch\Tests {
 			$auto->run();
 
 			$this->assertSame( [ 2, 4 ], $this->ids( $this->open( $this->livePath() ) ) );
+		}
+
+		public function test_run_rebuilds_every_partition_and_mirrors_moves_between_them(): void {
+			$this->seedStaleLive();
+			$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_partitions' ] = static fn() => [ 'a', 'b', 'c' ];
+			update_option( WP_Loupe_Auto_Reindex::STATE_OPTION, [ 'post_types' => [ self::PT ] ] );
+
+			$auto    = null;
+			$indexer = $this->indexer( function ( $shadows, int $after ) use ( &$auto ): int {
+				if ( 0 === $after ) {
+					$this->assertSame( [ 'a', 'b', 'c' ], array_keys( $shadows ) );
+					$shadows[ 'a' ]->addDocuments( [ [ 'id' => 2, 'post_title' => 'Two' ] ] );
+					$shadows[ 'b' ]->addDocuments( [ [ 'id' => 3, 'post_title' => 'Three' ] ] );
+					// Post 2 moves to partition "b"; post 3 is deleted.
+					$auto->mirror_add( self::PT, [ 'id' => 2, 'post_title' => 'Two' ], 'b' );
+					$auto->mirror_delete( self::PT, [ 3 ] );
+					return 3;
+				}
+				return 0;
+			} );
+			$auto = $this->auto( $indexer );
+
+			$auto->run();
+
+			$this->assertSame( [], $this->ids( $this->open( $this->livePath() . '/a' ) ) );
+			$this->assertSame( [ 2 ], $this->ids( $this->open( $this->livePath() . '/b' ) ) );
+			$this->assertFileExists( $this->livePath() . '/c/loupe.db', 'Empty partitions exist, so the index is not reported missing.' );
+			$this->assertFileDoesNotExist( $this->livePath() . '/loupe.db', 'The old unpartitioned index is replaced.' );
 		}
 
 		public function test_run_skips_post_types_already_rebuilt(): void {

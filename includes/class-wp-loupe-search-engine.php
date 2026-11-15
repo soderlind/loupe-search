@@ -30,8 +30,51 @@ class WP_Loupe_Search_Engine {
 
 		$iso6391_lang = WP_Loupe_Factory::get_site_language();
 		foreach ( $this->post_types as $post_type ) {
+			if ( WP_Loupe_Partitions::is_partitioned( $post_type ) ) {
+				continue; // Partition instances are opened on demand by loupe_for().
+			}
 			$this->loupe[ $post_type ] = WP_Loupe_Factory::create_loupe_instance( $post_type, $iso6391_lang, $this->db );
 		}
+	}
+
+	/**
+	 * Loupe instance for one partition of a post type's index.
+	 *
+	 * Keyed by post type for the unnamed partition, "post_type/partition" otherwise.
+	 *
+	 * @param string $post_type
+	 * @param string $partition
+	 * @return \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe
+	 */
+	private function loupe_for( string $post_type, string $partition = '' ) {
+		$key = '' === $partition ? $post_type : "{$post_type}/{$partition}";
+		if ( ! isset( $this->loupe[ $key ] ) ) {
+			$this->loupe[ $key ] = WP_Loupe_Factory::create_partition_instance( $post_type, $partition, $this->db );
+		}
+		return $this->loupe[ $key ];
+	}
+
+	/**
+	 * Partitions each post type's search covers.
+	 *
+	 * @return array<string,string[]> Post type => partitions.
+	 */
+	private function query_partitions(): array {
+		$out = [];
+		foreach ( $this->post_types as $post_type ) {
+			$out[ $post_type ] = WP_Loupe_Partitions::for_query( (string) $post_type );
+		}
+		return $out;
+	}
+
+	/**
+	 * Whether the engine knows a post type.
+	 *
+	 * @param string $post_type
+	 * @return bool
+	 */
+	private function has_post_type( string $post_type ): bool {
+		return isset( $this->loupe[ $post_type ] ) || in_array( $post_type, $this->post_types, true );
 	}
 
 	/**
@@ -72,9 +115,10 @@ class WP_Loupe_Search_Engine {
 	 * @return array Raw hit arrays with at least id, _score, post_type.
 	 */
 	public function search( $query, array $highlight = [], array $sort = [] ) {
-		$requested_sort = $this->parse_requested_sort( $sort );
-		$cacheable     = $this->is_cacheable_query( $query );
-		$cache_key     = md5( self::cache_version() . (string) $query . serialize( $this->post_types ) . serialize( $highlight ) . serialize( $requested_sort ) );
+		$requested_sort   = $this->parse_requested_sort( $sort );
+		$query_partitions = $this->query_partitions();
+		$cacheable        = $this->is_cacheable_query( $query );
+		$cache_key        = md5( self::cache_version() . (string) $query . serialize( $this->post_types ) . serialize( $highlight ) . serialize( $requested_sort ) . serialize( $query_partitions ) );
 		$transient_key = "loupe_search_cache_{$cache_key}";
 		$cached_result = $cacheable ? get_transient( $transient_key ) : false;
 		if ( false !== $cached_result ) {
@@ -197,24 +241,26 @@ class WP_Loupe_Search_Engine {
 						}
 					}
 
-					$result = $this->loupe[ $post_type ]->search( $search_params );
-					$arr    = $result->toArray();
+					foreach ( $query_partitions[ $post_type ] ?? [ '' ] as $partition ) {
+						$result = $this->loupe_for( $post_type, $partition )->search( $search_params );
+						$arr    = $result->toArray();
 
-					if ( isset( $arr[ 'processingTimeMs' ] ) ) {
-						$processing_time_sum += (int) $arr[ 'processingTimeMs' ];
-					}
+						if ( isset( $arr[ 'processingTimeMs' ] ) ) {
+							$processing_time_sum += (int) $arr[ 'processingTimeMs' ];
+						}
 
-					$tmp_hits = isset( $arr[ 'hits' ] ) && is_array( $arr[ 'hits' ] ) ? $arr[ 'hits' ] : [];
-					foreach ( $tmp_hits as $hit ) {
-						if ( ! is_array( $hit ) ) {
-							continue;
+						$tmp_hits = isset( $arr[ 'hits' ] ) && is_array( $arr[ 'hits' ] ) ? $arr[ 'hits' ] : [];
+						foreach ( $tmp_hits as $hit ) {
+							if ( ! is_array( $hit ) ) {
+								continue;
+							}
+							// Normalize Loupe's ranking score into the plugin's historic `_score` field.
+							if ( isset( $hit[ '_rankingScore' ] ) && ! isset( $hit[ '_score' ] ) ) {
+								$hit[ '_score' ] = $hit[ '_rankingScore' ];
+							}
+							$hit[ 'post_type' ] = $post_type;
+							$hits[]             = $hit;
 						}
-						// Normalize Loupe's ranking score into the plugin's historic `_score` field.
-						if ( isset( $hit[ '_rankingScore' ] ) && ! isset( $hit[ '_score' ] ) ) {
-							$hit[ '_score' ] = $hit[ '_rankingScore' ];
-						}
-						$hit[ 'post_type' ] = $post_type;
-						$hits[]             = $hit;
 					}
 				} catch (\Throwable $e) {
 					WP_Loupe_Utils::debug_log( "Search error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );
@@ -319,20 +365,36 @@ class WP_Loupe_Search_Engine {
 	 * Definition (per docs): ready = DB file exists + schema OK.
 	 * Schema OK is derived from Loupe's needsReindex() signal.
 	 *
-	 * @param string $post_type
+	 * @since 1.6.0 Added the `$partition` parameter.
+	 * @param string      $post_type
+	 * @param string|null $partition One partition, or null for all of them (ready only when every partition is).
 	 * @return array{ready:bool, reason?:string}
 	 */
-	public function is_index_ready( string $post_type ): array {
+	public function is_index_ready( string $post_type, ?string $partition = null ): array {
 		$post_type = sanitize_key( $post_type );
 		if ( empty( $post_type ) ) {
 			return [ 'ready' => false, 'reason' => 'invalid_post_type' ];
 		}
-		if ( ! isset( $this->loupe[ $post_type ] ) ) {
+		if ( ! $this->has_post_type( $post_type ) ) {
 			return [ 'ready' => false, 'reason' => 'unknown_post_type' ];
 		}
 
+		if ( null === $partition ) {
+			$partitions = WP_Loupe_Partitions::all( $post_type );
+			if ( [ '' ] !== $partitions ) {
+				foreach ( $partitions as $p ) {
+					$status = $this->is_index_ready( $post_type, $p );
+					if ( empty( $status[ 'ready' ] ) ) {
+						return $status;
+					}
+				}
+				return [ 'ready' => true ];
+			}
+			$partition = '';
+		}
+
 		try {
-			$db_dir  = $this->db->get_db_path( $post_type );
+			$db_dir  = $this->db->get_db_path( $post_type, $partition );
 			$db_file = trailingslashit( $db_dir ) . self::LOUPE_DB_FILENAME;
 			if ( ! file_exists( $db_file ) ) {
 				return [ 'ready' => false, 'reason' => 'index_missing' ];
@@ -342,8 +404,9 @@ class WP_Loupe_Search_Engine {
 		}
 
 		try {
-			if ( method_exists( $this->loupe[ $post_type ], 'needsReindex' ) ) {
-				$needs_reindex = (bool) $this->loupe[ $post_type ]->needsReindex();
+			$loupe = $this->loupe_for( $post_type, $partition );
+			if ( method_exists( $loupe, 'needsReindex' ) ) {
+				$needs_reindex = (bool) $loupe->needsReindex();
 				if ( $needs_reindex ) {
 					return [ 'ready' => false, 'reason' => 'index_needs_reindex' ];
 				}
@@ -386,18 +449,28 @@ class WP_Loupe_Search_Engine {
 	/**
 	 * Number of documents indexed for a post type, or -1 when it cannot be read.
 	 *
-	 * @param string $post_type
+	 * @since 1.6.0 Added the `$partition` parameter.
+	 * @param string      $post_type
+	 * @param string|null $partition One partition, or null for the total across all partitions.
 	 * @return int
 	 */
-	public function count_documents( string $post_type ): int {
-		if ( ! isset( $this->loupe[ $post_type ] ) || ! method_exists( $this->loupe[ $post_type ], 'countDocuments' ) ) {
+	public function count_documents( string $post_type, ?string $partition = null ): int {
+		if ( ! $this->has_post_type( $post_type ) ) {
 			return -1;
 		}
-		try {
-			return (int) $this->loupe[ $post_type ]->countDocuments();
-		} catch (\Throwable $e) {
-			return -1;
+		$total = 0;
+		foreach ( null === $partition ? WP_Loupe_Partitions::all( $post_type ) : [ $partition ] as $p ) {
+			try {
+				$loupe = $this->loupe_for( $post_type, $p );
+				if ( ! method_exists( $loupe, 'countDocuments' ) ) {
+					return -1;
+				}
+				$total += (int) $loupe->countDocuments();
+			} catch (\Throwable $e) {
+				return -1;
+			}
 		}
+		return $total;
 	}
 
 	/**
@@ -466,10 +539,12 @@ class WP_Loupe_Search_Engine {
 			$attrs = array_values( array_unique( array_merge( $attrs, $highlight, $crop ) ) );
 		}
 
-		$cache_key     = md5( wp_json_encode( [
+		$query_partitions = $this->query_partitions();
+		$cache_key        = md5( wp_json_encode( [
 			'v'          => self::cache_version(),
 			'q'          => $query,
 			'post_types' => $this->post_types,
+			'partitions' => $query_partitions,
 			'filter'     => $filter,
 			'sort'       => $sort,
 			'facets'     => $facets,
@@ -525,36 +600,38 @@ class WP_Loupe_Search_Engine {
 						$search_params = $search_params->withAttributesToCrop( $crop, $crop_length, $crop_marker );
 					}
 
-					$result = $this->loupe[ $post_type ]->search( $search_params );
-					$arr    = $result->toArray();
+					foreach ( $query_partitions[ $post_type ] ?? [ '' ] as $partition ) {
+						$result = $this->loupe_for( $post_type, $partition )->search( $search_params );
+						$arr    = $result->toArray();
 
-					$total_hits          += isset( $arr[ 'totalHits' ] ) ? (int) $arr[ 'totalHits' ] : 0;
-					$processing_time_sum += isset( $arr[ 'processingTimeMs' ] ) ? (int) $arr[ 'processingTimeMs' ] : 0;
+						$total_hits          += isset( $arr[ 'totalHits' ] ) ? (int) $arr[ 'totalHits' ] : 0;
+						$processing_time_sum += isset( $arr[ 'processingTimeMs' ] ) ? (int) $arr[ 'processingTimeMs' ] : 0;
 
-					if ( isset( $arr[ 'facetDistribution' ] ) && is_array( $arr[ 'facetDistribution' ] ) ) {
-						foreach ( $arr[ 'facetDistribution' ] as $facet_field => $dist ) {
-							if ( ! is_array( $dist ) ) {
+						if ( isset( $arr[ 'facetDistribution' ] ) && is_array( $arr[ 'facetDistribution' ] ) ) {
+							foreach ( $arr[ 'facetDistribution' ] as $facet_field => $dist ) {
+								if ( ! is_array( $dist ) ) {
+									continue;
+								}
+								if ( ! isset( $facet_distribution[ $facet_field ] ) ) {
+									$facet_distribution[ $facet_field ] = [];
+								}
+								foreach ( $dist as $val => $cnt ) {
+									$facet_distribution[ $facet_field ][ (string) $val ] = ( $facet_distribution[ $facet_field ][ (string) $val ] ?? 0 ) + (int) $cnt;
+								}
+							}
+						}
+
+						$tmp_hits = isset( $arr[ 'hits' ] ) && is_array( $arr[ 'hits' ] ) ? $arr[ 'hits' ] : [];
+						foreach ( $tmp_hits as $hit ) {
+							if ( ! is_array( $hit ) ) {
 								continue;
 							}
-							if ( ! isset( $facet_distribution[ $facet_field ] ) ) {
-								$facet_distribution[ $facet_field ] = [];
+							if ( isset( $hit[ '_rankingScore' ] ) && ! isset( $hit[ '_score' ] ) ) {
+								$hit[ '_score' ] = $hit[ '_rankingScore' ];
 							}
-							foreach ( $dist as $val => $cnt ) {
-								$facet_distribution[ $facet_field ][ (string) $val ] = ( $facet_distribution[ $facet_field ][ (string) $val ] ?? 0 ) + (int) $cnt;
-							}
+							$hit[ 'post_type' ] = $post_type;
+							$hits[]             = $hit;
 						}
-					}
-
-					$tmp_hits = isset( $arr[ 'hits' ] ) && is_array( $arr[ 'hits' ] ) ? $arr[ 'hits' ] : [];
-					foreach ( $tmp_hits as $hit ) {
-						if ( ! is_array( $hit ) ) {
-							continue;
-						}
-						if ( isset( $hit[ '_rankingScore' ] ) && ! isset( $hit[ '_score' ] ) ) {
-							$hit[ '_score' ] = $hit[ '_rankingScore' ];
-						}
-						$hit[ 'post_type' ] = $post_type;
-						$hits[]             = $hit;
 					}
 				} catch (\Throwable $e) {
 					WP_Loupe_Utils::debug_log( "Advanced search error for {$post_type}: " . $e->getMessage(), 'WP Loupe' );

@@ -51,7 +51,7 @@ class WP_Loupe_Auto_Reindex {
 	public function register(): void {
 		add_action( 'admin_init', [ $this, 'maybe_schedule' ] );
 		add_action( self::HOOK, [ $this, 'run' ] );
-		add_action( 'loupe_search_internal_document_added', [ $this, 'mirror_add' ], 10, 2 );
+		add_action( 'loupe_search_internal_document_added', [ $this, 'mirror_add' ], 10, 3 );
 		add_action( 'loupe_search_internal_documents_deleted', [ $this, 'mirror_delete' ], 10, 2 );
 	}
 
@@ -107,13 +107,20 @@ class WP_Loupe_Auto_Reindex {
 					}
 					$state[ 'post_type' ] = (string) array_shift( $state[ 'queue' ] );
 					$state[ 'after' ]     = 0;
+					$this->forget_shadows( $state[ 'post_type' ] );
 					$this->delete_directory( $this->get_shadow_path( $state[ 'post_type' ] ) );
+					if ( WP_Loupe_Partitions::is_partitioned( $state[ 'post_type' ] ) ) {
+						// Create every partition, so ones without posts are not reported missing.
+						foreach ( $this->open_shadow_target( $state[ 'post_type' ] ) as $shadow ) {
+							$shadow->deleteAllDocuments();
+						}
+					}
 					// Mirror edits from now on; the batches pick up everything else.
 					update_option( self::STATE_OPTION, $state, false );
 				}
 
 				$post_type = $state[ 'post_type' ];
-				$last_id   = $this->get_indexer()->index_batch_into( $this->open_shadow( $post_type ), $post_type, (int) $state[ 'after' ], self::BATCH_SIZE );
+				$last_id   = $this->get_indexer()->index_batch_into( $this->open_shadow_target( $post_type ), $post_type, (int) $state[ 'after' ], self::BATCH_SIZE );
 
 				if ( $last_id > 0 ) {
 					$state[ 'after' ] = $last_id;
@@ -132,7 +139,7 @@ class WP_Loupe_Auto_Reindex {
 			// Keep the stale live index (still searchable, still flagged by the admin notice).
 			WP_Loupe_Utils::debug_log( 'Background reindex failed: ' . $e->getMessage(), 'WP Loupe' );
 			if ( ! empty( $state[ 'post_type' ] ) ) {
-				unset( $this->shadows[ (string) $state[ 'post_type' ] ] );
+				$this->forget_shadows( (string) $state[ 'post_type' ] );
 				$this->delete_directory( $this->get_shadow_path( (string) $state[ 'post_type' ] ) );
 			}
 			$this->finish();
@@ -148,14 +155,21 @@ class WP_Loupe_Auto_Reindex {
 	 *
 	 * @param string $post_type
 	 * @param array  $document
+	 * @param string $partition Partition the document belongs to.
 	 */
-	public function mirror_add( $post_type, $document ): void {
-		$shadow = $this->get_active_shadow( (string) $post_type );
-		if ( null === $shadow ) {
+	public function mirror_add( $post_type, $document, $partition = '' ): void {
+		$post_type = (string) $post_type;
+		if ( ! $this->is_building( $post_type ) ) {
 			return;
 		}
+		$partition = (string) $partition;
 		try {
-			$shadow->addDocument( (array) $document );
+			foreach ( WP_Loupe_Partitions::all( $post_type ) as $other ) {
+				if ( $other !== $partition ) {
+					$this->open_shadow( $post_type, $other )->deleteDocuments( [ ( (array) $document )[ 'id' ] ?? 0 ] );
+				}
+			}
+			$this->open_shadow( $post_type, $partition )->addDocument( (array) $document );
 		} catch (\Throwable $e) {
 			WP_Loupe_Utils::debug_log( 'Background reindex mirror failed: ' . $e->getMessage(), 'WP Loupe' );
 		}
@@ -168,12 +182,14 @@ class WP_Loupe_Auto_Reindex {
 	 * @param array  $ids
 	 */
 	public function mirror_delete( $post_type, $ids ): void {
-		$shadow = $this->get_active_shadow( (string) $post_type );
-		if ( null === $shadow ) {
+		$post_type = (string) $post_type;
+		if ( ! $this->is_building( $post_type ) ) {
 			return;
 		}
 		try {
-			$shadow->deleteDocuments( array_values( (array) $ids ) );
+			foreach ( WP_Loupe_Partitions::all( $post_type ) as $partition ) {
+				$this->open_shadow( $post_type, $partition )->deleteDocuments( array_values( (array) $ids ) );
+			}
 		} catch (\Throwable $e) {
 			WP_Loupe_Utils::debug_log( 'Background reindex mirror failed: ' . $e->getMessage(), 'WP Loupe' );
 		}
@@ -209,27 +225,54 @@ class WP_Loupe_Auto_Reindex {
 	}
 
 	/**
-	 * @return \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe|null
+	 * Whether a shadow index for the post type is being built right now.
 	 */
-	private function get_active_shadow( string $post_type ) {
+	private function is_building( string $post_type ): bool {
 		$state = get_option( self::STATE_OPTION );
 		if ( ! is_array( $state ) || ( $state[ 'post_type' ] ?? null ) !== $post_type ) {
-			return null;
+			return false;
 		}
-		if ( ! is_dir( $this->get_shadow_path( $post_type ) ) ) {
-			return null;
-		}
-		return $this->open_shadow( $post_type );
+		return is_dir( $this->get_shadow_path( $post_type ) );
 	}
 
 	/**
+	 * Shadow index for one partition, stored like the live index: the unnamed
+	 * partition in the shadow directory itself, named ones in subdirectories.
+	 *
 	 * @return \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe
 	 */
-	private function open_shadow( string $post_type ) {
-		if ( ! isset( $this->shadows[ $post_type ] ) ) {
-			$this->shadows[ $post_type ] = WP_Loupe_Factory::create_loupe_instance_at( $post_type, WP_Loupe_Factory::get_site_language(), $this->get_shadow_path( $post_type ) );
+	private function open_shadow( string $post_type, string $partition = '' ) {
+		$key = "{$post_type}/{$partition}";
+		if ( ! isset( $this->shadows[ $key ] ) ) {
+			$path                  = $this->get_shadow_path( $post_type ) . ( '' === $partition ? '' : '/' . $partition );
+			$this->shadows[ $key ] = WP_Loupe_Factory::create_loupe_instance_at( $post_type, WP_Loupe_Partitions::language( $partition, $post_type ), $path );
 		}
-		return $this->shadows[ $post_type ];
+		return $this->shadows[ $key ];
+	}
+
+	/**
+	 * Where a rebuild batch writes: the shadow, or a partition => shadow map.
+	 *
+	 * @return \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe|array<string,\Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe>
+	 */
+	private function open_shadow_target( string $post_type ) {
+		$partitions = WP_Loupe_Partitions::all( $post_type );
+		if ( [ '' ] === $partitions ) {
+			return $this->open_shadow( $post_type );
+		}
+		$target = [];
+		foreach ( $partitions as $partition ) {
+			$target[ $partition ] = $this->open_shadow( $post_type, $partition );
+		}
+		return $target;
+	}
+
+	private function forget_shadows( string $post_type ): void {
+		foreach ( array_keys( $this->shadows ) as $key ) {
+			if ( 0 === strpos( $key, "{$post_type}/" ) ) {
+				unset( $this->shadows[ $key ] );
+			}
+		}
 	}
 
 	/**
@@ -240,7 +283,7 @@ class WP_Loupe_Auto_Reindex {
 		$shadow = $this->get_shadow_path( $post_type );
 		$old    = $live . '.old';
 
-		unset( $this->shadows[ $post_type ] );
+		$this->forget_shadows( $post_type );
 		$this->delete_directory( $old );
 		if ( is_dir( $live ) && ! rename( $live, $old ) ) {
 			throw new \RuntimeException( "Could not move {$live} aside." );

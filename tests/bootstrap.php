@@ -241,6 +241,26 @@ if ( ! function_exists( 'wp_unslash' ) ) {
 if ( ! function_exists( 'status_header' ) ) {
 	function status_header( $c ) {}
 }
+// Minimal WP_Filesystem_Direct shim: the directory operations used to delete indexes.
+if ( ! class_exists( 'WP_Filesystem_Direct' ) ) {
+	class WP_Filesystem_Direct {
+		public function __construct( $arg = null ) {
+		}
+		public function is_dir( $path ) {
+			return is_dir( $path );
+		}
+		public function rmdir( $path, $recursive = false ) {
+			if ( ! is_dir( $path ) ) {
+				return false;
+			}
+			foreach ( new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $path, \FilesystemIterator::SKIP_DOTS ), \RecursiveIteratorIterator::CHILD_FIRST ) as $file ) {
+				$file->isDir() ? rmdir( $file->getPathname() ) : unlink( $file->getPathname() );
+			}
+			return rmdir( $path );
+		}
+	}
+}
+
 // Minimal WP_Error shim for tests (subset implementation)
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
