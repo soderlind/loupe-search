@@ -707,7 +707,7 @@ msgid "Loupe Search Help"
 msgstr ""
 
 #: includes/class-wp-loupe-settings.php:854
-msgid "Loupe Search settings are organized into three tabs: Dashboard, Fields, and Search Behavior."
+msgid "Loupe Search settings are organized into tabs: Dashboard, Fields, Search Behavior, and Search insights."
 msgstr ""
 
 #: includes/class-wp-loupe-settings.php:855

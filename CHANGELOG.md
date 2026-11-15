@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Field weights on the Fields tab no longer show as `1.0` (or `1,0` in some browser locales) next to saved weights shown as `1`, and a saved weight of `0` is no longer replaced by the default.
+- The settings Help overview now lists the Search insights tab.
+
 ## [1.5.5] - 2026-11-14
 
 ### Added
