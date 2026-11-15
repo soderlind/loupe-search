@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.6] - 2026-11-15
+
+### Fixed
+
+- Field weights on the Fields tab no longer show as `1.0` (or `1,0` in some browser locales) next to saved weights shown as `1`, and a saved weight of `0` is no longer replaced by the default.
+- The settings Help overview now lists the Search insights tab.
+
+### Changed
+
+- readme.txt lists every public filter and the `loupe_search_searched` action; the full reference is in docs/filters.md.
+- The FAQ now explains that multi-word searches match all words, falling back to any word.
+- Updated WordPress.org screenshots, including the Search insights tab.
+
 ## [1.5.5] - 2026-11-14
 
 ### Added

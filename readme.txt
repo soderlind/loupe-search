@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.5.5
+Stable tag: 1.5.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -126,7 +126,8 @@ For signatures, defaults, and usage examples, see the [filter documentation](htt
 1. Dashboard tab showing index health per post type, batched reindexing, and the system status for the required PHP extensions.
 2. Fields tab for selecting which post types are indexed and configuring each field as indexable, filterable or sortable, with weight and sort direction.
 3. Search Behavior tab with tokenization, prefix search and typo tolerance settings.
-4. Contextual help tabs explaining field configuration options and search behavior settings.
+4. Search insights tab with privacy-friendly daily search totals, top searches and searches without results.
+5. Contextual help tabs explaining field configuration options and search behavior settings.
 
 == Frequently Asked Questions ==
 
@@ -155,7 +156,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 = How do I use advanced search operators? =
 
-* `Hello World` will search for posts containing `Hello` **or** `World`.
+* `Hello World` will search for posts containing both `Hello` and `World`. If no post contains both, posts containing either word are returned.
 * `"Hello World"` will search for posts containing the exact phrase `Hello World`.
 * `Hello -World` will search for posts containing `Hello` but not `World`.
 
@@ -168,6 +169,13 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.5.6 =
+* Fixed: Field weights on the Fields tab no longer show as `1.0` (or `1,0` in some browser locales) next to saved weights shown as `1`, and a saved weight of `0` is no longer replaced by the default.
+* Fixed: The settings Help overview now lists the Search insights tab.
+* Changed: readme.txt lists every public filter and the `loupe_search_searched` action; the full reference is in docs/filters.md.
+* Changed: The FAQ now explains that multi-word searches match all words, falling back to any word.
+* Changed: Updated WordPress.org screenshots, including the Search insights tab.
 
 = 1.5.5 =
 * Added: Common words (stop words) such as "the", "er" or "på" are ignored in searches, so they no longer make most posts match. Lists for 12 languages are bundled; change them with the `loupe_search_stop_words` filter. Indexes are rebuilt automatically after updating.
