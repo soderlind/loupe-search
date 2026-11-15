@@ -265,8 +265,9 @@ configuration, so reindex after changing it.
 
 By default each post type has one index. Partitions split a post type's index
 into several independent indexes, each with its own language, so stemming and
-stop words match the content. They are meant for add-ons such as a multilingual
-add-on, which partitions by language; the five filters below work together.
+stop words match the content. They are meant for add-ons such as
+[Loupe Search Multilingual](https://github.com/soderlind/loupe-search-multilingual),
+which partitions by language; the five filters below work together.
 
 - Each partition is stored in a subdirectory of the post type's index directory,
   for example `loupe-search-db/post/nb/`. Without partitions the layout is
