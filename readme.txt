@@ -126,7 +126,8 @@ For signatures, defaults, and usage examples, see the [filter documentation](htt
 1. Dashboard tab showing index health per post type, batched reindexing, and the system status for the required PHP extensions.
 2. Fields tab for selecting which post types are indexed and configuring each field as indexable, filterable or sortable, with weight and sort direction.
 3. Search Behavior tab with tokenization, prefix search and typo tolerance settings.
-4. Contextual help tabs explaining field configuration options and search behavior settings.
+4. Search insights tab with privacy-friendly daily search totals, top searches and searches without results.
+5. Contextual help tabs explaining field configuration options and search behavior settings.
 
 == Frequently Asked Questions ==
 
@@ -155,7 +156,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 = How do I use advanced search operators? =
 
-* `Hello World` will search for posts containing `Hello` **or** `World`.
+* `Hello World` will search for posts containing both `Hello` and `World`. If no post contains both, posts containing either word are returned.
 * `"Hello World"` will search for posts containing the exact phrase `Hello World`.
 * `Hello -World` will search for posts containing `Hello` but not `World`.
 
