@@ -47,24 +47,38 @@ class WP_Loupe_Factory {
 	 * @param string $post_type Post type to create instance for.
 	 * @param string $lang Language code.
 	 * @param WP_Loupe_DB $db Database instance.
-	 * @param bool $force_new Whether to force creation of a new instance regardless of cache
+	 * @param string $partition Optional index partition, see WP_Loupe_Partitions.
 	 * @return \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe Loupe instance
 	 */
-	public static function create_loupe_instance( string $post_type, string $lang, WP_Loupe_DB $db ): \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe {
+	public static function create_loupe_instance( string $post_type, string $lang, WP_Loupe_DB $db, string $partition = '' ): \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe {
 		// Generate cache key
-		$cache_key = "{$post_type}:{$lang}";
+		$cache_key = "{$post_type}:{$lang}:{$partition}";
 
 		// Return cached instance if available
 		if ( isset( self::$instance_cache[ $cache_key ] ) ) {
 			return self::$instance_cache[ $cache_key ];
 		}
 
-		$instance = self::create_loupe_instance_at( $post_type, $lang, $db->get_db_path( $post_type ) );
+		$instance = self::create_loupe_instance_at( $post_type, $lang, $db->get_db_path( $post_type, $partition ) );
 
 		// Cache the instance
 		self::$instance_cache[ $cache_key ] = $instance;
 
 		return $instance;
+	}
+
+	/**
+	 * Create (or reuse) the Loupe instance for one partition of a post type's index,
+	 * using the partition's language.
+	 *
+	 * @since 1.6.0
+	 * @param string      $post_type Post type.
+	 * @param string      $partition Partition name, '' when not partitioned.
+	 * @param WP_Loupe_DB $db        Database instance.
+	 * @return \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe
+	 */
+	public static function create_partition_instance( string $post_type, string $partition, WP_Loupe_DB $db ): \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe {
+		return self::create_loupe_instance( $post_type, WP_Loupe_Partitions::language( $partition, $post_type ), $db, $partition );
 	}
 
 	/**

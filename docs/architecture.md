@@ -13,6 +13,7 @@ below is traceable to a named symbol in `includes/`.
 - [Flow: indexing a saved post](#flow-indexing-a-saved-post)
 - [Flow: batched reindex](#flow-batched-reindex)
 - [Flow: background rebuild](#flow-background-rebuild)
+- [Index partitions](#index-partitions)
 - [Boundaries and constraints](#boundaries-and-constraints)
 - [Invariants](#invariants)
 - [Persistent state](#persistent-state)
@@ -59,6 +60,7 @@ Not included:
 | Bootstrap | Defines `WP_LOUPE_*` constants, gates unwanted request types, boots the loader on `plugins_loaded` | [loupe-search.php](../loupe-search.php) | `WP_Loupe_Loader`, `WP_Loupe_Utils` |
 | Loader | Requires every class file and wires the runtime components | [includes/class-wp-loupe-loader.php](../includes/class-wp-loupe-loader.php) | all components below |
 | Path resolver | Resolves the index base directory and per-post-type directory; deletes the index tree | [includes/class-wp-loupe-db.php](../includes/class-wp-loupe-db.php) | `loupe_search_db_path` filter |
+| Partitions | Optional split of a post type's index into named partitions, e.g. per language: the partition list, a post's partition, a partition's language, and the partitions a search covers (see [Index partitions](#index-partitions)) | [includes/class-wp-loupe-partitions.php](../includes/class-wp-loupe-partitions.php) | the five partition filters |
 | Engine factory | Builds and caches a configured `Loupe\Loupe\Loupe` per post type, and decides which fields may be sortable | [includes/class-wp-loupe-factory.php](../includes/class-wp-loupe-factory.php) | `loupe/loupe`, `loupe_search_fields`, `loupe_search_advanced` |
 | Schema manager | Turns saved field settings into indexable / filterable / sortable field lists, with per-request caching | [includes/class-wp-loupe-schema-manager.php](../includes/class-wp-loupe-schema-manager.php) | `loupe_search_fields` |
 | Indexer | Document preparation, incremental add/delete, full and batched reindex, on-disk column repair | [includes/class-wp-loupe-indexer.php](../includes/class-wp-loupe-indexer.php) | factory, path resolver, schema manager |
@@ -199,7 +201,10 @@ Trigger: `save_post_{$post_type}` for each configured post type.
    or a `{ lat, lng }` geo point. Sortable fields absent from the document are
    backfilled with `""` so the attribute always exists.
 4. `Loupe::addDocument()` writes to
-   `<db path>/<post_type>/loupe.db`.
+   `<db path>/<post_type>/loupe.db`. When the post type is partitioned (see
+   [Index partitions](#index-partitions)), it writes to the post's partition,
+   `<db path>/<post_type>/<partition>/loupe.db`, and first deletes the post from
+   the other partitions.
 
 Trashing is handled by `trash_post()` on `wp_trash_post`, which only acts when
 the previous status was `publish`, verifies the `bulk-posts` nonce for bulk
@@ -261,7 +266,9 @@ option (`queue`, `post_type`, `after`).
 
 1. `run()` takes the next post type, deletes any leftover `<post_type>.rebuild`
    directory, and opens a shadow Loupe instance there with
-   `WP_Loupe_Factory::create_loupe_instance_at()` (uncached).
+   `WP_Loupe_Factory::create_loupe_instance_at()` (uncached). A partitioned
+   post type gets one shadow per partition in subdirectories, all created up
+   front so empty partitions exist after the swap.
 2. `WP_Loupe_Indexer::index_batch_into()` adds 200 posts at a time (keyset
    pagination by ID) for up to 20 seconds, then the event reschedules itself.
 3. Meanwhile the live (stale) index keeps serving searches. Post saves and
@@ -272,10 +279,29 @@ option (`queue`, `post_type`, `after`).
    shadow → live, deletes `.old`, and clears the factory cache for the type.
 5. At most one post type completes per request, because Loupe keeps every
    opened index (and its tokenizer cache, ~130 MB for English/German) in
-   memory until the request ends.
+   memory until the request ends. A post type with both an English and a
+   German partition therefore needs about twice that.
 
 On failure the shadow is deleted and the queue is dropped. The stale live index
 stays searchable and the admin notice keeps asking for a manual reindex.
+
+## Index partitions
+
+Add-ons can split a post type's index into named partitions with the
+`loupe_search_partitions` filter, for example one per language so each index
+uses the right stemmer and stop words. `WP_Loupe_Partitions` holds the five
+partition filters (see [docs/filters.md](filters.md#index-partitions)); without
+them every post type has the single unnamed partition `''` and the layout is
+unchanged.
+
+| Concern | Unpartitioned | Partitioned |
+|---|---|---|
+| Index directory | `<post_type>/` | `<post_type>/<partition>/` |
+| Language | `WP_Loupe_Factory::get_site_language()` | `loupe_search_partition_language` |
+| Instance key in the indexer and search engine | `<post_type>` | `<post_type>/<partition>` |
+| Search | the post type's index | the partitions from `loupe_search_query_partitions`; the result cache key includes them |
+| Ready (`is_index_ready()`) | `loupe.db` exists and is current | every partition is ready |
+| Full reindex | clears the index; deletes leftover partition directories | deletes the post type directory and creates every partition empty |
 
 ## Boundaries and constraints
 
@@ -350,6 +376,16 @@ missing results rather than leaking drafts:
 `WP_Loupe_Search_Hooks::create_post_objects()`, which hydrates hits with
 `get_posts()` and therefore inherits its `publish`-only default.
 
+### A post is in at most one partition
+
+Rule: in a partitioned post type, a post's document exists only in the
+partition returned by `WP_Loupe_Partitions::for_post()`.
+
+Enforced by `WP_Loupe_Indexer::add()` and `WP_Loupe_Auto_Reindex::mirror_add()`,
+which delete the post from the other partitions before adding it, and by
+`delete()`, `delete_many()` and `mirror_delete()`, which delete from every
+partition.
+
 ### The document primary key is the post ID
 
 Rule: `Configuration::withPrimaryKey( 'id' )` and `prepare_document()` sets
@@ -419,7 +455,7 @@ Verified for abilities by
 
 | Data | Location | Owner | Removed on uninstall |
 |---|---|---|---|
-| Search indexes | `wp-content/loupe-search-db/<post_type>/loupe.db` | `WP_Loupe_DB`, `WP_Loupe_Factory` | yes, including the legacy `wp-loupe-db` directory |
+| Search indexes | `wp-content/loupe-search-db/<post_type>/loupe.db`, or `<post_type>/<partition>/loupe.db` per partition | `WP_Loupe_DB`, `WP_Loupe_Factory` | yes, including the legacy `wp-loupe-db` directory |
 | Indexed post types | option `loupe_search_custom_post_types` | settings screen | yes |
 | Field settings | option `loupe_search_fields` | settings screen, factory, indexer | yes |
 | Search behavior settings | option `loupe_search_advanced` | settings screen | yes |

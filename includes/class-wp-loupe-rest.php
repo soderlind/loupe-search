@@ -105,6 +105,9 @@ class WP_Loupe_REST {
 	 */
 	private function init_loupe_instances() {
 		foreach ( $this->post_types as $post_type ) {
+			if ( WP_Loupe_Partitions::is_partitioned( $post_type ) ) {
+				continue;
+			}
 			$this->loupe[ $post_type ] = WP_Loupe_Factory::create_loupe_instance(
 				$post_type,
 				$this->iso6391_lang,
@@ -1408,7 +1411,7 @@ class WP_Loupe_REST {
 			$excluded      = WP_Loupe_Exclusion::count_excluded( $pt );
 			$needs_rebuild = $engine->index_needs_rebuild( $pt );
 
-			$items[] = [
+			$item = [
 				'postType'     => $pt,
 				'label'        => $label,
 				'ready'        => $ready,
@@ -1418,6 +1421,23 @@ class WP_Loupe_REST {
 				'published'    => $publish,
 				'excluded'     => $excluded,
 			];
+
+			if ( WP_Loupe_Partitions::is_partitioned( $pt ) ) {
+				$item[ 'partitions' ] = [];
+				foreach ( WP_Loupe_Partitions::all( $pt ) as $partition ) {
+					$p_status               = $engine->is_index_ready( $pt, $partition );
+					$p_indexed              = $engine->count_documents( $pt, $partition );
+					$item[ 'partitions' ][] = [
+						'partition' => $partition,
+						'label'     => WP_Loupe_Partitions::label( $partition, $pt ),
+						'ready'     => ! empty( $p_status[ 'ready' ] ),
+						'reason'    => isset( $p_status[ 'reason' ] ) ? (string) $p_status[ 'reason' ] : null,
+						'indexed'   => $p_indexed >= 0 ? $p_indexed : null,
+					];
+				}
+			}
+
+			$items[] = $item;
 		}
 
 		return rest_ensure_response( [ 'items' => $items ] );

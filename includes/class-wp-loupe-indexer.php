@@ -64,12 +64,33 @@ class WP_Loupe_Indexer {
 	 */
 	private function init_loupe_instances() {
 		foreach ( $this->post_types as $post_type ) {
+			if ( WP_Loupe_Partitions::is_partitioned( $post_type ) ) {
+				continue; // Partition instances are opened on demand by loupe_for().
+			}
 			$this->loupe[ $post_type ] = WP_Loupe_Factory::create_loupe_instance(
 				$post_type,
 				$this->iso6391_lang,
 				$this->db
 			);
 		}
+	}
+
+	/**
+	 * Loupe instance for one partition of a post type's index.
+	 *
+	 * Instances are kept in $this->loupe, keyed by post type for the unnamed
+	 * partition and by "post_type/partition" for named ones.
+	 *
+	 * @param string $post_type
+	 * @param string $partition
+	 * @return \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe
+	 */
+	private function loupe_for( string $post_type, string $partition = '' ) {
+		$key = '' === $partition ? $post_type : "{$post_type}/{$partition}";
+		if ( ! isset( $this->loupe[ $key ] ) ) {
+			$this->loupe[ $key ] = WP_Loupe_Factory::create_partition_instance( $post_type, $partition, $this->db );
+		}
+		return $this->loupe[ $key ];
 	}
 
 	/**
@@ -114,10 +135,19 @@ class WP_Loupe_Indexer {
 
 		WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
 
+		$partition = WP_Loupe_Partitions::for_post( $post );
+		// Opening the index first saves the default field configuration of a new
+		// post type, which prepare_document() relies on.
+		$loupe    = $this->loupe_for( $post->post_type, $partition );
 		$document = $this->prepare_document( $post );
-		$loupe    = $this->loupe[ $post->post_type ];
 		// Lets a background rebuild mirror the change into its shadow index.
-		do_action( 'loupe_search_internal_document_added', $post->post_type, $document );
+		do_action( 'loupe_search_internal_document_added', $post->post_type, $document, $partition );
+		// The post may have moved partition (e.g. its language changed): drop it from the others.
+		foreach ( WP_Loupe_Partitions::all( $post->post_type ) as $other ) {
+			if ( $other !== $partition ) {
+				$this->delete_from( $this->loupe_for( $post->post_type, $other ), [ $post_id ] );
+			}
+		}
 		$loupe->addDocument( $document );
 	}
 
@@ -223,18 +253,37 @@ class WP_Loupe_Indexer {
 			return;
 		}
 		do_action( 'loupe_search_internal_documents_deleted', $post_type, [ $post_id ] );
-		$loupe = $this->loupe[ $post_type ];
-		$this->maybe_migrate_loupe_before_delete( $loupe, $post_id );
+		foreach ( WP_Loupe_Partitions::all( $post_type ) as $partition ) {
+			$this->delete_from( $this->loupe_for( $post_type, $partition ), [ $post_id ] );
+		}
+	}
+
+	/**
+	 * Delete documents from one Loupe index, migrating an old schema first if needed.
+	 *
+	 * @param \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe $loupe
+	 * @param int[] $post_ids
+	 * @param bool  $many     Use deleteDocuments() instead of deleteDocument().
+	 */
+	private function delete_from( $loupe, array $post_ids, bool $many = false ): void {
+		$delete = static function () use ( $loupe, $post_ids, $many ): void {
+			if ( $many ) {
+				$loupe->deleteDocuments( $post_ids );
+			} else {
+				$loupe->deleteDocument( $post_ids[ 0 ] );
+			}
+		};
+		$this->maybe_migrate_loupe_before_delete( $loupe, (int) $post_ids[ 0 ] );
 		try {
-			$loupe->deleteDocument( $post_id );
+			$delete();
 		} catch (\Throwable $e) {
 			if ( $this->is_loupe_schema_mismatch_error( $e ) ) {
-				$this->maybe_migrate_loupe_before_delete( $loupe, $post_id );
+				$this->maybe_migrate_loupe_before_delete( $loupe, (int) $post_ids[ 0 ] );
 				try {
-					$loupe->deleteDocument( $post_id );
+					$delete();
 					return;
 				} catch (\Throwable $e2) {
-					WP_Loupe_Utils::debug_log( '[WP Loupe] deleteDocument failed after migration retry: ' . $e2->getMessage() );
+					WP_Loupe_Utils::debug_log( '[WP Loupe] Delete failed after migration retry: ' . $e2->getMessage() );
 					return;
 				}
 			}
@@ -253,22 +302,9 @@ class WP_Loupe_Indexer {
 			return;
 		}
 		do_action( 'loupe_search_internal_documents_deleted', $post_type, $post_ids );
-		$loupe = $this->loupe[ $post_type ];
-		$this->maybe_migrate_loupe_before_delete( $loupe, $post_ids[ 0 ] );
-		try {
-			$loupe->deleteDocuments( $post_ids );
-		} catch (\Throwable $e) {
-			if ( $this->is_loupe_schema_mismatch_error( $e ) ) {
-				$this->maybe_migrate_loupe_before_delete( $loupe, $post_ids[ 0 ] );
-				try {
-					$loupe->deleteDocuments( $post_ids );
-					return;
-				} catch (\Throwable $e2) {
-					WP_Loupe_Utils::debug_log( '[WP Loupe] deleteDocuments failed after migration retry: ' . $e2->getMessage() );
-					return;
-				}
-			}
-			throw $e;
+		$post_ids = array_values( $post_ids );
+		foreach ( WP_Loupe_Partitions::all( $post_type ) as $partition ) {
+			$this->delete_from( $this->loupe_for( $post_type, $partition ), $post_ids, true );
 		}
 	}
 
@@ -328,52 +364,138 @@ class WP_Loupe_Indexer {
 				'post_status'    => $this->get_indexable_statuses( $post_type ),
 			] );
 
-			// If Loupe indicates the on-disk schema/version needs a rebuild, do that first.
-			// This avoids calling deleteAllDocuments() against an old schema (e.g. missing _id / _user_id).
-			$should_rebuild = false;
-			if ( isset( $this->loupe[ $post_type ] ) && method_exists( $this->loupe[ $post_type ], 'needsReindex' ) ) {
-				try {
-					$should_rebuild = (bool) $this->loupe[ $post_type ]->needsReindex();
-				} catch (\Throwable $e) {
-					$should_rebuild = false;
-				}
-			}
-			if ( $should_rebuild ) {
-				WP_Loupe_Utils::debug_log( '[WP Loupe] Rebuilding index for post type due to Loupe needsReindex(): ' . $post_type );
-				$this->record_reindex_rebuild( $post_type, 'needsReindex()' );
-				$this->delete_index_for_post_type( $post_type );
-				$this->init_loupe_instances();
-			}
-
-			// Always clear the index for this post type, even if there are zero published posts.
-			// Using deleteAllDocuments on a current schema is fine; for old schemas we rebuild above or in the catch below.
-			try {
-				$this->loupe[ $post_type ]->deleteAllDocuments();
-			} catch (\Throwable $e) {
-				if ( $this->is_loupe_schema_mismatch_error( $e ) ) {
-					WP_Loupe_Utils::debug_log( '[WP Loupe] deleteAllDocuments schema mismatch during reindex for ' . $post_type . ': ' . $e->getMessage() );
-					$this->record_reindex_rebuild( $post_type, 'schema mismatch during deleteAllDocuments()' );
-					$this->delete_index_for_post_type( $post_type );
-					$this->init_loupe_instances();
-				} else {
-					throw $e;
-				}
-			}
+			$this->clear_post_type_index( $post_type );
 
 			if ( empty( $posts ) ) {
 				// Index is now cleared; nothing to add.
 				continue;
 			}
 
-			$documents = [];
-			foreach ( $posts as $post ) {
-				if ( $post instanceof \WP_Post && $this->is_indexable( (int) $post->ID, $post ) ) {
-					$documents[] = $this->prepare_document( $post );
+			$this->add_posts_to_index( null, $post_type, $posts );
+		}
+	}
+
+	/**
+	 * Empty a post type's index before a full reindex, rebuilding it from scratch
+	 * when its on-disk schema is out of date.
+	 *
+	 * A partitioned index is always rebuilt from scratch, which also drops partitions
+	 * that no longer exist (and a previous unpartitioned index).
+	 *
+	 * @param string $post_type
+	 */
+	private function clear_post_type_index( string $post_type ): void {
+		if ( WP_Loupe_Partitions::is_partitioned( $post_type ) ) {
+			$this->delete_index_for_post_type( $post_type );
+			foreach ( WP_Loupe_Partitions::all( $post_type ) as $partition ) {
+				// Creates the empty partition, so it reports ready even without posts.
+				$this->loupe_for( $post_type, $partition )->deleteAllDocuments();
+			}
+			return;
+		}
+
+		// Partitions that are no longer used (e.g. the multilingual add-on was deactivated).
+		if ( glob( $this->db->get_db_path( $post_type ) . '/*/loupe.db' ) ) {
+			$this->delete_index_for_post_type( $post_type );
+		}
+
+		// If Loupe indicates the on-disk schema/version needs a rebuild, do that first.
+		// This avoids calling deleteAllDocuments() against an old schema (e.g. missing _id / _user_id).
+		$should_rebuild = false;
+		$loupe          = $this->loupe_for( $post_type );
+		if ( method_exists( $loupe, 'needsReindex' ) ) {
+			try {
+				$should_rebuild = (bool) $loupe->needsReindex();
+			} catch (\Throwable $e) {
+				$should_rebuild = false;
+			}
+		}
+		if ( $should_rebuild ) {
+			WP_Loupe_Utils::debug_log( '[WP Loupe] Rebuilding index for post type due to Loupe needsReindex(): ' . $post_type );
+			$this->record_reindex_rebuild( $post_type, 'needsReindex()' );
+			$this->delete_index_for_post_type( $post_type );
+		}
+
+		// Always clear the index for this post type, even if there are zero published posts.
+		// Using deleteAllDocuments on a current schema is fine; for old schemas we rebuild above or in the catch below.
+		try {
+			$this->loupe_for( $post_type )->deleteAllDocuments();
+		} catch (\Throwable $e) {
+			if ( $this->is_loupe_schema_mismatch_error( $e ) ) {
+				WP_Loupe_Utils::debug_log( '[WP Loupe] deleteAllDocuments schema mismatch during reindex for ' . $post_type . ': ' . $e->getMessage() );
+				$this->record_reindex_rebuild( $post_type, 'schema mismatch during deleteAllDocuments()' );
+				$this->delete_index_for_post_type( $post_type );
+			} else {
+				throw $e;
+			}
+		}
+	}
+
+	/**
+	 * Add indexable posts to the index, each in its partition.
+	 *
+	 * @param \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe|array<string,\Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe>|null $target
+	 *        Index to write to: one Loupe instance, a map of partition => instance, or null for the live index.
+	 * @param string $post_type
+	 * @param array  $posts
+	 */
+	private function add_posts_to_index( $target, string $post_type, array $posts ): void {
+		$by_partition = [];
+		foreach ( $posts as $post ) {
+			if ( $post instanceof \WP_Post && $this->is_indexable( (int) $post->ID, $post ) ) {
+				$partition = WP_Loupe_Partitions::for_post( $post );
+				if ( null === $target ) {
+					$this->loupe_for( $post_type, $partition ); // Saves default fields before prepare_document().
+				}
+				$by_partition[ $partition ][] = $this->prepare_document( $post );
+			}
+		}
+
+		$written = [];
+		foreach ( $by_partition as $partition => $documents ) {
+			$partition = (string) $partition;
+			if ( is_array( $target ) ) {
+				$loupe = $target[ $partition ] ?? null;
+			} else {
+				$loupe = $target ?? $this->loupe_for( $post_type, $partition );
+			}
+			if ( null !== $loupe ) {
+				$loupe->addDocuments( $documents );
+				$written[ $partition ] = [ $loupe, array_column( $documents, 'id' ) ];
+			}
+		}
+
+		if ( ! is_object( $target ) && WP_Loupe_Partitions::is_partitioned( $post_type ) ) {
+			$this->drop_moved_posts( $written );
+		}
+	}
+
+	/**
+	 * Remove posts a batch wrote to a partition they no longer belong to.
+	 *
+	 * A save while the batch was running may have moved a post to another
+	 * partition (or made it non-indexable) after the batch read it. That save
+	 * already updated the right partition, so the batch's copy must go, or the
+	 * post would be in two partitions. Rechecking after the write closes the
+	 * race: a save that lands later removes the copy itself.
+	 *
+	 * @param array<string,array{0:\Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe,1:array<int,int>}> $written
+	 *        Partition => [ index written to, post IDs written ].
+	 */
+	private function drop_moved_posts( array $written ): void {
+		foreach ( $written as $partition => [ $loupe, $ids ] ) {
+			$stale = [];
+			foreach ( $ids as $id ) {
+				clean_post_cache( (int) $id );
+				$post = get_post( (int) $id );
+				if ( ! ( $post instanceof \WP_Post )
+					|| ! $this->is_indexable( (int) $id, $post )
+					|| WP_Loupe_Partitions::for_post( $post ) !== (string) $partition ) {
+					$stale[] = (int) $id;
 				}
 			}
-
-			if ( ! empty( $documents ) ) {
-				$this->loupe[ $post_type ]->addDocuments( $documents );
+			if ( ! empty( $stale ) ) {
+				$this->delete_from( $loupe, $stale );
 			}
 		}
 	}
@@ -456,38 +578,9 @@ class WP_Loupe_Indexer {
 			return $state;
 		}
 
-		// Ensure Loupe instance exists.
-		if ( ! isset( $this->loupe[ $post_type ] ) ) {
-			$this->init_loupe_instances();
-		}
-
 		// One-time per post type: clear index (with rebuild protection).
 		if ( ! $cleared ) {
-			$should_rebuild = false;
-			if ( isset( $this->loupe[ $post_type ] ) && method_exists( $this->loupe[ $post_type ], 'needsReindex' ) ) {
-				try {
-					$should_rebuild = (bool) $this->loupe[ $post_type ]->needsReindex();
-				} catch (\Throwable $e) {
-					$should_rebuild = false;
-				}
-			}
-			if ( $should_rebuild ) {
-				$this->record_reindex_rebuild( $post_type, 'needsReindex()' );
-				$this->delete_index_for_post_type( $post_type );
-				$this->init_loupe_instances();
-			}
-			try {
-				$this->loupe[ $post_type ]->deleteAllDocuments();
-			} catch (\Throwable $e) {
-				if ( $this->is_loupe_schema_mismatch_error( $e ) ) {
-					$this->record_reindex_rebuild( $post_type, 'schema mismatch during deleteAllDocuments()' );
-					$this->delete_index_for_post_type( $post_type );
-					$this->init_loupe_instances();
-					// Fresh index; safe to proceed.
-				} else {
-					throw $e;
-				}
-			}
+			$this->clear_post_type_index( $post_type );
 			$cleared      = true;
 			$last_id      = 0;
 			$processed_pt = 0;
@@ -505,7 +598,7 @@ class WP_Loupe_Indexer {
 			return ( $idx >= count( $post_types ) ) ? [ 'done' => true ] + $state : $state;
 		}
 
-		$this->index_post_ids( $this->loupe[ $post_type ], $post_type, $ids );
+		$this->index_post_ids( null, $post_type, $ids );
 
 		$processed    += count( $ids );
 		$processed_pt += count( $ids );
@@ -525,7 +618,8 @@ class WP_Loupe_Indexer {
 	 * instance, e.g. a shadow index built by WP_Loupe_Auto_Reindex.
 	 *
 	 * @since 1.5.3
-	 * @param \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe $loupe
+	 * @since 1.6.0 `$loupe` may be a map of partition => Loupe instance for a partitioned post type.
+	 * @param \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe|array<string,\Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe> $loupe
 	 * @param string $post_type
 	 * @param int    $after_id
 	 * @param int    $batch_size
@@ -541,7 +635,7 @@ class WP_Loupe_Indexer {
 	}
 
 	/**
-	 * @param \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe $loupe
+	 * @param \Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe|array|null $loupe Target, see add_posts_to_index().
 	 * @param string $post_type
 	 * @param int[]  $ids
 	 */
@@ -554,16 +648,7 @@ class WP_Loupe_Indexer {
 			'posts_per_page' => count( $ids ),
 		] );
 
-		$documents = [];
-		foreach ( $posts as $post ) {
-			if ( $post instanceof \WP_Post && $this->is_indexable( (int) $post->ID, $post ) ) {
-				$documents[] = $this->prepare_document( $post );
-			}
-		}
-
-		if ( ! empty( $documents ) ) {
-			$loupe->addDocuments( $documents );
-		}
+		$this->add_posts_to_index( $loupe, $post_type, $posts );
 	}
 
 	/**
@@ -651,7 +736,11 @@ class WP_Loupe_Indexer {
 			$file_system_direct->rmdir( $path, true );
 		}
 
-		unset( $this->loupe[ $post_type ] );
+		foreach ( array_keys( $this->loupe ) as $key ) {
+			if ( $key === $post_type || 0 === strpos( (string) $key, "{$post_type}/" ) ) {
+				unset( $this->loupe[ $key ] );
+			}
+		}
 	}
 
 	/**
@@ -706,32 +795,40 @@ class WP_Loupe_Indexer {
 	 */
 	private function ensure_required_columns(): void {
 		foreach ( $this->post_types as $post_type ) {
-			$db_dir      = $this->db->get_db_path( $post_type );
-			$sqlite_file = trailingslashit( $db_dir ) . 'loupe.db';
-			if ( ! file_exists( $sqlite_file ) ) {
-				continue; // Fresh index will create schema.
+			foreach ( WP_Loupe_Partitions::all( $post_type ) as $partition ) {
+				$this->ensure_required_columns_at( $this->db->get_db_path( $post_type, $partition ) );
 			}
-			try {
-				$pdo           = new \PDO( 'sqlite:' . $sqlite_file ); // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO required for SQLite (loupe/loupe); no $wpdb alternative.
-				$stmt          = $pdo->query( 'PRAGMA table_info(documents)' );
-				$has_post_date = false;
-				if ( $stmt ) {
-					foreach ( $stmt->fetchAll( \PDO::FETCH_ASSOC ) as $col ) { // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO constant for SQLite PRAGMA.
-						if ( isset( $col[ 'name' ] ) && 'post_date' === $col[ 'name' ] ) {
-							$has_post_date = true;
-							break;
-						}
+		}
+	}
+
+	/**
+	 * @param string $db_dir Index directory.
+	 */
+	private function ensure_required_columns_at( string $db_dir ): void {
+		$sqlite_file = trailingslashit( $db_dir ) . 'loupe.db';
+		if ( ! file_exists( $sqlite_file ) ) {
+			return; // Fresh index will create schema.
+		}
+		try {
+			$pdo           = new \PDO( 'sqlite:' . $sqlite_file ); // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO required for SQLite (loupe/loupe); no $wpdb alternative.
+			$stmt          = $pdo->query( 'PRAGMA table_info(documents)' );
+			$has_post_date = false;
+			if ( $stmt ) {
+				foreach ( $stmt->fetchAll( \PDO::FETCH_ASSOC ) as $col ) { // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO -- PDO constant for SQLite PRAGMA.
+					if ( isset( $col[ 'name' ] ) && 'post_date' === $col[ 'name' ] ) {
+						$has_post_date = true;
+						break;
 					}
 				}
-				if ( ! $has_post_date ) {
-					// Add column similar to Loupe's default (TEXT with default 'null').
-					$pdo->exec( "ALTER TABLE documents ADD COLUMN post_date TEXT NOT NULL DEFAULT 'null'" );
-					// Create an index to mirror Loupe's performance expectations.
-					$pdo->exec( 'CREATE INDEX IF NOT EXISTS documents_post_date_idx ON documents(post_date)' );
-				}
-			} catch (\Throwable $e) {
-				// Silently ignore; worst case a full delete will be required.
 			}
+			if ( ! $has_post_date ) {
+				// Add column similar to Loupe's default (TEXT with default 'null').
+				$pdo->exec( "ALTER TABLE documents ADD COLUMN post_date TEXT NOT NULL DEFAULT 'null'" );
+				// Create an index to mirror Loupe's performance expectations.
+				$pdo->exec( 'CREATE INDEX IF NOT EXISTS documents_post_date_idx ON documents(post_date)' );
+			}
+		} catch (\Throwable $e) {
+			// Silently ignore; worst case a full delete will be required.
 		}
 	}
 

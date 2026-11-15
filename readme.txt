@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.5.6
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -86,6 +86,7 @@ These filters allow developers to customize Loupe Search's behavior. As of 1.1.0
 * `loupe_search_db_path`: Move the index directory.
 * `loupe_search_language`: Override the stemming language.
 * `loupe_search_stop_words`: Change the common words ignored in searches.
+* `loupe_search_partitions`, `loupe_search_post_partition`, `loupe_search_partition_language`, `loupe_search_query_partitions`, `loupe_search_partition_label`: Split a post type's index into partitions, for example one per language.
 * `loupe_search_field_{$field_name}`: Clean a core post field before indexing.
 * `loupe_search_schema_{$post_type}`: Add/remove fields, set weights and sorting.
 * `loupe_search_is_safely_sortable_{$post_type}`: Force a core field to be sortable.
@@ -169,6 +170,11 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.6.0 =
+* Added: Index partitions. Add-ons can split a post type's index into several indexes, for example one per language, each with its own stemming and stop words. New filters `loupe_search_partitions`, `loupe_search_post_partition`, `loupe_search_partition_language`, `loupe_search_query_partitions` and `loupe_search_partition_label`. Without them nothing changes.
+* Added: The Dashboard's index health table shows a row per partition.
+* Changed: The internal `loupe_search_internal_document_added` action passes the partition as a third argument.
 
 = 1.5.6 =
 * Fixed: Field weights on the Fields tab no longer show as `1.0` (or `1,0` in some browser locales) next to saved weights shown as `1`, and a saved weight of `0` is no longer replaced by the default.

@@ -20,33 +20,39 @@ insights counts, plus one action, `loupe_search_searched`. The
    - [`loupe_search_db_path`](#loupe_search_db_path)
    - [`loupe_search_language`](#loupe_search_language)
    - [`loupe_search_stop_words`](#loupe_search_stop_words)
-4. [Field content](#field-content)
+4. [Index partitions](#index-partitions)
+   - [`loupe_search_partitions`](#loupe_search_partitions)
+   - [`loupe_search_post_partition`](#loupe_search_post_partition)
+   - [`loupe_search_partition_language`](#loupe_search_partition_language)
+   - [`loupe_search_query_partitions`](#loupe_search_query_partitions)
+   - [`loupe_search_partition_label`](#loupe_search_partition_label)
+5. [Field content](#field-content)
    - [`loupe_search_field_{$field_name}`](#loupe_search_field_field_name)
-5. [Schema](#schema)
+6. [Schema](#schema)
    - [`loupe_search_schema_{$post_type}`](#loupe_search_schema_post_type)
-6. [Sortability](#sortability)
+7. [Sortability](#sortability)
    - [`loupe_search_is_safely_sortable_{$post_type}`](#loupe_search_is_safely_sortable_post_type)
    - [`loupe_search_is_safely_sortable_meta_{$post_type}`](#loupe_search_is_safely_sortable_meta_post_type)
-7. [Results](#results)
+8. [Results](#results)
    - [`loupe_search_posts_per_page`](#loupe_search_posts_per_page)
    - [`loupe_search_max_cacheable_query_length`](#loupe_search_max_cacheable_query_length)
    - [`loupe_search_order_results`](#loupe_search_order_results)
    - [`loupe_search_advanced_hits`](#loupe_search_advanced_hits)
    - [`loupe_search_is_post_indexable()` (function)](#loupe_search_is_post_indexable-function)
-8. [Highlighting](#highlighting)
+9. [Highlighting](#highlighting)
    - [`loupe_search_highlight`](#loupe_search_highlight)
    - [`loupe_search_highlight_fields`](#loupe_search_highlight_fields)
    - [`loupe_search_highlight_start_tag` / `loupe_search_highlight_end_tag`](#loupe_search_highlight_start_tag--loupe_search_highlight_end_tag)
    - [`loupe_search_highlight_crop_fields`](#loupe_search_highlight_crop_fields)
    - [`loupe_search_highlight_crop_length`](#loupe_search_highlight_crop_length)
    - [`loupe_search_highlight_crop_marker`](#loupe_search_highlight_crop_marker)
-9. [Search insights](#search-insights)
+10. [Search insights](#search-insights)
    - [`loupe_search_insights_should_count`](#loupe_search_insights_should_count)
    - [`loupe_search_searched` (action)](#loupe_search_searched-action)
-10. [Settings page](#settings-page)
+11. [Settings page](#settings-page)
    - [`loupe_search_settings_tabs`](#loupe_search_settings_tabs)
-11. [Recipes](#recipes)
-12. [After changing a filter](#after-changing-a-filter)
+12. [Recipes](#recipes)
+13. [After changing a filter](#after-changing-a-filter)
 
 ## Where to put filter code
 
@@ -70,6 +76,11 @@ register them at load time (not inside an `init` callback that runs late).
 | `loupe_search_db_path` | `string $path` | Move the index directory |
 | `loupe_search_language` | `string $language`, `string $locale` | Override the stemming language |
 | `loupe_search_stop_words` | `array $words`, `array $languages` | Change the common words ignored in searches |
+| `loupe_search_partitions` | `array $partitions`, `string $post_type` | Split a post type's index, e.g. one per language |
+| `loupe_search_post_partition` | `string $partition`, `WP_Post $post` | Choose the partition a post is indexed in |
+| `loupe_search_partition_language` | `string $language`, `string $partition`, `string $post_type` | Set a partition's stemming and stop-word language |
+| `loupe_search_query_partitions` | `array $partitions`, `string $post_type` | Choose the partitions a search covers |
+| `loupe_search_partition_label` | `string $label`, `string $partition`, `string $post_type` | Name a partition on the Dashboard |
 | `loupe_search_field_{$field_name}` | `mixed $value` | Clean a core post field before indexing |
 | `loupe_search_schema_{$post_type}` | `array $schema` | Add/remove fields, set weights and sorting |
 | `loupe_search_is_safely_sortable_{$post_type}` | `bool $sortable`, `string $field_name` | Force a core field to be sortable |
@@ -249,6 +260,87 @@ add_filter( 'loupe_search_stop_words', function ( array $words, array $languages
 
 Return an empty array to turn stop words off. The list is part of the index
 configuration, so reindex after changing it.
+
+## Index partitions
+
+By default each post type has one index. Partitions split a post type's index
+into several independent indexes, each with its own language, so stemming and
+stop words match the content. They are meant for add-ons such as a multilingual
+add-on, which partitions by language; the five filters below work together.
+
+- Each partition is stored in a subdirectory of the post type's index directory,
+  for example `loupe-search-db/post/nb/`. Without partitions the layout is
+  unchanged: `loupe-search-db/post/`.
+- A post is in exactly one partition. When a saved post moves to another
+  partition (for example its language changes), it is removed from the old one.
+- A post type's index is ready when every partition exists; the Dashboard
+  shows a row per partition below the post type.
+- Reindex after changing the list of partitions or how posts are assigned. A
+  full reindex removes partitions that are no longer in the list.
+
+### `loupe_search_partitions`
+
+The partitions a post type's index is split into. Names are lowercased and may
+contain only `a-z`, `0-9`, `-` and `_`. Return `[ '' ]` (the default) for a
+single index.
+
+```php
+add_filter( 'loupe_search_partitions', function ( array $partitions, string $post_type ): array {
+	return in_array( $post_type, [ 'post', 'page' ], true ) ? [ 'en', 'nb' ] : $partitions;
+}, 10, 2 );
+```
+
+### `loupe_search_post_partition`
+
+The partition a post is indexed in. The default is the first partition, which is
+also used when the filter returns a name that is not in the list.
+
+```php
+add_filter( 'loupe_search_post_partition', function ( string $partition, WP_Post $post ): string {
+	return get_post_meta( $post->ID, 'language', true ) ?: $partition;
+}, 10, 2 );
+```
+
+### `loupe_search_partition_language`
+
+The language used for a partition's stemming and stop words. The default is the
+site language (see [`loupe_search_language`](#loupe_search_language)). The
+`languages` key of the `loupe_search_advanced` option, when set, overrides this
+for every partition.
+
+```php
+add_filter( 'loupe_search_partition_language', function ( string $language, string $partition ): string {
+	return 'nb' === $partition ? 'no' : 'en';
+}, 10, 2 );
+```
+
+### `loupe_search_query_partitions`
+
+The partitions a search covers. The default is all partitions. Unknown names are
+ignored; return an empty array to leave the post type out of the search. Search
+results are cached per set of partitions.
+
+The filter also runs for post types that are not partitioned. Their only
+partition is `''` (empty string), so keep it unless you want to leave them out.
+
+```php
+add_filter( 'loupe_search_query_partitions', function ( array $partitions, string $post_type ): array {
+	$language = my_current_language();
+	// Unpartitioned post types have only the '' partition: keep searching them.
+	return in_array( $language, $partitions, true ) ? [ $language ] : $partitions;
+}, 10, 2 );
+```
+
+### `loupe_search_partition_label`
+
+The name shown for a partition on the Dashboard. The default is the partition
+name.
+
+```php
+add_filter( 'loupe_search_partition_label', function ( string $label, string $partition ): string {
+	return [ 'en' => 'English', 'nb' => 'Norsk bokmål' ][ $partition ] ?? $label;
+}, 10, 2 );
+```
 
 ## Field content
 
@@ -698,7 +790,7 @@ add_filter( 'loupe_search_highlight_crop_length', fn() => 40 );
 ## After changing a filter
 
 Filters that affect **what** or **how** content is indexed — post types, schema,
-field content, sortability, protected posts — only take effect for content
+field content, sortability, protected posts, partitions — only take effect for content
 indexed afterwards. Reindex so the existing index matches:
 
 ```bash

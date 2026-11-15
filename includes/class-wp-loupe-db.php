@@ -60,12 +60,18 @@ class WP_Loupe_DB {
 	 * Get database path for a post type
 	 *
 	 * @since 0.0.1
+	 * @since 1.6.0 Added the `$partition` parameter.
 	 * @param string $post_type Post type.
+	 * @param string $partition Optional index partition, see WP_Loupe_Partitions. Stored in a subdirectory.
 	 * @return string Path to database file
 	 */
-	public function get_db_path($post_type) {
+	public function get_db_path( $post_type, string $partition = '' ) {
 		$base_path = $this->get_base_path();
 		$path      = rtrim( $base_path, '/' ) . '/' . ltrim( (string) $post_type, '/' );
+		$partition = WP_Loupe_Partitions::sanitize( $partition );
+		if ( '' !== $partition ) {
+			$path .= '/' . $partition;
+		}
 		$this->ensure_directory_exists( $path );
 		return $path;
 	}

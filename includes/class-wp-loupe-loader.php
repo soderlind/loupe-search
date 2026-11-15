@@ -55,6 +55,7 @@ class WP_Loupe_Loader {
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-insights.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-bbpress.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-db.php';
+		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-partitions.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-utils.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-index-notice.php';
 		require_once LOUPE_SEARCH_PATH . 'includes/class-wp-loupe-auto-reindex.php';

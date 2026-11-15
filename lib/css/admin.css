@@ -57,6 +57,10 @@
 	margin-top: 10px;
 }
 
+.wp-loupe-health-table .wp-loupe-health-partition td:first-child {
+	padding-left: 24px;
+}
+
 .hidden {
 	display: none;
 }

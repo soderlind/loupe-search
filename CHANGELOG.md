@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-15
+
+### Added
+
+- Index partitions: add-ons can split a post type's index into several Loupe indexes, for example one per language, each with its own stemming and stop words. New filters `loupe_search_partitions`, `loupe_search_post_partition`, `loupe_search_partition_language`, `loupe_search_query_partitions` and `loupe_search_partition_label`; see [docs/filters.md](docs/filters.md#index-partitions). Without them nothing changes.
+- The Dashboard's index health table shows a row per partition.
+
+### Changed
+
+- The internal `loupe_search_internal_document_added` action passes the partition as a third argument.
+
 ## [1.5.6] - 2026-11-15
 
 ### Fixed
