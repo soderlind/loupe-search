@@ -320,9 +320,14 @@ The partitions a search covers. The default is all partitions. Unknown names are
 ignored; return an empty array to leave the post type out of the search. Search
 results are cached per set of partitions.
 
+The filter also runs for post types that are not partitioned. Their only
+partition is `''` (empty string), so keep it unless you want to leave them out.
+
 ```php
 add_filter( 'loupe_search_query_partitions', function ( array $partitions, string $post_type ): array {
-	return [ my_current_language() ];
+	$language = my_current_language();
+	// Unpartitioned post types have only the '' partition: keep searching them.
+	return in_array( $language, $partitions, true ) ? [ $language ] : $partitions;
 }, 10, 2 );
 ```
 

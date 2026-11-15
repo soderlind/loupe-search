@@ -242,8 +242,13 @@ class WP_Loupe_Search_Engine {
 					}
 
 					foreach ( $query_partitions[ $post_type ] ?? [ '' ] as $partition ) {
-						$result = $this->loupe_for( $post_type, $partition )->search( $search_params );
-						$arr    = $result->toArray();
+						// A broken partition must not hide the results of the others.
+						try {
+							$arr = $this->loupe_for( $post_type, $partition )->search( $search_params )->toArray();
+						} catch (\Throwable $e) {
+							WP_Loupe_Utils::debug_log( "Search error for {$post_type}/{$partition}: " . $e->getMessage(), 'WP Loupe' );
+							continue;
+						}
 
 						if ( isset( $arr[ 'processingTimeMs' ] ) ) {
 							$processing_time_sum += (int) $arr[ 'processingTimeMs' ];
@@ -601,8 +606,13 @@ class WP_Loupe_Search_Engine {
 					}
 
 					foreach ( $query_partitions[ $post_type ] ?? [ '' ] as $partition ) {
-						$result = $this->loupe_for( $post_type, $partition )->search( $search_params );
-						$arr    = $result->toArray();
+						// A broken partition must not hide the results of the others.
+						try {
+							$arr = $this->loupe_for( $post_type, $partition )->search( $search_params )->toArray();
+						} catch (\Throwable $e) {
+							WP_Loupe_Utils::debug_log( "Search error for {$post_type}/{$partition}: " . $e->getMessage(), 'WP Loupe' );
+							continue;
+						}
 
 						$total_hits          += isset( $arr[ 'totalHits' ] ) ? (int) $arr[ 'totalHits' ] : 0;
 						$processing_time_sum += isset( $arr[ 'processingTimeMs' ] ) ? (int) $arr[ 'processingTimeMs' ] : 0;

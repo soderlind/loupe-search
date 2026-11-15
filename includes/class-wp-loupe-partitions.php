@@ -140,14 +140,12 @@ final class WP_Loupe_Partitions {
 	 */
 	public static function for_query( string $post_type ): array {
 		$partitions = self::all( $post_type );
-		if ( [ '' ] === $partitions ) {
-			return $partitions;
-		}
 
 		/**
 		 * Filters the partitions a search covers, e.g. only the current language.
 		 *
 		 * Unknown names are ignored. Return an empty array to skip the post type.
+		 * An unpartitioned post type has the single partition '' (empty string).
 		 *
 		 * @since 1.6.0
 		 * @param string[] $partitions All partitions of the post type.

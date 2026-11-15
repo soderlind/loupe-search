@@ -2,6 +2,7 @@
 namespace Soderlind\Plugin\LoupeSearch;
 
 use PHPUnit\Framework\TestCase;
+use Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\SearchParameters;
 
 /**
  * Index partitions: one Loupe index per partition (e.g. per language), routed by filters.
@@ -25,6 +26,7 @@ class WP_Loupe_PartitionsTest extends TestCase {
 	protected function tearDown(): void {
 		WP_Loupe_Factory::clear_instance_cache();
 		$GLOBALS[ 'wp_loupe_test_filters' ] = [];
+		$GLOBALS[ 'wp_loupe_test_posts' ]   = [];
 		$this->rmdir( $this->dir );
 		parent::tearDown();
 	}
@@ -91,6 +93,50 @@ class WP_Loupe_PartitionsTest extends TestCase {
 		$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_query_partitions' ] = static fn() => [ 'NB', 'de' ];
 
 		$this->assertSame( [ 'nb' ], WP_Loupe_Partitions::for_query( 'post' ) );
+	}
+
+	public function test_query_partitions_can_leave_out_an_unpartitioned_post_type(): void {
+		$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_query_partitions' ] = static fn() => [];
+
+		$this->assertSame( [], WP_Loupe_Partitions::for_query( 'page' ) );
+	}
+
+	public function test_first_post_of_a_new_partitioned_post_type_is_indexed_with_default_fields(): void {
+		$language = [ 1 => 'en' ];
+		$this->partition_by( $language );
+
+		$this->make_indexer()->add( 1, $this->post( 1 ), false );
+
+		$this->assertSame( [ 1 ], $this->ids_matching( 'post', 'en', 'Post' ) );
+	}
+
+	public function test_a_batch_drops_posts_that_moved_partition_while_it_ran(): void {
+		$language = [ 1 => 'en', 2 => 'en' ];
+		$this->partition_by( $language );
+		$posts = [ $this->post( 1 ), $this->post( 2 ) ];
+		foreach ( $posts as $post ) {
+			$GLOBALS[ 'wp_loupe_test_posts' ][ $post->ID ] = $post;
+		}
+		// A save moves post 1 to "nb" after the batch has read it.
+		$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_field_post_title' ] = static function ( $title ) use ( &$language ) {
+			$language[ 1 ] = 'nb';
+			return $title;
+		};
+
+		$indexer = $this->make_indexer();
+		( new \ReflectionMethod( WP_Loupe_Indexer::class, 'add_posts_to_index' ) )->invoke( $indexer, null, 'post', $posts );
+
+		$this->assertSame( [ 2 ], $this->ids_matching( 'post', 'en', 'Post' ) );
+	}
+
+	/**
+	 * @return int[] IDs in a partition matching a query.
+	 */
+	private function ids_matching( string $post_type, string $partition, string $query ): array {
+		$loupe = WP_Loupe_Factory::create_partition_instance( $post_type, $partition, WP_Loupe_DB::get_instance() );
+		$ids   = array_map( 'intval', array_column( $loupe->search( SearchParameters::create()->withQuery( $query ) )->toArray()[ 'hits' ], 'id' ) );
+		sort( $ids );
+		return $ids;
 	}
 
 	public function test_a_post_lives_in_exactly_one_partition_and_moves_when_its_partition_changes(): void {
@@ -184,6 +230,23 @@ class WP_Loupe_PartitionsTest extends TestCase {
 		$ids = array_column( $engine->search( 'post' ), 'id' );
 		sort( $ids );
 		$this->assertSame( [ 1, 2 ], $ids );
+	}
+
+	public function test_a_failing_partition_does_not_hide_the_others(): void {
+		$GLOBALS[ 'wp_loupe_test_filters' ][ 'loupe_search_partitions' ] = static fn() => [ 'en', 'nb' ];
+		$engine = new WP_Loupe_Search_Engine( [ 'post' ], WP_Loupe_DB::get_instance() );
+		$broken = new class() {
+			public function search( $params ) {
+				throw new \RuntimeException( 'corrupt index' );
+			}
+		};
+		$loupes = [ 'post/en' => $broken, 'post/nb' => $this->fake_loupe( 2 ) ];
+		foreach ( [ 'saved_fields' => [ 'post' => [ 'post_title' => [ 'indexable' => true, 'weight' => 1.0 ] ] ], 'loupe' => $loupes ] as $prop => $value ) {
+			( new \ReflectionProperty( WP_Loupe_Search_Engine::class, $prop ) )->setValue( $engine, $value );
+		}
+
+		$this->assertSame( [ 2 ], array_column( $engine->search( 'post' ), 'id' ) );
+		$this->assertSame( [ 2 ], array_column( $engine->search_advanced( 'post', [] )[ 'hits' ], 'id' ) );
 	}
 
 	public function test_index_is_ready_only_when_every_partition_exists(): void {

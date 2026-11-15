@@ -135,8 +135,11 @@ class WP_Loupe_Indexer {
 
 		WP_Loupe_Utils::remove_transient( 'loupe_search_cache_' );
 
-		$document  = $this->prepare_document( $post );
 		$partition = WP_Loupe_Partitions::for_post( $post );
+		// Opening the index first saves the default field configuration of a new
+		// post type, which prepare_document() relies on.
+		$loupe    = $this->loupe_for( $post->post_type, $partition );
+		$document = $this->prepare_document( $post );
 		// Lets a background rebuild mirror the change into its shadow index.
 		do_action( 'loupe_search_internal_document_added', $post->post_type, $document, $partition );
 		// The post may have moved partition (e.g. its language changed): drop it from the others.
@@ -145,7 +148,7 @@ class WP_Loupe_Indexer {
 				$this->delete_from( $this->loupe_for( $post->post_type, $other ), [ $post_id ] );
 			}
 		}
-		$this->loupe_for( $post->post_type, $partition )->addDocument( $document );
+		$loupe->addDocument( $document );
 	}
 
 	/**
@@ -440,10 +443,15 @@ class WP_Loupe_Indexer {
 		$by_partition = [];
 		foreach ( $posts as $post ) {
 			if ( $post instanceof \WP_Post && $this->is_indexable( (int) $post->ID, $post ) ) {
-				$by_partition[ WP_Loupe_Partitions::for_post( $post ) ][] = $this->prepare_document( $post );
+				$partition = WP_Loupe_Partitions::for_post( $post );
+				if ( null === $target ) {
+					$this->loupe_for( $post_type, $partition ); // Saves default fields before prepare_document().
+				}
+				$by_partition[ $partition ][] = $this->prepare_document( $post );
 			}
 		}
 
+		$written = [];
 		foreach ( $by_partition as $partition => $documents ) {
 			$partition = (string) $partition;
 			if ( is_array( $target ) ) {
@@ -453,6 +461,41 @@ class WP_Loupe_Indexer {
 			}
 			if ( null !== $loupe ) {
 				$loupe->addDocuments( $documents );
+				$written[ $partition ] = [ $loupe, array_column( $documents, 'id' ) ];
+			}
+		}
+
+		if ( ! is_object( $target ) && WP_Loupe_Partitions::is_partitioned( $post_type ) ) {
+			$this->drop_moved_posts( $written );
+		}
+	}
+
+	/**
+	 * Remove posts a batch wrote to a partition they no longer belong to.
+	 *
+	 * A save while the batch was running may have moved a post to another
+	 * partition (or made it non-indexable) after the batch read it. That save
+	 * already updated the right partition, so the batch's copy must go, or the
+	 * post would be in two partitions. Rechecking after the write closes the
+	 * race: a save that lands later removes the copy itself.
+	 *
+	 * @param array<string,array{0:\Soderlind\Plugin\LoupeSearch\Vendor\Loupe\Loupe\Loupe,1:array<int,int>}> $written
+	 *        Partition => [ index written to, post IDs written ].
+	 */
+	private function drop_moved_posts( array $written ): void {
+		foreach ( $written as $partition => [ $loupe, $ids ] ) {
+			$stale = [];
+			foreach ( $ids as $id ) {
+				clean_post_cache( (int) $id );
+				$post = get_post( (int) $id );
+				if ( ! ( $post instanceof \WP_Post )
+					|| ! $this->is_indexable( (int) $id, $post )
+					|| WP_Loupe_Partitions::for_post( $post ) !== (string) $partition ) {
+					$stale[] = (int) $id;
+				}
+			}
+			if ( ! empty( $stale ) ) {
+				$this->delete_from( $loupe, $stale );
 			}
 		}
 	}

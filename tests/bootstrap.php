@@ -390,6 +390,10 @@ if ( ! function_exists( 'rest_ensure_response' ) ) {
 		return $value;
 	}
 }
+if ( ! function_exists( 'clean_post_cache' ) ) {
+	function clean_post_cache( $post ) {
+	}
+}
 if ( ! function_exists( 'get_post' ) ) {
 	function get_post( $id ) {
 		if ( isset( $GLOBALS[ 'wp_loupe_test_posts' ][ (int) $id ] ) ) {
