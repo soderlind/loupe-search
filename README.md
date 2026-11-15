@@ -195,6 +195,8 @@ Developer documentation (schema + examples + Gutenberg block example): **[docs/s
 
 ## Add-ons
 
+Install, activate and update the Loupe add-ons from one screen with **[Loupe Search Add-ons](https://github.com/soderlind/loupe-search-addons)** (Settings → Loupe Search → Add-ons; Network Admin → Plugins on multisite). Add-on updates then show up in Dashboard → Updates like any other plugin. It manages Loupe Search Block, Loupe Semantic Search and Loupe Search Multilingual.
+
 - **[Loupe Search Block](https://github.com/soderlind/loupe-search-block)** — A search block with live results as you type, a post type filter, category and tag facets, sorting and highlighted snippets. Falls back to a plain search form without JavaScript. Requires Loupe Search 1.4.0+.
 - **[Loupe Cross-Site Search](https://github.com/soderlind/loupe-cross-site-search)** — Search across every site in a WordPress multisite network from a single hub. It mirrors each site's public content into one combined index and ships a ready-to-use Cross-Site Search block with site and post-type facets, sorting, and highlighted snippets. Requires WordPress multisite 7.0+ and Loupe Search active on the network.
 - **[Loupe Semantic Search](https://github.com/soderlind/loupe-semantic-search)** — Adds semantic retrieval to Loupe Search. Hybrid (keyword + semantic) search finds posts by meaning as well as by words, in the front-end search, the REST API and Loupe Search Block. Abilities return RAG passages with sources for AI agents. Embeddings come from a provider you connect through WordPress 7 AI Connectors. Requires WordPress 7.0+, Loupe Search 1.5.0+ and the AI plugin 1.5.0+.
