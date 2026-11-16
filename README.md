@@ -6,7 +6,7 @@ A search enhancement plugin for WordPress that builds a fast, typo-tolerant inde
 
 ## Quick Links
 
-[Requirements](#technical-requirements) | [Installation](#installation) | [Settings](#settings) | [Reindexing](#reindexing) | [FAQ](#faq) | [Building Your Own Search UI](#building-your-own-search-ui) | [REST API](#rest-api) | [AI Agent Integration](#ai-agent-integration-wordpress-abilities-api) | [Filters](#filters) | [Docs](docs/README.md) | [Changelog](CHANGELOG.md)
+[Requirements](#technical-requirements) | [Installation](#installation) | [Settings](#settings) | [Reindexing](#reindexing) | [FAQ](#faq) | [Building Your Own Search UI](#building-your-own-search-ui) | [REST API](#rest-api) | [Add-ons](#add-ons) | [AI Agent Integration](#ai-agent-integration-wordpress-abilities-api) | [Filters](#filters) | [Docs](docs/README.md) | [Changelog](CHANGELOG.md)
 
 ## Overview
 
