@@ -439,6 +439,10 @@ class WP_Loupe_Exclusion {
 		if ( 'edit.php' !== $hook || ! $this->is_indexed_screen( 'edit' ) ) {
 			return;
 		}
+		// List tables use table-layout: fixed, so the column needs an explicit width; 7.5em fits "Excluded" and longer translations such as "Ausgeschlossen".
+		wp_register_style( 'loupe-search-exclude-list', false, [], null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- inline-only handle.
+		wp_enqueue_style( 'loupe-search-exclude-list' );
+		wp_add_inline_style( 'loupe-search-exclude-list', '.fixed .column-' . self::COLUMN . '{width:7.5em}' );
 		wp_enqueue_script(
 			'loupe-search-exclude-quick-edit',
 			LOUPE_SEARCH_URL . 'lib/js/exclude-quick-edit.js',

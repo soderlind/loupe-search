@@ -7,9 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-17
+
+### Added
+
+- Search insights report moved to **Dashboard → Search insights**, with a Dashboard widget for the last 7 days. The settings tab links to it. ([loupe-search-block#9](https://github.com/soderlind/loupe-search-block/issues/9))
+- Search insights periods: this month, last week, last month, last quarter and a custom date range, next to the last 7, 30 and 90 days. ([loupe-search-block#11](https://github.com/soderlind/loupe-search-block/issues/11))
+- Search insights **Export CSV**: daily totals (day, query, searches, zero results, results sum) for the selected period. Queries that a spreadsheet would read as a formula are exported as text. ([loupe-search-block#11](https://github.com/soderlind/loupe-search-block/issues/11))
+
 ### Changed
 
-- Docs list the Loupe Search Multilingual add-on.
+- Docs list the Loupe Search Multilingual add-on and the Loupe Search Add-ons manager.
+- Top searches no longer list queries that never returned a result; they appear only under searches without results. ([loupe-search-block#10](https://github.com/soderlind/loupe-search-block/issues/10))
+
+### Fixed
+
+- The Search column in post lists has a fixed width instead of taking up spare space. ([loupe-search-block#8](https://github.com/soderlind/loupe-search-block/issues/8))
 
 ## [1.6.0] - 2026-11-15
 

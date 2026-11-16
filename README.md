@@ -128,7 +128,7 @@ These advanced settings can be accessed in the WordPress admin under Settings > 
 
 ### Search insights
 
-Settings > Loupe Search > **Search insights** shows what visitors search for: the top 20 searches and the top 20 searches without results for the last 7, 30 or 90 days, plus the average number of results. It is **off by default**.
+Turn it on under Settings > Loupe Search > **Search insights**. It is **off by default**. The report is under **Dashboard > Search insights**: the top 20 searches that found something, the top 20 searches without results, and the average number of results. Pick the last 7, 30 or 90 days, this month, last week, last month, last quarter or a custom date range, and **Export CSV** to download the daily totals for that period. A Dashboard widget shows the last 7 days at a glance.
 
 - Only daily totals per search query are stored (how often it was searched and how many results it returned). No IP address, user, browser details or time of day.
 - Only front-end visitor searches are counted: the WordPress search page, and REST searches that send `countSearch: true`. Administrators, bots, WP-CLI and admin screens are skipped.

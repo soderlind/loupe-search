@@ -20,10 +20,15 @@ class WP_Loupe_Insights {
 	public const DEFAULT_RETENTION = 90;
 	public const MAX_RETENTION     = 365;
 	public const REPORT_LIMIT      = 20;
-	public const PERIODS           = [ 7, 30, 90 ];
+	public const WIDGET_LIMIT      = 5;
+	public const PERIODS           = [ '7', '30', '90', 'this_month', 'last_week', 'last_month', 'last_quarter', 'custom' ];
+	public const DEFAULT_PERIOD    = '30';
+	public const PAGE_SLUG         = 'loupe-search-insights';
+	public const WIDGET_ID         = 'loupe_search_insights';
 
-	private const SAVE_ACTION  = 'loupe_search_insights_save';
-	private const CLEAR_ACTION = 'loupe_search_insights_clear';
+	private const SAVE_ACTION   = 'loupe_search_insights_save';
+	private const CLEAR_ACTION  = 'loupe_search_insights_clear';
+	private const EXPORT_ACTION = 'loupe_search_insights_export';
 
 	/**
 	 * User-agent fragments of crawlers, monitors and HTTP libraries.
@@ -43,6 +48,9 @@ class WP_Loupe_Insights {
 			add_action( 'admin_init', [ $this, 'admin_init' ] );
 			add_action( 'admin_post_' . self::SAVE_ACTION, [ $this, 'handle_save' ] );
 			add_action( 'admin_post_' . self::CLEAR_ACTION, [ $this, 'handle_clear' ] );
+			add_action( 'admin_post_' . self::EXPORT_ACTION, [ $this, 'handle_export' ] );
+			add_action( 'admin_menu', [ $this, 'add_report_page' ] );
+			add_action( 'wp_dashboard_setup', [ $this, 'add_dashboard_widget' ] );
 		}
 	}
 
@@ -191,30 +199,47 @@ class WP_Loupe_Insights {
 	 * @return array{searches:int,zero_results:int,average_results:float,top:array,zero:array}
 	 */
 	public static function report( int $days ): array {
+		return self::report_range( self::day_offset( max( 1, $days ) - 1 ), self::today() );
+	}
+
+	/**
+	 * Aggregate report for an inclusive date range.
+	 *
+	 * Top searches only lists queries that returned results at least once;
+	 * queries that never did are listed under searches without results.
+	 *
+	 * @param string $from  First day (Y-m-d).
+	 * @param string $to    Last day (Y-m-d).
+	 * @param int    $limit Rows per list.
+	 * @return array{searches:int,zero_results:int,average_results:float,top:array,zero:array}
+	 */
+	public static function report_range( string $from, string $to, int $limit = self::REPORT_LIMIT ): array {
 		global $wpdb;
 		$empty = [ 'searches' => 0, 'zero_results' => 0, 'average_results' => 0.0, 'top' => [], 'zero' => [] ];
 		if ( ! self::is_installed() ) {
 			return $empty;
 		}
 		$table = self::table_name();
-		$since = self::day_offset( max( 1, $days ) - 1 );
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom table; name is not user input.
 		$totals = $wpdb->get_row( $wpdb->prepare(
-			"SELECT SUM(searches) AS searches, SUM(zero_results) AS zero_results, SUM(results_sum) AS results_sum FROM {$table} WHERE day >= %s",
-			$since
+			"SELECT SUM(searches) AS searches, SUM(zero_results) AS zero_results, SUM(results_sum) AS results_sum FROM {$table} WHERE day >= %s AND day <= %s",
+			$from,
+			$to
 		), ARRAY_A );
 		$top    = $wpdb->get_results( $wpdb->prepare(
 			"SELECT search_query, SUM(searches) AS searches, SUM(zero_results) AS zero_results, SUM(results_sum) AS results_sum
-			FROM {$table} WHERE day >= %s GROUP BY search_query ORDER BY searches DESC, search_query ASC LIMIT %d",
-			$since,
-			self::REPORT_LIMIT
+			FROM {$table} WHERE day >= %s AND day <= %s GROUP BY search_query HAVING SUM(zero_results) < SUM(searches) ORDER BY searches DESC, search_query ASC LIMIT %d",
+			$from,
+			$to,
+			$limit
 		), ARRAY_A );
 		$zero   = $wpdb->get_results( $wpdb->prepare(
 			"SELECT search_query, SUM(zero_results) AS zero_results
-			FROM {$table} WHERE day >= %s GROUP BY search_query HAVING SUM(zero_results) > 0 ORDER BY zero_results DESC, search_query ASC LIMIT %d",
-			$since,
-			self::REPORT_LIMIT
+			FROM {$table} WHERE day >= %s AND day <= %s GROUP BY search_query HAVING SUM(zero_results) > 0 ORDER BY zero_results DESC, search_query ASC LIMIT %d",
+			$from,
+			$to,
+			$limit
 		), ARRAY_A );
 		// phpcs:enable
 
@@ -226,6 +251,109 @@ class WP_Loupe_Insights {
 			'top'             => is_array( $top ) ? $top : [],
 			'zero'            => is_array( $zero ) ? $zero : [],
 		];
+	}
+
+	/**
+	 * Daily rows for an inclusive date range, for export.
+	 *
+	 * @param string $from First day (Y-m-d).
+	 * @param string $to   Last day (Y-m-d).
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function export_rows( string $from, string $to ): array {
+		global $wpdb;
+		if ( ! self::is_installed() ) {
+			return [];
+		}
+		$table = self::table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom table; name is not user input.
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT day, search_query, searches, zero_results, results_sum FROM {$table} WHERE day >= %s AND day <= %s ORDER BY day ASC, search_query ASC",
+			$from,
+			$to
+		), ARRAY_A );
+		return is_array( $rows ) ? $rows : [];
+	}
+
+	/**
+	 * Neutralize a CSV cell that a spreadsheet would run as a formula.
+	 *
+	 * Search queries are visitor input, so "=HYPERLINK(...)" must stay text.
+	 *
+	 * @param mixed $value Cell value.
+	 * @return string
+	 */
+	public static function csv_cell( $value ): string {
+		$value = (string) $value;
+		if ( '' !== $value && false !== strpos( "=+-@\t\r", $value[ 0 ] ) ) {
+			return "'" . $value;
+		}
+		return $value;
+	}
+
+	/**
+	 * Turn a period key (and custom dates) into an inclusive date range.
+	 *
+	 * Calendar periods are complete: "last month" is the whole previous month.
+	 * Weeks start on the site's "Week Starts On" day.
+	 *
+	 * @param string $period Period key, see PERIODS.
+	 * @param string $from   Custom first day (Y-m-d).
+	 * @param string $to     Custom last day (Y-m-d).
+	 * @return array{period:string,from:string,to:string}
+	 */
+	public static function resolve_period( string $period, string $from = '', string $to = '' ): array {
+		$today = new \DateTimeImmutable( self::today(), new \DateTimeZone( 'UTC' ) );
+		$fmt   = static fn( \DateTimeImmutable $d ): string => $d->format( 'Y-m-d' );
+
+		switch ( $period ) {
+			case '7':
+			case '30':
+			case '90':
+				return [ 'period' => $period, 'from' => $fmt( $today->modify( '-' . ( (int) $period - 1 ) . ' days' ) ), 'to' => $fmt( $today ) ];
+
+			case 'this_month':
+				return [ 'period' => $period, 'from' => $fmt( $today->modify( 'first day of this month' ) ), 'to' => $fmt( $today ) ];
+
+			case 'last_week':
+				$start_of_week = ( (int) get_option( 'start_of_week', 1 ) ) % 7;
+				$into_week     = ( (int) $today->format( 'w' ) - $start_of_week + 7 ) % 7;
+				$this_week     = $today->modify( '-' . $into_week . ' days' );
+				return [ 'period' => $period, 'from' => $fmt( $this_week->modify( '-7 days' ) ), 'to' => $fmt( $this_week->modify( '-1 day' ) ) ];
+
+			case 'last_month':
+				return [ 'period' => $period, 'from' => $fmt( $today->modify( 'first day of last month' ) ), 'to' => $fmt( $today->modify( 'last day of last month' ) ) ];
+
+			case 'last_quarter':
+				$quarter_start = $today->setDate( (int) $today->format( 'Y' ), intdiv( (int) $today->format( 'n' ) - 1, 3 ) * 3 + 1, 1 );
+				return [ 'period' => $period, 'from' => $fmt( $quarter_start->modify( '-3 months' ) ), 'to' => $fmt( $quarter_start->modify( '-1 day' ) ) ];
+
+			case 'custom':
+				$start = self::parse_day( $from );
+				$end   = self::parse_day( $to );
+				if ( null !== $start && null !== $end ) {
+					if ( $start > $end ) {
+						[ $start, $end ] = [ $end, $start ];
+					}
+					$end   = min( $end, $fmt( $today ) );
+					$start = min( $start, $end );
+					return [ 'period' => $period, 'from' => $start, 'to' => $end ];
+				}
+				break;
+		}
+
+		return self::resolve_period( self::DEFAULT_PERIOD );
+	}
+
+	/**
+	 * Validate a Y-m-d date string.
+	 *
+	 * @param string $day Raw value.
+	 * @return string|null Normalized day, or null when invalid.
+	 */
+	private static function parse_day( string $day ): ?string {
+		$date = \DateTimeImmutable::createFromFormat( '!Y-m-d', $day, new \DateTimeZone( 'UTC' ) );
+		return ( $date && $date->format( 'Y-m-d' ) === $day ) ? $day : null;
 	}
 
 	/**
@@ -408,14 +536,144 @@ class WP_Loupe_Insights {
 	}
 
 	/**
+	 * Stream the selected period as CSV.
+	 *
+	 * @return void
+	 */
+	public function handle_export(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Sorry, you are not allowed to manage options for this site.', 'loupe-search' ), 403 );
+		}
+		check_admin_referer( self::EXPORT_ACTION );
+
+		$range = self::period_from_request();
+		$rows  = self::export_rows( $range[ 'from' ], $range[ 'to' ] );
+
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( sprintf( 'Content-Disposition: attachment; filename="loupe-search-insights-%s-%s.csv"', $range[ 'from' ], $range[ 'to' ] ) );
+
+		$out = fopen( 'php://output', 'w' );
+		fwrite( $out, "\xEF\xBB\xBF" ); // UTF-8 BOM so spreadsheet apps detect the encoding.
+		fputcsv( $out, [ 'day', 'search_query', 'searches', 'zero_results', 'results_sum' ], ',', '"', '' );
+		foreach ( $rows as $row ) {
+			fputcsv(
+				$out,
+				[
+					(string) $row[ 'day' ],
+					self::csv_cell( $row[ 'search_query' ] ),
+					(int) $row[ 'searches' ],
+					(int) $row[ 'zero_results' ],
+					(int) $row[ 'results_sum' ],
+				],
+				',',
+				'"',
+				''
+			);
+		}
+		fclose( $out );
+		exit;
+	}
+
+	/**
+	 * Add Dashboard → Search insights while collection is on.
+	 *
+	 * @return void
+	 */
+	public function add_report_page(): void {
+		if ( ! self::settings()[ 'enabled' ] ) {
+			return;
+		}
+		add_dashboard_page(
+			__( 'Search insights', 'loupe-search' ),
+			__( 'Search insights', 'loupe-search' ),
+			'manage_options',
+			self::PAGE_SLUG,
+			[ self::class, 'render_page' ]
+		);
+	}
+
+	/**
+	 * Add the dashboard widget while collection is on.
+	 *
+	 * @return void
+	 */
+	public function add_dashboard_widget(): void {
+		if ( ! self::settings()[ 'enabled' ] || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		wp_add_dashboard_widget( self::WIDGET_ID, __( 'Search insights', 'loupe-search' ), [ self::class, 'render_widget' ] );
+	}
+
+	/**
+	 * URL of the report page.
+	 *
+	 * @param array<string,string> $args Extra query args.
+	 * @return string
+	 */
+	public static function report_url( array $args = [] ): string {
+		return add_query_arg( array_merge( [ 'page' => self::PAGE_SLUG ], $args ), admin_url( 'index.php' ) );
+	}
+
+	/**
+	 * URL of the settings tab.
+	 *
+	 * @param array<string,string> $args Extra query args.
+	 * @return string
+	 */
+	private static function settings_url( array $args = [] ): string {
+		return add_query_arg( array_merge( [ 'page' => 'loupe-search', 'tab' => 'insights' ], $args ), admin_url( 'options-general.php' ) );
+	}
+
+	/**
 	 * Redirect to the Search insights tab with a notice flag.
 	 *
 	 * @param string $notice Notice key.
 	 * @return void
 	 */
 	private function redirect_back( string $notice ): void {
-		wp_safe_redirect( add_query_arg( [ 'page' => 'loupe-search', 'tab' => 'insights', 'insights_notice' => $notice ], admin_url( 'options-general.php' ) ) );
+		wp_safe_redirect( self::settings_url( [ 'insights_notice' => $notice ] ) );
 		exit;
+	}
+
+	/**
+	 * Period selected in the current request.
+	 *
+	 * @return array{period:string,from:string,to:string}
+	 */
+	private static function period_from_request(): array {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only view state; export checks its own nonce.
+		$period = isset( $_GET[ 'period' ] ) ? sanitize_key( wp_unslash( $_GET[ 'period' ] ) ) : self::DEFAULT_PERIOD;
+		$from   = isset( $_GET[ 'from' ] ) ? sanitize_text_field( wp_unslash( $_GET[ 'from' ] ) ) : '';
+		$to     = isset( $_GET[ 'to' ] ) ? sanitize_text_field( wp_unslash( $_GET[ 'to' ] ) ) : '';
+		// phpcs:enable
+		return self::resolve_period( $period, $from, $to );
+	}
+
+	/**
+	 * Human label for a period key.
+	 *
+	 * @param string $period Period key.
+	 * @return string
+	 */
+	private static function period_label( string $period ): string {
+		switch ( $period ) {
+			case '7':
+			case '30':
+			case '90':
+				/* translators: %d: number of days. */
+				return sprintf( _n( 'Last %d day', 'Last %d days', (int) $period, 'loupe-search' ), (int) $period );
+			case 'this_month':
+				return __( 'This month', 'loupe-search' );
+			case 'last_week':
+				return __( 'Last week', 'loupe-search' );
+			case 'last_month':
+				return __( 'Last month', 'loupe-search' );
+			case 'last_quarter':
+				return __( 'Last quarter', 'loupe-search' );
+			default:
+				return __( 'Custom', 'loupe-search' );
+		}
 	}
 
 	/**
@@ -425,14 +683,8 @@ class WP_Loupe_Insights {
 	 */
 	public static function render_tab(): void {
 		$settings = self::settings();
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only view state.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view state.
 		$notice = isset( $_GET[ 'insights_notice' ] ) ? sanitize_key( $_GET[ 'insights_notice' ] ) : '';
-		$period = isset( $_GET[ 'period' ] ) ? absint( $_GET[ 'period' ] ) : 30;
-		// phpcs:enable
-		if ( ! in_array( $period, self::PERIODS, true ) ) {
-			$period = 30;
-		}
-
 		if ( 'saved' === $notice ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Search insights settings saved.', 'loupe-search' ) . '</p></div>';
 		} elseif ( 'cleared' === $notice ) {
@@ -468,7 +720,13 @@ class WP_Loupe_Insights {
 		</form>
 		<?php
 		if ( $settings[ 'enabled' ] ) {
-			self::render_report( $period );
+			?>
+			<hr />
+			<p>
+				<a class="button" href="<?php echo esc_url( self::report_url() ); ?>"><?php esc_html_e( 'View report', 'loupe-search' ); ?></a>
+				<span class="description"><?php esc_html_e( 'The report is under Dashboard → Search insights, with a summary on the Dashboard.', 'loupe-search' ); ?></span>
+			</p>
+			<?php
 		}
 		if ( self::has_data() ) {
 			self::render_clear_form();
@@ -476,33 +734,52 @@ class WP_Loupe_Insights {
 	}
 
 	/**
-	 * Render the period picker and reports.
+	 * Render the Dashboard → Search insights page.
 	 *
-	 * @param int $period Days.
 	 * @return void
 	 */
-	private static function render_report( int $period ): void {
-		$report = self::report( $period );
+	public static function render_page(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Sorry, you are not allowed to manage options for this site.', 'loupe-search' ), 403 );
+		}
+		$range = self::period_from_request();
 		?>
-		<hr />
-		<h2><?php esc_html_e( 'Report', 'loupe-search' ); ?></h2>
-		<ul class="subsubsub" style="float:none;margin-bottom:1em;">
-			<?php
-			$links = [];
-			foreach ( self::PERIODS as $days ) {
-				$url     = add_query_arg( [ 'page' => 'loupe-search', 'tab' => 'insights', 'period' => $days ], admin_url( 'options-general.php' ) );
-				/* translators: %d: number of days. */
-				$label   = sprintf( _n( 'Last %d day', 'Last %d days', $days, 'loupe-search' ), $days );
-				$links[] = sprintf(
-					'<li><a href="%s"%s>%s</a></li>',
-					esc_url( $url ),
-					$days === $period ? ' class="current" aria-current="page"' : '',
-					esc_html( $label )
-				);
-			}
-			echo implode( ' | ', $links ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
-			?>
-		</ul>
+		<div class="wrap">
+			<h1 class="wp-heading-inline"><?php esc_html_e( 'Search insights', 'loupe-search' ); ?></h1>
+			<a class="page-title-action" href="<?php echo esc_url( self::settings_url() ); ?>"><?php esc_html_e( 'Settings', 'loupe-search' ); ?></a>
+			<hr class="wp-header-end" />
+			<?php self::render_report( $range ); ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the dashboard widget: last 7 days at a glance.
+	 *
+	 * @return void
+	 */
+	public static function render_widget(): void {
+		$range  = self::resolve_period( '7' );
+		$report = self::report_range( $range[ 'from' ], $range[ 'to' ], self::WIDGET_LIMIT );
+		?>
+		<p><strong><?php echo esc_html( self::period_label( '7' ) ); ?></strong></p>
+		<?php self::render_summary( $report ); ?>
+		<h3><?php esc_html_e( 'Top searches', 'loupe-search' ); ?></h3>
+		<?php self::render_table( $report[ 'top' ], [ 'search_query' => __( 'Search', 'loupe-search' ), 'searches' => __( 'Searches', 'loupe-search' ) ] ); ?>
+		<h3><?php esc_html_e( 'Searches without results', 'loupe-search' ); ?></h3>
+		<?php self::render_table( $report[ 'zero' ], [ 'search_query' => __( 'Search', 'loupe-search' ), 'zero_results' => __( 'Searches', 'loupe-search' ) ] ); ?>
+		<p><a href="<?php echo esc_url( self::report_url() ); ?>"><?php esc_html_e( 'View full report', 'loupe-search' ); ?></a></p>
+		<?php
+	}
+
+	/**
+	 * Render the totals sentence.
+	 *
+	 * @param array{searches:int,zero_results:int,average_results:float} $report Report.
+	 * @return void
+	 */
+	private static function render_summary( array $report ): void {
+		?>
 		<p>
 			<?php
 			printf(
@@ -514,6 +791,62 @@ class WP_Loupe_Insights {
 			);
 			?>
 		</p>
+		<?php
+	}
+
+	/**
+	 * Render the period picker, export link and reports.
+	 *
+	 * @param array{period:string,from:string,to:string} $range Selected period.
+	 * @return void
+	 */
+	private static function render_report( array $range ): void {
+		$report      = self::report_range( $range[ 'from' ], $range[ 'to' ] );
+		$date_format = (string) get_option( 'date_format', 'Y-m-d' );
+		$export_url  = wp_nonce_url(
+			add_query_arg(
+				[ 'action' => self::EXPORT_ACTION, 'period' => $range[ 'period' ], 'from' => $range[ 'from' ], 'to' => $range[ 'to' ] ],
+				admin_url( 'admin-post.php' )
+			),
+			self::EXPORT_ACTION
+		);
+		?>
+		<ul class="subsubsub" style="float:none;margin-bottom:1em;">
+			<?php
+			$links = [];
+			foreach ( array_diff( self::PERIODS, [ 'custom' ] ) as $period ) {
+				$links[] = sprintf(
+					'<li><a href="%s"%s>%s</a></li>',
+					esc_url( self::report_url( [ 'period' => $period ] ) ),
+					$period === $range[ 'period' ] ? ' class="current" aria-current="page"' : '',
+					esc_html( self::period_label( $period ) )
+				);
+			}
+			echo implode( ' | ', $links ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+			?>
+		</ul>
+		<form method="get" action="<?php echo esc_url( admin_url( 'index.php' ) ); ?>" style="margin-bottom:1em;">
+			<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
+			<input type="hidden" name="period" value="custom" />
+			<label for="loupe-search-insights-from"><?php esc_html_e( 'From', 'loupe-search' ); ?></label>
+			<input type="date" id="loupe-search-insights-from" name="from" value="<?php echo esc_attr( $range[ 'from' ] ); ?>" max="<?php echo esc_attr( self::today() ); ?>" required />
+			<label for="loupe-search-insights-to"><?php esc_html_e( 'To', 'loupe-search' ); ?></label>
+			<input type="date" id="loupe-search-insights-to" name="to" value="<?php echo esc_attr( $range[ 'to' ] ); ?>" max="<?php echo esc_attr( self::today() ); ?>" required />
+			<button type="submit" class="button"><?php esc_html_e( 'Apply', 'loupe-search' ); ?></button>
+			<a class="button" href="<?php echo esc_url( $export_url ); ?>"><?php esc_html_e( 'Export CSV', 'loupe-search' ); ?></a>
+		</form>
+		<h2>
+			<?php
+			echo esc_html( sprintf(
+				/* translators: 1: period name, 2: first day, 3: last day. */
+				__( '%1$s: %2$s – %3$s', 'loupe-search' ),
+				self::period_label( $range[ 'period' ] ),
+				date_i18n( $date_format, strtotime( $range[ 'from' ] . ' 12:00:00' ) ),
+				date_i18n( $date_format, strtotime( $range[ 'to' ] . ' 12:00:00' ) )
+			) );
+			?>
+		</h2>
+		<?php self::render_summary( $report ); ?>
 		<div style="display:flex;flex-wrap:wrap;gap:2em;">
 			<div style="flex:1 1 320px;">
 				<h3><?php esc_html_e( 'Top searches', 'loupe-search' ); ?></h3>

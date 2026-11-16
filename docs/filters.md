@@ -670,7 +670,8 @@ add_filter( 'loupe_search_highlight_crop_marker', fn() => ' [&hellip;]' );
 
 ## Search insights
 
-Search insights (Settings → Loupe Search → Search insights) is off by default.
+Search insights (Settings → Loupe Search → Search insights) is off by default;
+its report is under Dashboard → Search insights.
 When on, it stores daily totals per normalized query — searches, zero-result
 searches and total results — and nothing about the visitor. Searches are
 counted from the WordPress search page (first page only) and from REST requests

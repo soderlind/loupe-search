@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -43,7 +43,7 @@ Loupe Search improves WordPress core search by maintaining its own index for fas
 * Field configuration options
 * One-click reindexing
 * Exclude individual posts from search (post list column, Quick Edit, bulk actions, editor sidebar)
-* Opt-in Search insights: top searches and searches without results, stored as privacy-friendly daily totals (no IP, user or browser data)
+* Opt-in Search insights: top searches and searches without results, stored as privacy-friendly daily totals (no IP, user or browser data). Report under Dashboard → Search insights with fixed or custom date ranges, a Dashboard widget and CSV export
 * Processing time monitoring
 
 = Developer Features =
@@ -130,7 +130,7 @@ For signatures, defaults, and usage examples, see the [filter documentation](htt
 1. Dashboard tab showing index health per post type, batched reindexing, and the system status for the required PHP extensions.
 2. Fields tab for selecting which post types are indexed and configuring each field as indexable, filterable or sortable, with weight and sort direction.
 3. Search Behavior tab with tokenization, prefix search and typo tolerance settings.
-4. Search insights tab with privacy-friendly daily search totals, top searches and searches without results.
+4. Search insights report with privacy-friendly daily search totals, top searches and searches without results.
 5. Contextual help tabs explaining field configuration options and search behavior settings.
 
 == Frequently Asked Questions ==
@@ -173,6 +173,14 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.7.0 =
+* Added: The Search insights report moved to Dashboard → Search insights, with a Dashboard widget for the last 7 days. The settings tab links to it.
+* Added: Search insights periods: this month, last week, last month, last quarter and a custom date range, next to the last 7, 30 and 90 days.
+* Added: Search insights Export CSV: daily totals (day, query, searches, zero results, results sum) for the selected period. Queries that a spreadsheet would read as a formula are exported as text.
+* Changed: Top searches no longer list queries that never returned a result; they appear only under searches without results.
+* Changed: Docs list the Loupe Search Multilingual add-on and the Loupe Search Add-ons manager.
+* Fixed: The Search column in post lists has a fixed width instead of taking up spare space.
 
 = 1.6.0 =
 * Added: Index partitions. Add-ons can split a post type's index into several indexes, for example one per language, each with its own stemming and stop words. New filters `loupe_search_partitions`, `loupe_search_post_partition`, `loupe_search_partition_language`, `loupe_search_query_partitions` and `loupe_search_partition_label`. Without them nothing changes.

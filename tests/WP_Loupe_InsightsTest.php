@@ -173,8 +173,57 @@ namespace Soderlind\Plugin\LoupeSearch {
 			$this->assertSame( 3.8, $report[ 'average_results' ] );
 			$this->assertSame( 'news', $report[ 'top' ][ 0 ][ 'search_query' ] );
 			$this->assertSame( 'xyzzy', $report[ 'zero' ][ 0 ][ 'search_query' ] );
-			$this->assertStringContainsString( "day >= '2026-03-09'", $this->db->queries[ 0 ], 'Seven days including today.' );
+			$this->assertStringContainsString( "day >= '2026-03-09' AND day <= '2026-03-15'", $this->db->queries[ 0 ], 'Seven days including today.' );
 			$this->assertStringContainsString( 'LIMIT 20', $this->db->queries[ 1 ] );
+		}
+
+		public function test_top_searches_leave_out_queries_that_never_found_anything(): void {
+			WP_Loupe_Insights::report_range( '2026-03-01', '2026-03-15' );
+			$this->assertStringContainsString( 'HAVING SUM(zero_results) < SUM(searches)', $this->db->queries[ 1 ] );
+		}
+
+		/**
+		 * Today is Sunday 2026-03-15.
+		 */
+		#[\PHPUnit\Framework\Attributes\DataProvider( 'period_provider' )]
+		public function test_periods_resolve_to_inclusive_date_ranges( string $period, string $from, string $to, array $expected ): void {
+			$this->assertSame( $expected, array_values( WP_Loupe_Insights::resolve_period( $period, $from, $to ) ) );
+		}
+
+		public static function period_provider(): array {
+			return [
+				'rolling 7 days'         => [ '7', '', '', [ '7', '2026-03-09', '2026-03-15' ] ],
+				'this month'             => [ 'this_month', '', '', [ 'this_month', '2026-03-01', '2026-03-15' ] ],
+				'last week, Monday start' => [ 'last_week', '', '', [ 'last_week', '2026-03-02', '2026-03-08' ] ],
+				'last month'             => [ 'last_month', '', '', [ 'last_month', '2026-02-01', '2026-02-28' ] ],
+				'last quarter'           => [ 'last_quarter', '', '', [ 'last_quarter', '2025-10-01', '2025-12-31' ] ],
+				'custom, swapped'        => [ 'custom', '2026-03-10', '2026-01-05', [ 'custom', '2026-01-05', '2026-03-10' ] ],
+				'custom, capped at today' => [ 'custom', '2026-03-01', '2026-12-31', [ 'custom', '2026-03-01', '2026-03-15' ] ],
+				'custom, invalid date'   => [ 'custom', '2026-02-30', '2026-03-10', [ '30', '2026-02-14', '2026-03-15' ] ],
+				'unknown period'         => [ 'forever', '', '', [ '30', '2026-02-14', '2026-03-15' ] ],
+			];
+		}
+
+		public function test_last_week_follows_the_sites_start_of_week(): void {
+			$GLOBALS[ 'wp_loupe_test_options' ][ 'start_of_week' ] = 0;
+			$range = WP_Loupe_Insights::resolve_period( 'last_week' );
+			unset( $GLOBALS[ 'wp_loupe_test_options' ][ 'start_of_week' ] );
+			$this->assertSame( [ '2026-03-08', '2026-03-14' ], [ $range[ 'from' ], $range[ 'to' ] ] );
+		}
+
+		public function test_csv_cells_that_look_like_formulas_stay_text(): void {
+			$this->assertSame( "'=HYPERLINK(\"x\")", WP_Loupe_Insights::csv_cell( '=HYPERLINK("x")' ) );
+			$this->assertSame( "'+1", WP_Loupe_Insights::csv_cell( '+1' ) );
+			$this->assertSame( "'@sum", WP_Loupe_Insights::csv_cell( '@sum' ) );
+			$this->assertSame( 'opening hours', WP_Loupe_Insights::csv_cell( 'opening hours' ) );
+			$this->assertSame( '', WP_Loupe_Insights::csv_cell( '' ) );
+		}
+
+		public function test_export_rows_are_daily_and_bounded_by_the_range(): void {
+			$this->db->results = [ [ [ 'day' => '2026-03-14', 'search_query' => 'news', 'searches' => '2', 'zero_results' => '0', 'results_sum' => '9' ] ] ];
+			$rows              = WP_Loupe_Insights::export_rows( '2026-03-01', '2026-03-15' );
+			$this->assertSame( 'news', $rows[ 0 ][ 'search_query' ] );
+			$this->assertStringContainsString( "day >= '2026-03-01' AND day <= '2026-03-15' ORDER BY day ASC", $this->db->queries[ 0 ] );
 		}
 
 		public function test_report_is_empty_before_the_table_exists(): void {
@@ -215,6 +264,15 @@ namespace Soderlind\Plugin\LoupeSearch {
 			$this->assertArrayHasKey( 'loupe_search_searched', $GLOBALS[ 'wp_loupe_test_hooks' ] );
 			$this->assertArrayHasKey( WP_Loupe_Insights::CRON_HOOK, $GLOBALS[ 'wp_loupe_test_hooks' ] );
 			$this->assertArrayNotHasKey( 'admin_post_loupe_search_insights_clear', $GLOBALS[ 'wp_loupe_test_hooks' ], 'Admin handlers only in admin.' );
+		}
+
+		public function test_admin_registers_report_page_widget_and_export(): void {
+			$GLOBALS[ 'wp_loupe_test_is_admin' ] = true;
+			( new WP_Loupe_Insights() )->register();
+			$GLOBALS[ 'wp_loupe_test_is_admin' ] = false;
+			$this->assertArrayHasKey( 'admin_post_loupe_search_insights_export', $GLOBALS[ 'wp_loupe_test_hooks' ] );
+			$this->assertArrayHasKey( 'admin_menu', $GLOBALS[ 'wp_loupe_test_hooks' ] );
+			$this->assertArrayHasKey( 'wp_dashboard_setup', $GLOBALS[ 'wp_loupe_test_hooks' ] );
 		}
 	}
 }
