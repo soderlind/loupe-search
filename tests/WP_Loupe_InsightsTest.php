@@ -10,6 +10,27 @@ namespace {
 			$GLOBALS[ 'wp_loupe_test_cleared_hooks' ][] = $hook;
 		}
 	}
+	if ( ! function_exists( 'check_admin_referer' ) ) {
+		function check_admin_referer( $action = -1, $query_arg = '_wpnonce' ) {
+			$GLOBALS[ 'wp_loupe_test_referer_checked' ] = $action;
+			return 1;
+		}
+	}
+	if ( ! function_exists( 'add_query_arg' ) ) {
+		function add_query_arg( $args, $url ) {
+			return $url . ( str_contains( $url, '?' ) ? '&' : '?' ) . http_build_query( $args );
+		}
+	}
+	if ( ! class_exists( 'WP_Loupe_Test_Redirect' ) ) {
+		// Thrown by the wp_safe_redirect() shim so handlers stop before their exit.
+		class WP_Loupe_Test_Redirect extends \RuntimeException {
+		}
+	}
+	if ( ! function_exists( 'wp_safe_redirect' ) ) {
+		function wp_safe_redirect( $location, $status = 302 ) {
+			throw new WP_Loupe_Test_Redirect( $location );
+		}
+	}
 	if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 		define( 'DAY_IN_SECONDS', 86400 );
 	}
@@ -20,6 +41,7 @@ namespace {
 
 namespace Soderlind\Plugin\LoupeSearch {
 
+	use PHPUnit\Framework\Attributes\DataProvider;
 	use PHPUnit\Framework\TestCase;
 
 	/**
@@ -274,6 +296,45 @@ namespace Soderlind\Plugin\LoupeSearch {
 			$this->assertArrayHasKey( 'admin_menu', $GLOBALS[ 'wp_loupe_test_hooks' ] );
 			$this->assertArrayHasKey( 'wp_dashboard_setup', $GLOBALS[ 'wp_loupe_test_hooks' ] );
 			$this->assertArrayHasKey( 'admin_enqueue_scripts', $GLOBALS[ 'wp_loupe_test_hooks' ] );
+		}
+
+		/**
+		 * Run handle_clear() and return the redirect URL.
+		 */
+		private function clear_and_redirect( array $post ): string {
+			$GLOBALS[ 'wp_loupe_test_user_can' ]        = true;
+			$GLOBALS[ 'wp_loupe_test_referer_checked' ] = null;
+			$_POST                                      = $post;
+			try {
+				( new WP_Loupe_Insights() )->handle_clear();
+			} catch ( \WP_Loupe_Test_Redirect $redirect ) {
+				return $redirect->getMessage();
+			} finally {
+				$_POST = [];
+			}
+			$this->fail( 'handle_clear() did not redirect.' );
+		}
+
+		public static function unconfirmed_clear_requests(): array {
+			return [
+				'confirmation missing' => [ [] ],
+				'confirmation empty'   => [ [ 'confirm_clear' => '' ] ],
+			];
+		}
+
+		#[DataProvider( 'unconfirmed_clear_requests' )]
+		public function test_clear_without_confirmation_deletes_nothing( array $post ): void {
+			$location = $this->clear_and_redirect( $post );
+			$this->assertSame( 'loupe_search_insights_clear', $GLOBALS[ 'wp_loupe_test_referer_checked' ] );
+			$this->assertStringContainsString( 'insights_notice=not_confirmed', $location );
+			$this->assertSame( [], $this->db->queries );
+		}
+
+		public function test_confirmed_clear_deletes_all_data(): void {
+			$location = $this->clear_and_redirect( [ 'confirm_clear' => '1' ] );
+			$this->assertSame( 'loupe_search_insights_clear', $GLOBALS[ 'wp_loupe_test_referer_checked' ] );
+			$this->assertStringContainsString( 'insights_notice=cleared', $location );
+			$this->assertSame( [ 'DELETE FROM wp_loupe_search_insights' ], $this->db->queries );
 		}
 	}
 }
