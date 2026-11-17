@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -173,6 +173,10 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.7.2 =
+* Changed: Search insights "Searches without results" lists only queries that found nothing in the whole period. A query that found results some of the time is listed only under Top searches, so the two lists no longer overlap. Applies to the report page and the Dashboard widget.
+* Changed: The "without results" total in the Search insights summary counts only searches for those never-found queries, so it matches the list.
 
 = 1.7.1 =
 * Changed: Search insights follows WordPress admin design conventions: right-aligned number columns, "Export this period (CSV)" next to the period heading, a screen-reader heading for the period links, "Custom" shown as the current period, a stylesheet instead of inline styles, and more spacing in the Dashboard widget.

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-11-17
+
+### Changed
+
+- Search insights: "Searches without results" now lists only queries that found nothing in the whole period. A query that found results some of the time is listed only under Top searches, so the two lists no longer overlap. This applies to the report page and the Dashboard widget.
+- Search insights: the "without results" total in the summary counts only searches for queries that found nothing in the whole period, so it matches the list.
+
 ## [1.7.1] - 2026-11-17
 
 ### Changed

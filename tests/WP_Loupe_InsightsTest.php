@@ -204,6 +204,12 @@ namespace Soderlind\Plugin\LoupeSearch {
 			$this->assertStringContainsString( 'HAVING SUM(zero_results) < SUM(searches)', $this->db->queries[ 1 ] );
 		}
 
+		public function test_searches_without_results_only_list_queries_that_never_found_anything(): void {
+			WP_Loupe_Insights::report_range( '2026-03-01', '2026-03-15' );
+			$this->assertStringContainsString( 'HAVING SUM(zero_results) = SUM(searches)', $this->db->queries[ 2 ] );
+			$this->assertStringContainsString( 'CASE WHEN q.zero_results = q.searches THEN q.searches ELSE 0 END', $this->db->queries[ 0 ], 'The total counts the same queries as the list.' );
+		}
+
 		/**
 		 * Today is Sunday 2026-03-15.
 		 */
