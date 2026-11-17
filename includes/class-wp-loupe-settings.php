@@ -552,7 +552,7 @@ class WPLoupe_Settings_Page {
 						do_settings_sections( 'loupe-search' );
 					}
 
-					submit_button( __( 'Save Settings', 'loupe-search' ) );
+					submit_button( __( 'Save Changes', 'loupe-search' ) );
 					?>
 				</form>
 				<?php

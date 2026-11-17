@@ -273,6 +273,7 @@ namespace Soderlind\Plugin\LoupeSearch {
 			$this->assertArrayHasKey( 'admin_post_loupe_search_insights_export', $GLOBALS[ 'wp_loupe_test_hooks' ] );
 			$this->assertArrayHasKey( 'admin_menu', $GLOBALS[ 'wp_loupe_test_hooks' ] );
 			$this->assertArrayHasKey( 'wp_dashboard_setup', $GLOBALS[ 'wp_loupe_test_hooks' ] );
+			$this->assertArrayHasKey( 'admin_enqueue_scripts', $GLOBALS[ 'wp_loupe_test_hooks' ] );
 		}
 	}
 }

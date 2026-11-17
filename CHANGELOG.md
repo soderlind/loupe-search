@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-11-17
+
+### Changed
+
+- Search insights now follows WordPress admin design conventions:
+  - Number columns are right-aligned.
+  - The export button is next to the period heading, labelled "Export this period (CSV)".
+  - The period links have a screen-reader heading, and "Custom" is shown as the current period.
+  - Inline styles were moved to a stylesheet.
+  - The Dashboard widget has more spacing.
+- The settings save button is now labelled "Save Changes".
+
+### Fixed
+
+- "Delete all data permanently" now requires a confirmation checkbox, which is also checked on the server. The button is styled as a destructive action.
+
 ## [1.7.0] - 2026-11-17
 
 ### Added

@@ -51,7 +51,21 @@ class WP_Loupe_Insights {
 			add_action( 'admin_post_' . self::EXPORT_ACTION, [ $this, 'handle_export' ] );
 			add_action( 'admin_menu', [ $this, 'add_report_page' ] );
 			add_action( 'wp_dashboard_setup', [ $this, 'add_dashboard_widget' ] );
+			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 		}
+	}
+
+	/**
+	 * Load the report stylesheet on the report page and the Dashboard (widget).
+	 *
+	 * @param string $hook Current admin page hook.
+	 * @return void
+	 */
+	public function enqueue_assets( $hook ): void {
+		if ( ! in_array( $hook, [ 'index.php', 'dashboard_page_' . self::PAGE_SLUG ], true ) || ! self::settings()[ 'enabled' ] ) {
+			return;
+		}
+		wp_enqueue_style( 'loupe-search-insights', LOUPE_SEARCH_URL . 'lib/css/insights.css', [], WP_Loupe_Utils::get_version_number() );
 	}
 
 	/**
@@ -531,6 +545,9 @@ class WP_Loupe_Insights {
 			wp_die( esc_html__( 'Sorry, you are not allowed to manage options for this site.', 'loupe-search' ), 403 );
 		}
 		check_admin_referer( self::CLEAR_ACTION );
+		if ( empty( $_POST[ 'confirm_clear' ] ) ) {
+			$this->redirect_back( 'not_confirmed' );
+		}
 		self::clear();
 		$this->redirect_back( 'cleared' );
 	}
@@ -689,6 +706,8 @@ class WP_Loupe_Insights {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Search insights settings saved.', 'loupe-search' ) . '</p></div>';
 		} elseif ( 'cleared' === $notice ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'All search insights data was deleted.', 'loupe-search' ) . '</p></div>';
+		} elseif ( 'not_confirmed' === $notice ) {
+			echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__( 'Nothing was deleted. To delete all search insights data, tick the confirmation box first.', 'loupe-search' ) . '</p></div>';
 		}
 		?>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
@@ -716,7 +735,7 @@ class WP_Loupe_Insights {
 					</tr>
 				<?php endif; ?>
 			</table>
-			<?php submit_button( __( 'Save Settings', 'loupe-search' ) ); ?>
+			<?php submit_button( __( 'Save Changes', 'loupe-search' ) ); ?>
 		</form>
 		<?php
 		if ( $settings[ 'enabled' ] ) {
@@ -744,7 +763,7 @@ class WP_Loupe_Insights {
 		}
 		$range = self::period_from_request();
 		?>
-		<div class="wrap">
+		<div class="wrap loupe-search-insights">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Search insights', 'loupe-search' ); ?></h1>
 			<a class="page-title-action" href="<?php echo esc_url( self::settings_url() ); ?>"><?php esc_html_e( 'Settings', 'loupe-search' ); ?></a>
 			<hr class="wp-header-end" />
@@ -762,13 +781,15 @@ class WP_Loupe_Insights {
 		$range  = self::resolve_period( '7' );
 		$report = self::report_range( $range[ 'from' ], $range[ 'to' ], self::WIDGET_LIMIT );
 		?>
-		<p><strong><?php echo esc_html( self::period_label( '7' ) ); ?></strong></p>
-		<?php self::render_summary( $report ); ?>
-		<h3><?php esc_html_e( 'Top searches', 'loupe-search' ); ?></h3>
-		<?php self::render_table( $report[ 'top' ], [ 'search_query' => __( 'Search', 'loupe-search' ), 'searches' => __( 'Searches', 'loupe-search' ) ] ); ?>
-		<h3><?php esc_html_e( 'Searches without results', 'loupe-search' ); ?></h3>
-		<?php self::render_table( $report[ 'zero' ], [ 'search_query' => __( 'Search', 'loupe-search' ), 'zero_results' => __( 'Searches', 'loupe-search' ) ] ); ?>
-		<p><a href="<?php echo esc_url( self::report_url() ); ?>"><?php esc_html_e( 'View full report', 'loupe-search' ); ?></a></p>
+		<div class="loupe-search-insights loupe-search-insights__widget">
+			<p class="loupe-search-insights__period"><strong><?php echo esc_html( self::period_label( '7' ) ); ?></strong></p>
+			<?php self::render_summary( $report ); ?>
+			<h3><?php esc_html_e( 'Top searches', 'loupe-search' ); ?></h3>
+			<?php self::render_table( $report[ 'top' ], [ 'search_query' => __( 'Search', 'loupe-search' ), 'searches' => __( 'Searches', 'loupe-search' ) ] ); ?>
+			<h3><?php esc_html_e( 'Searches without results', 'loupe-search' ); ?></h3>
+			<?php self::render_table( $report[ 'zero' ], [ 'search_query' => __( 'Search', 'loupe-search' ), 'zero_results' => __( 'Searches', 'loupe-search' ) ] ); ?>
+			<p><a href="<?php echo esc_url( self::report_url() ); ?>"><?php esc_html_e( 'View full report', 'loupe-search' ); ?></a></p>
+		</div>
 		<?php
 	}
 
@@ -811,7 +832,8 @@ class WP_Loupe_Insights {
 			self::EXPORT_ACTION
 		);
 		?>
-		<ul class="subsubsub" style="float:none;margin-bottom:1em;">
+		<h2 class="screen-reader-text"><?php esc_html_e( 'Choose a period', 'loupe-search' ); ?></h2>
+		<ul class="subsubsub">
 			<?php
 			$links = [];
 			foreach ( array_diff( self::PERIODS, [ 'custom' ] ) as $period ) {
@@ -822,10 +844,13 @@ class WP_Loupe_Insights {
 					esc_html( self::period_label( $period ) )
 				);
 			}
+			if ( 'custom' === $range[ 'period' ] ) {
+				$links[] = '<li><span class="current" aria-current="page">' . esc_html( self::period_label( 'custom' ) ) . '</span></li>';
+			}
 			echo implode( ' | ', $links ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
 			?>
 		</ul>
-		<form method="get" action="<?php echo esc_url( admin_url( 'index.php' ) ); ?>" style="margin-bottom:1em;">
+		<form method="get" action="<?php echo esc_url( admin_url( 'index.php' ) ); ?>" class="loupe-search-insights__range">
 			<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
 			<input type="hidden" name="period" value="custom" />
 			<label for="loupe-search-insights-from"><?php esc_html_e( 'From', 'loupe-search' ); ?></label>
@@ -833,22 +858,24 @@ class WP_Loupe_Insights {
 			<label for="loupe-search-insights-to"><?php esc_html_e( 'To', 'loupe-search' ); ?></label>
 			<input type="date" id="loupe-search-insights-to" name="to" value="<?php echo esc_attr( $range[ 'to' ] ); ?>" max="<?php echo esc_attr( self::today() ); ?>" required />
 			<button type="submit" class="button"><?php esc_html_e( 'Apply', 'loupe-search' ); ?></button>
-			<a class="button" href="<?php echo esc_url( $export_url ); ?>"><?php esc_html_e( 'Export CSV', 'loupe-search' ); ?></a>
 		</form>
-		<h2>
-			<?php
-			echo esc_html( sprintf(
-				/* translators: 1: period name, 2: first day, 3: last day. */
-				__( '%1$s: %2$s – %3$s', 'loupe-search' ),
-				self::period_label( $range[ 'period' ] ),
-				date_i18n( $date_format, strtotime( $range[ 'from' ] . ' 12:00:00' ) ),
-				date_i18n( $date_format, strtotime( $range[ 'to' ] . ' 12:00:00' ) )
-			) );
-			?>
-		</h2>
+		<div class="loupe-search-insights__heading">
+			<h2>
+				<?php
+				echo esc_html( sprintf(
+					/* translators: 1: period name, 2: first day, 3: last day. */
+					__( '%1$s: %2$s – %3$s', 'loupe-search' ),
+					self::period_label( $range[ 'period' ] ),
+					date_i18n( $date_format, strtotime( $range[ 'from' ] . ' 12:00:00' ) ),
+					date_i18n( $date_format, strtotime( $range[ 'to' ] . ' 12:00:00' ) )
+				) );
+				?>
+			</h2>
+			<a class="button" href="<?php echo esc_url( $export_url ); ?>"><?php esc_html_e( 'Export this period (CSV)', 'loupe-search' ); ?></a>
+		</div>
 		<?php self::render_summary( $report ); ?>
-		<div style="display:flex;flex-wrap:wrap;gap:2em;">
-			<div style="flex:1 1 320px;">
+		<div class="loupe-search-insights__columns">
+			<div class="loupe-search-insights__column">
 				<h3><?php esc_html_e( 'Top searches', 'loupe-search' ); ?></h3>
 				<?php
 				self::render_table(
@@ -861,7 +888,7 @@ class WP_Loupe_Insights {
 				);
 				?>
 			</div>
-			<div style="flex:1 1 320px;">
+			<div class="loupe-search-insights__column">
 				<h3><?php esc_html_e( 'Searches without results', 'loupe-search' ); ?></h3>
 				<?php
 				self::render_table(
@@ -889,8 +916,8 @@ class WP_Loupe_Insights {
 		<table class="widefat striped">
 			<thead>
 				<tr>
-					<?php foreach ( $columns as $heading ) : ?>
-						<th scope="col"><?php echo esc_html( $heading ); ?></th>
+					<?php foreach ( $columns as $key => $heading ) : ?>
+						<th scope="col"<?php echo 'search_query' === $key ? '' : ' class="num"'; ?>><?php echo esc_html( $heading ); ?></th>
 					<?php endforeach; ?>
 				</tr>
 			</thead>
@@ -901,7 +928,7 @@ class WP_Loupe_Insights {
 				<?php foreach ( $rows as $row ) : ?>
 					<tr>
 						<?php foreach ( array_keys( $columns ) as $key ) : ?>
-							<td>
+							<td<?php echo 'search_query' === $key ? '' : ' class="num"'; ?>>
 								<?php
 								if ( 'search_query' === $key ) {
 									echo esc_html( (string) $row[ 'search_query' ] );
@@ -922,7 +949,7 @@ class WP_Loupe_Insights {
 	}
 
 	/**
-	 * Render the Clear all data form.
+	 * Render the Delete all data form.
 	 *
 	 * @return void
 	 */
@@ -932,7 +959,13 @@ class WP_Loupe_Insights {
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return window.confirm('<?php echo esc_js( __( 'Delete all search insights data? This cannot be undone.', 'loupe-search' ) ); ?>');">
 			<input type="hidden" name="action" value="<?php echo esc_attr( self::CLEAR_ACTION ); ?>" />
 			<?php wp_nonce_field( self::CLEAR_ACTION ); ?>
-			<?php submit_button( __( 'Clear all data', 'loupe-search' ), 'delete', 'submit', false ); ?>
+			<p>
+				<label>
+					<input type="checkbox" name="confirm_clear" value="1" required />
+					<?php esc_html_e( 'I understand that this permanently deletes all search insights data and cannot be undone.', 'loupe-search' ); ?>
+				</label>
+			</p>
+			<?php submit_button( __( 'Delete all data permanently', 'loupe-search' ), 'secondary loupe-search-insights-delete', 'submit', false ); ?>
 		</form>
 		<?php
 	}

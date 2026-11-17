@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -173,6 +173,11 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.7.1 =
+* Changed: Search insights follows WordPress admin design conventions: right-aligned number columns, "Export this period (CSV)" next to the period heading, a screen-reader heading for the period links, "Custom" shown as the current period, a stylesheet instead of inline styles, and more spacing in the Dashboard widget.
+* Changed: The settings save button is now labelled "Save Changes".
+* Fixed: "Delete all data permanently" now requires a confirmation checkbox, which is also checked on the server. The button is styled as a destructive action.
 
 = 1.7.0 =
 * Added: The Search insights report moved to Dashboard → Search insights, with a Dashboard widget for the last 7 days. The settings tab links to it.
