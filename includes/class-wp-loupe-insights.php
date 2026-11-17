@@ -219,8 +219,11 @@ class WP_Loupe_Insights {
 	/**
 	 * Aggregate report for an inclusive date range.
 	 *
-	 * Top searches only lists queries that returned results at least once;
-	 * queries that never did are listed under searches without results.
+	 * The two lists do not overlap: top searches lists queries that returned
+	 * results at least once in the range, searches without results lists
+	 * queries that never returned anything in the range.
+	 * The zero_results total counts the searches for those never-found queries,
+	 * so it matches the searches without results list.
 	 *
 	 * @param string $from  First day (Y-m-d).
 	 * @param string $to    Last day (Y-m-d).
@@ -237,7 +240,8 @@ class WP_Loupe_Insights {
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom table; name is not user input.
 		$totals = $wpdb->get_row( $wpdb->prepare(
-			"SELECT SUM(searches) AS searches, SUM(zero_results) AS zero_results, SUM(results_sum) AS results_sum FROM {$table} WHERE day >= %s AND day <= %s",
+			"SELECT SUM(q.searches) AS searches, SUM(CASE WHEN q.zero_results = q.searches THEN q.searches ELSE 0 END) AS zero_results, SUM(q.results_sum) AS results_sum
+			FROM ( SELECT SUM(searches) AS searches, SUM(zero_results) AS zero_results, SUM(results_sum) AS results_sum FROM {$table} WHERE day >= %s AND day <= %s GROUP BY search_query ) AS q",
 			$from,
 			$to
 		), ARRAY_A );
@@ -250,7 +254,7 @@ class WP_Loupe_Insights {
 		), ARRAY_A );
 		$zero   = $wpdb->get_results( $wpdb->prepare(
 			"SELECT search_query, SUM(zero_results) AS zero_results
-			FROM {$table} WHERE day >= %s AND day <= %s GROUP BY search_query HAVING SUM(zero_results) > 0 ORDER BY zero_results DESC, search_query ASC LIMIT %d",
+			FROM {$table} WHERE day >= %s AND day <= %s GROUP BY search_query HAVING SUM(zero_results) = SUM(searches) ORDER BY zero_results DESC, search_query ASC LIMIT %d",
 			$from,
 			$to,
 			$limit
