@@ -128,12 +128,12 @@ These advanced settings can be accessed in the WordPress admin under Settings > 
 
 ### Search insights
 
-Turn it on under Settings > Loupe Search > **Search insights**. It is **off by default**. The report is under **Dashboard > Search insights**: the top 20 searches that found something, the top 20 searches without results, and the average number of results. Pick the last 7, 30 or 90 days, this month, last week, last month, last quarter or a custom date range, and **Export CSV** to download the daily totals for that period. A Dashboard widget shows the last 7 days at a glance.
+Turn it on under Settings > Loupe Search > **Search insights**. It is **off by default**. The report is under **Dashboard > Search insights**: the top 20 searches that found something, the top 20 searches without results, and the average number of results. Pick the last 7, 30 or 90 days, this month, last week, last month, last quarter or a custom date range, and **Export this period (CSV)** to download the daily totals for that period. A Dashboard widget shows the last 7 days at a glance.
 
 - Only daily totals per search query are stored (how often it was searched and how many results it returned). No IP address, user, browser details or time of day.
 - Only front-end visitor searches are counted: the WordPress search page, and REST searches that send `countSearch: true`. Administrators, bots, WP-CLI and admin screens are skipped.
 - Queries that look like an email address or phone number, or are longer than 100 characters, are discarded.
-- Data is kept for 90 days by default (configurable) and purged daily. Turning the feature off keeps existing data; use **Clear all data** to delete it. Suggested privacy policy text is added under Settings > Privacy.
+- Data is kept for 90 days by default (configurable) and purged daily. Turning the feature off keeps existing data; use **Delete all data permanently** (after ticking the confirmation box) to delete it. Suggested privacy policy text is added under Settings > Privacy.
 
 ## Reindexing
 

@@ -284,3 +284,15 @@ tr:has(td.non-sortable-field) {
 .wp-loupe-sticky-actions {
 	margin-top: 12px;
 }
+/* Search insights: destructive "Delete all data permanently" button. */
+.wp-core-ui .button.loupe-search-insights-delete {
+	border-color: #d63638;
+	color: #d63638;
+}
+
+.wp-core-ui .button.loupe-search-insights-delete:hover,
+.wp-core-ui .button.loupe-search-insights-delete:focus {
+	border-color: #b32d2e;
+	background: #d63638;
+	color: #fff;
+}

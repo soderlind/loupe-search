@@ -1,0 +1,59 @@
+/* Search insights: report page (Dashboard → Search insights) and dashboard widget. */
+
+.loupe-search-insights .subsubsub {
+	float: none;
+	margin: 8px 0 12px;
+}
+
+.loupe-search-insights .subsubsub span.current {
+	color: #000;
+	font-weight: 600;
+}
+
+.loupe-search-insights__range {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.loupe-search-insights__range label {
+	margin-right: 4px;
+}
+
+.loupe-search-insights__heading {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 16px;
+}
+
+.loupe-search-insights__heading h2 {
+	margin: 0;
+}
+
+.loupe-search-insights__columns {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 24px;
+}
+
+.loupe-search-insights__column {
+	flex: 1 1 320px;
+	min-width: 0;
+}
+
+.loupe-search-insights table .num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.loupe-search-insights__widget h3 {
+	margin: 16px 0 8px;
+}
+
+.loupe-search-insights__widget .loupe-search-insights__period {
+	margin-top: 0;
+}
