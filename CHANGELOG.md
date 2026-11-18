@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.4] - 2026-11-18
+
+### Added
+
+- Search insights: contextual help on Dashboard → Search insights (Overview, Periods, Reading the lists, Export, Privacy) with a link to the Search insights settings.
+- WordPress.org screenshot 7: the Search insights contextual help.
+
 ## [1.7.3] - 2026-11-18
 
 ### Fixed

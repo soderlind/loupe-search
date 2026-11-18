@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.7.3
+Stable tag: 1.7.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -133,6 +133,7 @@ For signatures, defaults, and usage examples, see the [filter documentation](htt
 4. Search insights settings tab for turning on privacy-friendly search counting, choosing how long data is kept, opening the report and deleting all data.
 5. Contextual help tabs explaining field configuration options and search behavior settings.
 6. Search insights report under Dashboard → Search insights, with preset and custom periods, CSV export, top searches and searches without results.
+7. Contextual help on the Search insights report explaining the summary, periods, the two lists, the CSV export and what is stored.
 
 == Frequently Asked Questions ==
 
@@ -174,6 +175,10 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.7.4 =
+* Added: Contextual help on Dashboard → Search insights (Overview, Periods, Reading the lists, Export, Privacy) with a link to the Search insights settings.
+* Added: WordPress.org screenshot 7 showing the Search insights contextual help.
 
 = 1.7.3 =
 * Fixed: The From and To dates on the Search insights report use the date format from Settings → General instead of the browser's locale, with a date picker that follows the site's language and start of week. Typed dates are checked before the report is applied, so an invalid or future date shows a message instead of silently using the previous date.
