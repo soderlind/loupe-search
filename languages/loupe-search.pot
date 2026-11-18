@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-18T09:41:42+00:00\n"
+"POT-Creation-Date: 2026-11-18T09:49:46+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: loupe-search\n"
@@ -169,10 +169,10 @@ msgid "Whether the post is excluded from Loupe Search."
 msgstr ""
 
 #: includes/class-wp-loupe-exclusion.php:252
-#: includes/class-wp-loupe-insights.php:797
-#: includes/class-wp-loupe-insights.php:799
-#: includes/class-wp-loupe-insights.php:893
-#: includes/class-wp-loupe-insights.php:906
+#: includes/class-wp-loupe-insights.php:798
+#: includes/class-wp-loupe-insights.php:800
+#: includes/class-wp-loupe-insights.php:894
+#: includes/class-wp-loupe-insights.php:907
 msgid "Search"
 msgstr ""
 
@@ -243,173 +243,173 @@ msgstr ""
 msgid "Loupe Search debug: index rebuild triggered for %s."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:519
+#: includes/class-wp-loupe-insights.php:520
 msgid "When Search insights is turned on, this site counts the words visitors search for so we can improve our content. We store only the search words (lowercased) and, per day, how many times they were searched and how many results they returned. We do not store your IP address, user account, browser details or the time of your search. Searches that look like an email address or phone number are not stored. The daily totals are deleted automatically after the retention period set by the site administrator."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:529
-#: includes/class-wp-loupe-insights.php:554
-#: includes/class-wp-loupe-insights.php:571
-#: includes/class-wp-loupe-insights.php:771
+#: includes/class-wp-loupe-insights.php:530
+#: includes/class-wp-loupe-insights.php:555
+#: includes/class-wp-loupe-insights.php:572
+#: includes/class-wp-loupe-insights.php:772
 msgid "Sorry, you are not allowed to manage options for this site."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:614
 #: includes/class-wp-loupe-insights.php:615
-#: includes/class-wp-loupe-insights.php:631
-#: includes/class-wp-loupe-insights.php:727
-#: includes/class-wp-loupe-insights.php:776
+#: includes/class-wp-loupe-insights.php:616
+#: includes/class-wp-loupe-insights.php:632
+#: includes/class-wp-loupe-insights.php:728
+#: includes/class-wp-loupe-insights.php:777
 #: includes/class-wp-loupe-settings.php:512
 msgid "Search insights"
 msgstr ""
 
 #. translators: %d: number of days.
-#: includes/class-wp-loupe-insights.php:691
+#: includes/class-wp-loupe-insights.php:692
 #, php-format
 msgid "Last %d day"
 msgid_plural "Last %d days"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-wp-loupe-insights.php:693
+#: includes/class-wp-loupe-insights.php:694
 msgid "This month"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:695
+#: includes/class-wp-loupe-insights.php:696
 msgid "Last week"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:697
+#: includes/class-wp-loupe-insights.php:698
 msgid "Last month"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:699
+#: includes/class-wp-loupe-insights.php:700
 msgid "Last quarter"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:701
+#: includes/class-wp-loupe-insights.php:702
 msgid "Custom"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:715
+#: includes/class-wp-loupe-insights.php:716
 msgid "Search insights settings saved."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:717
+#: includes/class-wp-loupe-insights.php:718
 msgid "All search insights data was deleted."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:719
+#: includes/class-wp-loupe-insights.php:720
 msgid "Nothing was deleted. To delete all search insights data, tick the confirmation box first."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:731
+#: includes/class-wp-loupe-insights.php:732
 msgid "Count what visitors search for"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:733
+#: includes/class-wp-loupe-insights.php:734
 msgid "Stores only daily totals per search query: how often it was searched and how many results it returned. No IP address, user, browser or time of day is stored. Searches by administrators, bots, WP-CLI and the admin are not counted. Queries that look like an email address or phone number are discarded."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:738
+#: includes/class-wp-loupe-insights.php:739
 msgid "Keep data for"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:741
+#: includes/class-wp-loupe-insights.php:742
 msgid "days"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:742
+#: includes/class-wp-loupe-insights.php:743
 msgid "Older daily totals are deleted automatically once a day."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:747
+#: includes/class-wp-loupe-insights.php:748
 #: includes/class-wp-loupe-settings.php:555
 msgid "Save Changes"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:754
+#: includes/class-wp-loupe-insights.php:755
 msgid "View report"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:755
+#: includes/class-wp-loupe-insights.php:756
 msgid "The report is under Dashboard → Search insights, with a summary on the Dashboard."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:777
+#: includes/class-wp-loupe-insights.php:778
 msgid "Settings"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:796
-#: includes/class-wp-loupe-insights.php:888
+#: includes/class-wp-loupe-insights.php:797
+#: includes/class-wp-loupe-insights.php:889
 msgid "Top searches"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:797
-#: includes/class-wp-loupe-insights.php:799
-#: includes/class-wp-loupe-insights.php:894
-#: includes/class-wp-loupe-insights.php:907
+#: includes/class-wp-loupe-insights.php:798
+#: includes/class-wp-loupe-insights.php:800
+#: includes/class-wp-loupe-insights.php:895
+#: includes/class-wp-loupe-insights.php:908
 msgid "Searches"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:798
-#: includes/class-wp-loupe-insights.php:901
+#: includes/class-wp-loupe-insights.php:799
+#: includes/class-wp-loupe-insights.php:902
 msgid "Searches without results"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:800
+#: includes/class-wp-loupe-insights.php:801
 msgid "View full report"
 msgstr ""
 
 #. translators: 1: number of searches, 2: number of searches without results, 3: average number of results.
-#: includes/class-wp-loupe-insights.php:817
+#: includes/class-wp-loupe-insights.php:818
 #, php-format
 msgid "%1$s searches, %2$s without results, %3$s results on average."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:844
+#: includes/class-wp-loupe-insights.php:845
 msgid "Choose a period"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:865
+#: includes/class-wp-loupe-insights.php:866
 msgid "From"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:867
+#: includes/class-wp-loupe-insights.php:868
 msgid "To"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:869
+#: includes/class-wp-loupe-insights.php:870
 msgid "Apply"
 msgstr ""
 
 #. translators: 1: period name, 2: first day, 3: last day.
-#: includes/class-wp-loupe-insights.php:876
+#: includes/class-wp-loupe-insights.php:877
 #, php-format
 msgid "%1$s: %2$s – %3$s"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:883
+#: includes/class-wp-loupe-insights.php:884
 msgid "Export this period (CSV)"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:895
+#: includes/class-wp-loupe-insights.php:896
 msgid "Avg. results"
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:935
+#: includes/class-wp-loupe-insights.php:936
 msgid "No searches yet."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:968
+#: includes/class-wp-loupe-insights.php:969
 msgid "Delete all search insights data? This cannot be undone."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:974
+#: includes/class-wp-loupe-insights.php:975
 msgid "I understand that this permanently deletes all search insights data and cannot be undone."
 msgstr ""
 
-#: includes/class-wp-loupe-insights.php:977
+#: includes/class-wp-loupe-insights.php:978
 msgid "Delete all data permanently"
 msgstr ""
 
@@ -1202,4 +1202,8 @@ msgstr ""
 
 #: lib/js/admin.js:1233
 msgid "Copy failed"
+msgstr ""
+
+#: lib/js/insights.js:73
+msgid "Enter a valid date that is not in the future."
 msgstr ""

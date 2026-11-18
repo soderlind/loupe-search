@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Search insights: the From and To dates on the report page now use the date format from Settings → General instead of the browser's locale, with a date picker that follows the site's language and start of week. Without JavaScript the browser's own date fields are used as before.
+- Search insights: the From and To dates on the report page now use the date format from Settings → General instead of the browser's locale, with a date picker that follows the site's language and start of week. Without JavaScript the browser's own date fields are used as before. Typed dates are checked before the report is applied, so an invalid or future date shows a message instead of silently using the previous date.
 
 ### Changed
 

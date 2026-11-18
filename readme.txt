@@ -176,7 +176,7 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 == Changelog ==
 
 = 1.7.3 =
-* Fixed: The From and To dates on the Search insights report use the date format from Settings → General instead of the browser's locale, with a date picker that follows the site's language and start of week.
+* Fixed: The From and To dates on the Search insights report use the date format from Settings → General instead of the browser's locale, with a date picker that follows the site's language and start of week. Typed dates are checked before the report is applied, so an invalid or future date shows a message instead of silently using the previous date.
 * Changed: Updated WordPress.org screenshot 4 (Search insights settings tab) and added screenshot 6 (Search insights report).
 
 = 1.7.2 =

@@ -69,7 +69,8 @@ class WP_Loupe_Insights {
 		wp_enqueue_style( 'loupe-search-insights', LOUPE_SEARCH_URL . 'lib/css/insights.css', [], WP_Loupe_Utils::get_version_number() );
 		if ( 'dashboard_page_' . self::PAGE_SLUG === $hook ) {
 			// Core localizes jquery-ui-datepicker with the date format from Settings → General.
-			wp_enqueue_script( 'loupe-search-insights', LOUPE_SEARCH_URL . 'lib/js/insights.js', [ 'jquery-ui-datepicker' ], WP_Loupe_Utils::get_version_number(), true );
+			wp_enqueue_script( 'loupe-search-insights', LOUPE_SEARCH_URL . 'lib/js/insights.js', [ 'jquery-ui-datepicker', 'wp-i18n' ], WP_Loupe_Utils::get_version_number(), true );
+			wp_set_script_translations( 'loupe-search-insights', 'loupe-search', LOUPE_SEARCH_PATH . 'languages' );
 		}
 	}
 
