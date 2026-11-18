@@ -611,12 +611,96 @@ class WP_Loupe_Insights {
 		if ( ! self::settings()[ 'enabled' ] ) {
 			return;
 		}
-		add_dashboard_page(
+		$hook = add_dashboard_page(
 			__( 'Search insights', 'loupe-search' ),
 			__( 'Search insights', 'loupe-search' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			[ self::class, 'render_page' ]
+		);
+		if ( $hook ) {
+			add_action( 'load-' . $hook, [ self::class, 'add_help_tabs' ] );
+		}
+	}
+
+	/**
+	 * Contextual help for Dashboard → Search insights.
+	 *
+	 * @return void
+	 */
+	public static function add_help_tabs(): void {
+		$screen = get_current_screen();
+		if ( ! $screen ) {
+			return;
+		}
+
+		$screen->add_help_tab( [
+			'id'      => 'loupe_search_insights_overview',
+			'title'   => __( 'Overview', 'loupe-search' ),
+			'content' => sprintf(
+				'<p>%s</p><p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul>',
+				esc_html__( 'Search insights shows what visitors search for on this site and which searches find nothing, so you can see what content is missing.', 'loupe-search' ),
+				esc_html__( 'The summary line covers the selected period:', 'loupe-search' ),
+				esc_html__( 'Searches: the total number of searches.', 'loupe-search' ),
+				esc_html__( 'Without results: searches for queries that found nothing at all in the period.', 'loupe-search' ),
+				esc_html__( 'Results on average: the average number of results a search returned.', 'loupe-search' )
+			),
+		] );
+
+		$screen->add_help_tab( [
+			'id'      => 'loupe_search_insights_periods',
+			'title'   => __( 'Periods', 'loupe-search' ),
+			'content' => sprintf(
+				'<ul><li>%s</li><li>%s</li><li>%s</li><li>%s</li></ul><p>%s</p>',
+				esc_html__( 'Last 7, 30 and 90 days include today.', 'loupe-search' ),
+				esc_html__( 'This month runs from the first of the month to today.', 'loupe-search' ),
+				esc_html__( 'Last week, last month and last quarter are the previous full calendar periods. Weeks start on the day set in Settings → General.', 'loupe-search' ),
+				esc_html__( 'Use From and To to choose your own range, then select Apply. Dates cannot be in the future.', 'loupe-search' ),
+				esc_html__( 'Days follow the site time zone. Data older than the retention period set under Settings is deleted and not shown.', 'loupe-search' )
+			),
+		] );
+
+		$screen->add_help_tab( [
+			'id'      => 'loupe_search_insights_lists',
+			'title'   => __( 'Reading the lists', 'loupe-search' ),
+			'content' => sprintf(
+				'<h3>%s</h3><p>%s</p><h3>%s</h3><p>%s</p><p>%s</p><p>%s</p>',
+				esc_html__( 'Top searches', 'loupe-search' ),
+				esc_html__( 'The most frequent queries that found results at least once in the period, with the number of searches and the average number of results.', 'loupe-search' ),
+				esc_html__( 'Searches without results', 'loupe-search' ),
+				esc_html__( 'Queries that never found anything in the period. A query that sometimes found results is listed only under Top searches.', 'loupe-search' ),
+				esc_html__( 'These point to content visitors expect but cannot find. Consider writing that content, using the words visitors use, or adjusting typo tolerance and prefix search under Settings → Loupe Search → Search Behavior.', 'loupe-search' ),
+				/* translators: %d: number of rows. */
+				esc_html( sprintf( __( 'Each list shows up to %d queries. Queries are stored in lowercase, so different capitalizations are counted together.', 'loupe-search' ), self::REPORT_LIMIT ) )
+			),
+		] );
+
+		$screen->add_help_tab( [
+			'id'      => 'loupe_search_insights_export',
+			'title'   => __( 'Export', 'loupe-search' ),
+			'content' => sprintf(
+				'<p>%s</p><ul><li><code>day</code>, <code>search_query</code>, <code>searches</code>, <code>zero_results</code>, <code>results_sum</code></li></ul><p>%s</p>',
+				esc_html__( 'Export this period (CSV) downloads every query for the selected period, one row per query per day, with these columns:', 'loupe-search' ),
+				esc_html__( 'zero_results is how many of the searches found nothing. Divide results_sum by searches to get the average number of results.', 'loupe-search' )
+			),
+		] );
+
+		$screen->add_help_tab( [
+			'id'      => 'loupe_search_insights_privacy',
+			'title'   => __( 'Privacy', 'loupe-search' ),
+			'content' => sprintf(
+				'<p>%s</p>',
+				esc_html__( 'Stores only daily totals per search query: how often it was searched and how many results it returned. No IP address, user, browser or time of day is stored. Searches by administrators, bots, WP-CLI and the admin are not counted. Queries that look like an email address or phone number are discarded.', 'loupe-search' )
+			),
+		] );
+
+		$screen->set_help_sidebar(
+			sprintf(
+				'<p><strong>%s</strong></p><p><a href="%s">%s</a></p>',
+				esc_html__( 'For more information:', 'loupe-search' ),
+				esc_url( self::settings_url() ),
+				esc_html__( 'Search insights settings', 'loupe-search' )
+			)
 		);
 	}
 
