@@ -22,6 +22,117 @@
 	margin-right: 4px;
 }
 
+.loupe-search-insights__range input.hasDatepicker {
+	width: 12em;
+}
+
+/* jQuery UI Datepicker (core ships no theme), styled like wp-admin. */
+#ui-datepicker-div {
+	display: none;
+	z-index: 100 !important;
+	padding: 8px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+#ui-datepicker-div .ui-datepicker-header {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 6px;
+}
+
+#ui-datepicker-div .ui-datepicker-prev,
+#ui-datepicker-div .ui-datepicker-next {
+	cursor: pointer;
+	text-decoration: none;
+	color: var(--wp-admin-theme-color, #2271b1);
+}
+
+#ui-datepicker-div .ui-datepicker-prev {
+	order: -1;
+}
+
+#ui-datepicker-div .ui-datepicker-prev .ui-icon,
+#ui-datepicker-div .ui-datepicker-next .ui-icon {
+	display: none;
+}
+
+#ui-datepicker-div .ui-datepicker-prev::before {
+	content: "\2039";
+	font-size: 20px;
+	padding: 0 6px;
+}
+
+#ui-datepicker-div .ui-datepicker-next::before {
+	content: "\203A";
+	font-size: 20px;
+	padding: 0 6px;
+}
+
+#ui-datepicker-div .ui-state-disabled {
+	cursor: default;
+	color: #a7aaad;
+}
+
+#ui-datepicker-div .ui-datepicker-title {
+	display: flex;
+	flex: 1;
+	gap: 4px;
+	justify-content: center;
+}
+
+#ui-datepicker-div .ui-datepicker-title select {
+	min-height: 28px;
+	font-size: 13px;
+}
+
+#ui-datepicker-div table {
+	border-collapse: collapse;
+}
+
+#ui-datepicker-div th {
+	padding: 4px;
+	font-weight: 600;
+	color: #50575e;
+}
+
+#ui-datepicker-div td {
+	padding: 1px;
+	text-align: center;
+}
+
+#ui-datepicker-div td a,
+#ui-datepicker-div td span {
+	display: block;
+	width: 28px;
+	line-height: 28px;
+	border-radius: 2px;
+	text-decoration: none;
+	color: #1d2327;
+}
+
+#ui-datepicker-div td a:hover,
+#ui-datepicker-div td a:focus {
+	background: #f0f0f1;
+	color: var(--wp-admin-theme-color, #2271b1);
+}
+
+#ui-datepicker-div td.ui-datepicker-today a {
+	box-shadow: inset 0 0 0 1px var(--wp-admin-theme-color, #2271b1);
+}
+
+#ui-datepicker-div td a.ui-state-active {
+	background: var(--wp-admin-theme-color, #2271b1);
+	color: #fff;
+}
+
+#ui-datepicker-div td.ui-state-disabled span {
+	color: #a7aaad;
+}
+
 .loupe-search-insights__heading {
 	display: flex;
 	flex-wrap: wrap;

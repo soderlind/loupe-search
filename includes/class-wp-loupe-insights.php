@@ -56,7 +56,8 @@ class WP_Loupe_Insights {
 	}
 
 	/**
-	 * Load the report stylesheet on the report page and the Dashboard (widget).
+	 * Load the report stylesheet on the report page and the Dashboard (widget),
+	 * and the date picker script on the report page.
 	 *
 	 * @param string $hook Current admin page hook.
 	 * @return void
@@ -66,6 +67,10 @@ class WP_Loupe_Insights {
 			return;
 		}
 		wp_enqueue_style( 'loupe-search-insights', LOUPE_SEARCH_URL . 'lib/css/insights.css', [], WP_Loupe_Utils::get_version_number() );
+		if ( 'dashboard_page_' . self::PAGE_SLUG === $hook ) {
+			// Core localizes jquery-ui-datepicker with the date format from Settings → General.
+			wp_enqueue_script( 'loupe-search-insights', LOUPE_SEARCH_URL . 'lib/js/insights.js', [ 'jquery-ui-datepicker' ], WP_Loupe_Utils::get_version_number(), true );
+		}
 	}
 
 	/**

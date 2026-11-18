@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-11-18
+
+### Fixed
+
+- Search insights: the From and To dates on the report page now use the date format from Settings → General instead of the browser's locale, with a date picker that follows the site's language and start of week. Without JavaScript the browser's own date fields are used as before.
+
+### Changed
+
+- WordPress.org screenshots: updated screenshot 4 (Search insights settings tab) and added screenshot 6 (Search insights report).
+
 ## [1.7.2] - 2026-11-17
 
 ### Changed

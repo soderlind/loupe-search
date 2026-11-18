@@ -4,7 +4,7 @@ Tags: search, full-text search, typo-tolerant, bbpress, SQLite
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.7.2
+Stable tag: 1.7.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://paypal.me/PerSoderlind
@@ -130,8 +130,9 @@ For signatures, defaults, and usage examples, see the [filter documentation](htt
 1. Dashboard tab showing index health per post type, batched reindexing, and the system status for the required PHP extensions.
 2. Fields tab for selecting which post types are indexed and configuring each field as indexable, filterable or sortable, with weight and sort direction.
 3. Search Behavior tab with tokenization, prefix search and typo tolerance settings.
-4. Search insights report with privacy-friendly daily search totals, top searches and searches without results.
+4. Search insights settings tab for turning on privacy-friendly search counting, choosing how long data is kept, opening the report and deleting all data.
 5. Contextual help tabs explaining field configuration options and search behavior settings.
+6. Search insights report under Dashboard → Search insights, with preset and custom periods, CSV export, top searches and searches without results.
 
 == Frequently Asked Questions ==
 
@@ -173,6 +174,10 @@ Use Settings > Loupe Search > Reindex (batched), or run via WP-CLI:
 
 
 == Changelog ==
+
+= 1.7.3 =
+* Fixed: The From and To dates on the Search insights report use the date format from Settings → General instead of the browser's locale, with a date picker that follows the site's language and start of week.
+* Changed: Updated WordPress.org screenshot 4 (Search insights settings tab) and added screenshot 6 (Search insights report).
 
 = 1.7.2 =
 * Changed: Search insights "Searches without results" lists only queries that found nothing in the whole period. A query that found results some of the time is listed only under Top searches, so the two lists no longer overlap. Applies to the report page and the Dashboard widget.
